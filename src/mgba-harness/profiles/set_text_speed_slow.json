@@ -1,0 +1,83 @@
+{
+  "description": "Navigate to Options menu, Text Speed submenu, and set to Slow",
+  "steps": [
+    {
+      "action": "tap",
+      "button": "start",
+      "delay": 0.5,
+      "description": "Open main menu"
+    },
+    {
+      "action": "tap",
+      "button": "down",
+      "delay": 0.3,
+      "description": "Navigate to Options"
+    },
+    {
+      "action": "tap",
+      "button": "down",
+      "delay": 0.3,
+      "description": "Navigate to Options"
+    },
+    {
+      "action": "tap",
+      "button": "a",
+      "delay": 1.0,
+      "description": "Enter Options menu"
+    },
+    {
+      "action": "tap",
+      "button": "down",
+      "delay": 0.3,
+      "description": "Navigate to Text Speed"
+    },
+    {
+      "action": "tap",
+      "button": "down",
+      "delay": 0.3,
+      "description": "Navigate to Text Speed"
+    },
+    {
+      "action": "tap",
+      "button": "down",
+      "delay": 0.3,
+      "description": "Navigate to Text Speed"
+    },
+    {
+      "action": "tap",
+      "button": "a",
+      "delay": 1.0,
+      "description": "Enter Text Speed submenu"
+    },
+    {
+      "action": "tap",
+      "button": "right",
+      "delay": 0.3,
+      "description": "Change speed to Slow"
+    },
+    {
+      "action": "tap",
+      "button": "a",
+      "delay": 0.5,
+      "description": "Confirm Slow setting"
+    },
+    {
+      "action": "tap",
+      "button": "b",
+      "delay": 0.5,
+      "description": "Exit Text Speed submenu"
+    },
+    {
+      "action": "tap",
+      "button": "b",
+      "delay": 0.5,
+      "description": "Exit Options menu"
+    },
+    {
+      "action": "tap",
+      "button": "b",
+      "delay": 0.5,
+      "description": "Exit main menu"
+    }
+  ]
+}

@@ -1,0 +1,424 @@
+{
+  "rom_info": {
+    "title": "POKEMON MD - RED RESCUE",
+    "game_code": "BPRG",
+    "region": "USA/Australia",
+    "version": "1.0",
+    "sha1": "TBD"
+  },
+  "memory_domains": {
+    "WRAM": {
+      "base_address": 0,
+      "size": 65536,
+      "description": "Working RAM - main game state"
+    },
+    "VRAM": {
+      "base_address": 524288,
+      "size": 16384,
+      "description": "Video RAM - sprite data"
+    },
+    "OAM": {
+      "base_address": 540672,
+      "size": 512,
+      "description": "Object Attribute Memory - sprite attributes"
+    },
+    "PALETTE": {
+      "base_address": 541184,
+      "size": 512,
+      "description": "Color palettes"
+    },
+    "ROM": {
+      "base_address": 16777216,
+      "size": 16777216,
+      "description": "Game ROM"
+    }
+  },
+  "addresses": {
+    "player_state": {
+      "floor_number": {
+        "domain": "WRAM",
+        "address": 123456,
+        "size": 1,
+        "description": "Current floor number in dungeon",
+        "type": "uint8",
+        "min": 1,
+        "max": 99
+      },
+      "dungeon_id": {
+        "domain": "WRAM",
+        "address": 123457,
+        "size": 2,
+        "description": "Current dungeon ID",
+        "type": "uint16"
+      },
+      "turn_counter": {
+        "domain": "WRAM",
+        "address": 123458,
+        "size": 2,
+        "description": "Turn counter for current floor",
+        "type": "uint16",
+        "min": 0,
+        "max": 999
+      },
+      "player_tile_x": {
+        "domain": "WRAM",
+        "address": 123460,
+        "size": 1,
+        "description": "Player X position (tile coordinates)",
+        "type": "uint8",
+        "min": 0,
+        "max": 53
+      },
+      "player_tile_y": {
+        "domain": "WRAM",
+        "address": 123461,
+        "size": 1,
+        "description": "Player Y position (tile coordinates)",
+        "type": "uint8",
+        "min": 0,
+        "max": 29
+      },
+      "partner_tile_x": {
+        "domain": "WRAM",
+        "address": 123462,
+        "size": 1,
+        "description": "Partner X position (tile coordinates)",
+        "type": "uint8",
+        "min": 0,
+        "max": 53
+      },
+      "partner_tile_y": {
+        "domain": "WRAM",
+        "address": 123463,
+        "size": 1,
+        "description": "Partner Y position (tile coordinates)",
+        "type": "uint8",
+        "min": 0,
+        "max": 29
+      },
+      "room_flag": {
+        "domain": "WRAM",
+        "address": 123464,
+        "size": 1,
+        "description": "Room (1) or corridor (0) flag",
+        "type": "bool"
+      }
+    },
+    "entities": {
+      "monster_list_ptr": {
+        "domain": "WRAM",
+        "address": 124000,
+        "size": 4,
+        "description": "Pointer to monster list structure",
+        "type": "pointer"
+      },
+      "monster_count": {
+        "domain": "WRAM",
+        "address": 124004,
+        "size": 1,
+        "description": "Number of active entities",
+        "type": "uint8",
+        "min": 0,
+        "max": 20
+      },
+      "monster_struct_size": {
+        "description": "Size of each monster structure",
+        "value": 48
+      },
+      "monster_fields": {
+        "species_id": {
+          "offset": 0,
+          "size": 2,
+          "type": "uint16",
+          "description": "Pokemon species ID"
+        },
+        "level": {
+          "offset": 2,
+          "size": 1,
+          "type": "uint8",
+          "description": "Pokemon level",
+          "min": 1,
+          "max": 99
+        },
+        "hp_current": {
+          "offset": 4,
+          "size": 2,
+          "type": "uint16",
+          "description": "Current HP"
+        },
+        "hp_max": {
+          "offset": 6,
+          "size": 2,
+          "type": "uint16",
+          "description": "Maximum HP"
+        },
+        "status": {
+          "offset": 8,
+          "size": 1,
+          "type": "bitfield",
+          "description": "Status conditions (sleep/paralysis/confusion)"
+        },
+        "affiliation": {
+          "offset": 9,
+          "size": 1,
+          "type": "uint8",
+          "description": "0=ally, 1=enemy, 2=neutral"
+        },
+        "tile_x": {
+          "offset": 16,
+          "size": 1,
+          "type": "uint8",
+          "description": "X position (tile coordinates)"
+        },
+        "tile_y": {
+          "offset": 17,
+          "size": 1,
+          "type": "uint8",
+          "description": "Y position (tile coordinates)"
+        },
+        "direction": {
+          "offset": 18,
+          "size": 1,
+          "type": "uint8",
+          "description": "Facing direction (0=up, 1=right, 2=down, 3=left)"
+        },
+        "visible": {
+          "offset": 19,
+          "size": 1,
+          "type": "bool",
+          "description": "Is entity visible on screen"
+        }
+      }
+    },
+    "items": {
+      "item_list_ptr": {
+        "domain": "WRAM",
+        "address": 125000,
+        "size": 4,
+        "description": "Pointer to item list structure",
+        "type": "pointer"
+      },
+      "item_count": {
+        "domain": "WRAM",
+        "address": 125004,
+        "size": 1,
+        "description": "Number of active items",
+        "type": "uint8",
+        "min": 0,
+        "max": 20
+      },
+      "item_struct_size": {
+        "description": "Size of each item structure",
+        "value": 12
+      },
+      "item_fields": {
+        "item_id": {
+          "offset": 0,
+          "size": 2,
+          "type": "uint16",
+          "description": "Item ID"
+        },
+        "tile_x": {
+          "offset": 4,
+          "size": 1,
+          "type": "uint8",
+          "description": "X position (tile coordinates)"
+        },
+        "tile_y": {
+          "offset": 5,
+          "size": 1,
+          "type": "uint8",
+          "description": "Y position (tile coordinates)"
+        },
+        "quantity": {
+          "offset": 6,
+          "size": 2,
+          "type": "uint16",
+          "description": "Item quantity (for stackable items)"
+        }
+      }
+    },
+    "party_status": {
+      "leader_hp": {
+        "domain": "WRAM",
+        "address": 126000,
+        "size": 2,
+        "description": "Leader current HP",
+        "type": "uint16"
+      },
+      "leader_hp_max": {
+        "domain": "WRAM",
+        "address": 126002,
+        "size": 2,
+        "description": "Leader max HP",
+        "type": "uint16"
+      },
+      "leader_belly": {
+        "domain": "WRAM",
+        "address": 126004,
+        "size": 2,
+        "description": "Leader belly (food meter)",
+        "type": "uint16",
+        "min": 0,
+        "max": 100
+      },
+      "leader_status": {
+        "domain": "WRAM",
+        "address": 126006,
+        "size": 4,
+        "type": "bitfield",
+        "description": "Leader status conditions"
+      },
+      "partner_hp": {
+        "domain": "WRAM",
+        "address": 126010,
+        "size": 2,
+        "description": "Partner current HP",
+        "type": "uint16"
+      },
+      "partner_hp_max": {
+        "domain": "WRAM",
+        "address": 126012,
+        "size": 2,
+        "description": "Partner max HP",
+        "type": "uint16"
+      },
+      "partner_belly": {
+        "domain": "WRAM",
+        "address": 126014,
+        "size": 2,
+        "description": "Partner belly",
+        "type": "uint16",
+        "min": 0,
+        "max": 100
+      },
+      "partner_status": {
+        "domain": "WRAM",
+        "address": 126016,
+        "size": 4,
+        "type": "bitfield",
+        "description": "Partner status conditions"
+      }
+    },
+    "map_data": {
+      "minimap_ptr": {
+        "domain": "WRAM",
+        "address": 127000,
+        "size": 4,
+        "description": "Pointer to minimap tile data",
+        "type": "pointer"
+      },
+      "room_rectangles_ptr": {
+        "domain": "WRAM",
+        "address": 127004,
+        "size": 4,
+        "description": "Pointer to room rectangle data",
+        "type": "pointer"
+      },
+      "corridor_graph_ptr": {
+        "domain": "WRAM",
+        "address": 127008,
+        "size": 4,
+        "description": "Pointer to corridor graph data",
+        "type": "pointer"
+      },
+      "stairs_x": {
+        "domain": "WRAM",
+        "address": 127012,
+        "size": 1,
+        "type": "uint8",
+        "description": "Stairs X position"
+      },
+      "stairs_y": {
+        "domain": "WRAM",
+        "address": 127013,
+        "size": 1,
+        "type": "uint8",
+        "description": "Stairs Y position"
+      },
+      "camera_origin_x": {
+        "domain": "WRAM",
+        "address": 127014,
+        "size": 1,
+        "type": "uint8",
+        "description": "Camera origin X (tile coordinates)"
+      },
+      "camera_origin_y": {
+        "domain": "WRAM",
+        "address": 127015,
+        "size": 1,
+        "type": "uint8",
+        "description": "Camera origin Y (tile coordinates)"
+      },
+      "weather_state": {
+        "domain": "WRAM",
+        "address": 127016,
+        "size": 1,
+        "type": "uint8",
+        "description": "Weather state (clear, rain, etc.)"
+      },
+      "turn_phase": {
+        "domain": "WRAM",
+        "address": 127017,
+        "size": 1,
+        "type": "uint8",
+        "description": "Current turn phase (0=player, 1=enemy, 2=ally)"
+      }
+    },
+    "town_hubs": {
+      "kecleon_shop_x": {
+        "domain": "WRAM",
+        "address": 128000,
+        "size": 1,
+        "type": "uint8",
+        "description": "Kecleon shop X position"
+      },
+      "kecleon_shop_y": {
+        "domain": "WRAM",
+        "address": 128001,
+        "size": 1,
+        "type": "uint8",
+        "description": "Kecleon shop Y position"
+      },
+      "bank_balance": {
+        "domain": "WRAM",
+        "address": 128002,
+        "size": 4,
+        "type": "int32",
+        "description": "Persian bank balance"
+      },
+      "storage_count": {
+        "domain": "WRAM",
+        "address": 128006,
+        "size": 2,
+        "type": "uint16",
+        "description": "Kangaskhan storage item count"
+      },
+      "text_speed": {
+        "domain": "WRAM",
+        "address": 128008,
+        "size": 1,
+        "type": "uint8",
+        "description": "Text speed setting (0=fast, 1=normal, 2=slow)",
+        "min": 0,
+        "max": 2
+      }
+    }
+  },
+  "version_notes": {
+    "address_source": "TBD - Need empirical verification",
+    "verification_needed": [
+      "Confirm all memory addresses through testing",
+      "Verify tile coordinate ranges match actual game dimensions",
+      "Validate entity structure sizes and offsets",
+      "Test item and monster list pointers",
+      "Confirm status bitfield encodings"
+    ],
+    "testing_procedures": [
+      "Load known game state and dump RAM to verify addresses",
+      "Take screenshots while moving to verify tile coordinates",
+      "Enter combat to verify entity data updates",
+      "Pick up items to verify item tracking"
+    ]
+  }
+}
