@@ -556,12 +556,12 @@ See [AGENTS.md](AGENTS.md) for detailed instructions on:
 #### Test Markers & Scripts
 
 **Fast Lane** (`scripts/test_fast.ps1`):
-- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; $env:FAST="1"; $env:PYTEST_FDUMP_S="45"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python -m pytest -q --maxfail=1 -m "not slow and not network and not bench and not longctx"`
+- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; $env:FAST="1"; $env:PYTEST_FDUMP_S="45"; $env:PYTHONPATH="$(pwd)\src"; python -m pytest -q --maxfail=1 -m "not slow and not network and not bench and not longctx"`
 - **Expected Runtime**: <3 minutes
 - **Purpose**: Quick validation excluding slow/network/bench/longctx tests
 
 **Full Lane** (`scripts/test_full.ps1`):
-- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; Remove-Item Env:FAST -ErrorAction SilentlyContinue; $env:PYTEST_FDUMP_S="90"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python -m pytest -q`
+- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; Remove-Item Env:FAST -ErrorAction SilentlyContinue; $env:PYTEST_FDUMP_S="90"; $env:PYTHONPATH="$(pwd)\src"; python -m pytest -q`
 - **Expected Runtime**: 10-15 minutes
 - **Purpose**: Complete test suite with all markers
 
@@ -571,7 +571,7 @@ See [AGENTS.md](AGENTS.md) for detailed instructions on:
 - **Purpose**: Minimal CI validation
 
 **Bench Sweep** (`scripts/bench_sweep.ps1`):
-- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python profiling/bench_qwen_vl.py --models all --csv bench_results.csv --time-budget-s 180 --full --plot bench_results.csv`
+- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; $env:PYTHONPATH="$(pwd)\src"; python profiling/bench_qwen_vl.py --models all --csv bench_results.csv --time-budget-s 180 --full --plot bench_results.csv`
 - **Expected Runtime**: 5-10 minutes per configuration
 - **Purpose**: Performance benchmarking with parameter sweeps, saves CSV + JSONL + PNG plots to `profiling/results/<UTC_ISO>/`
 

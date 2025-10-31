@@ -286,7 +286,7 @@ class ContentAPI:
     """You.com Contents API wrapper with budget, cache, and queued fetching."""
 
     def __init__(self, api_key: Optional[str] = None, budget_tracker: Optional[BudgetTracker] = None, cache_dir: Optional[Path] = None, max_concurrent_fetches: int = 5):
-        self.api_key = api_key or os.getenv('YOUCOM_API_KEY')
+        self.api_key = api_key or os.getenv('YOU_API_KEY') or os.getenv('YOUCOM_API_KEY')
         self.base_url = "https://api.you.com"
 
         # Budget tracking

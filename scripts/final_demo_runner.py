@@ -94,7 +94,10 @@ def generate_video(run_dir: Path) -> bool:
         "--run-dir", str(run_dir),
         "--output", "agent_demo.mp4",
         "--fps", "15",
-        "--duration", "180"  # 3 minutes
+        "--duration", "180",  # 3 minutes
+        "--voiceover",
+        "--voiceover-voice", "af_heart",
+        "--voiceover-lang", "a",
     ]
 
     proc = subprocess.Popen(

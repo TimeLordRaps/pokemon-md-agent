@@ -1,5 +1,4 @@
 #!/bin/bash
-mamba info --envs && python --version && mamba activate agent-hackathon && pwd && ls
-cd "C:\Homework\agent_hackathon\pokemon-md-agent"
-export PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"
+mamba info --envs && python --version && mamba activate agent-hackathon && pwd && ls -la && \
+export PYTHONPATH="$(pwd)/src" && \
 python profiling/bench_qwen_vl.py --models all --time-budget-s 180 --full

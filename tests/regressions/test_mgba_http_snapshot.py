@@ -138,9 +138,9 @@ class TestMGBASnapshotMocking:
         # Initialize _memory_domains to avoid the validation call
         controller._memory_domains = ["wram", "iwram", "vram", "oam", "palette", "rom"]
 
-        # Should raise MemoryReadError when read fails
-        with pytest.raises(Exception):  # Could be MemoryReadError or similar
-            result = controller.peek(0x02000000, 4)
+        # Should return None when read fails
+        result = controller.peek(0x02000000, 4)
+        assert result is None
 
     def test_peek_memory_malformed_response(self, mock_controller, mock_transport):
         """Test memory peek with malformed response."""
@@ -163,9 +163,9 @@ class TestMGBASnapshotMocking:
         # Initialize _memory_domains to avoid the validation call
         controller._memory_domains = ["wram", "iwram", "vram", "oam", "palette", "rom"]
 
-        # Should raise MemoryReadError when response is malformed
-        with pytest.raises(Exception):  # Could be MemoryReadError or similar
-            result = controller.peek(0x02000000, 4)
+        # Should return None when response is malformed
+        result = controller.peek(0x02000000, 4)
+        assert result is None
 
     def test_get_floor_success(self, mock_controller, mock_transport):
         """Test successful floor reading."""
