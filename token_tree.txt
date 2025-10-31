@@ -4,25 +4,17 @@
 [2mNo custom config found at repomix.config.json5, repomix.config.jsonc, repomix.config.json or global config at C:\Users\tyler\AppData\Local\Repomix\repomix.config.json5, C:\Users\tyler\AppData\Local\Repomix\repomix.config.jsonc, C:\Users\tyler\AppData\Local\Repomix\repomix.config.json.
 You can add a config file for additional settings. Please check https://github.com/yamadashy/repomix for more information.[22m
 [36m⠙[39m Searching for files...
-[2K[1A[2K[G[36m⠹[39m Searching for files...
-[2K[1A[2K[G[36m⠸[39m Collecting files...
-[2K[1A[2K[G[36m⠼[39m Collect file... (45/234) [2mprototypes/wram_decoder_fix/test_decoder.py[22m
-[2K[1A[2K[G[36m⠴[39m Collect file... (201/234) [2mtests/test_model_router_deadline.py[22m
-[2K[1A[2K[G[36m⠦[39m Running security check...
-[2K[1A[2K[G[36m⠧[39m Running security check... (143/225) [2msrc/skills/python_runtime.py[22m
-[2K[1A[2K[G[36m⠇[39m Processing files...
-[2K[1A[2K[G[36m⠏[39m Processing file... (20/225) [2mdocs/docs/items/index.md[22m
-[2K[1A[2K[G[36m⠋[39m Generating output...
-[2K[1A[2K[G[36m⠙[39m Generating output...
-[2K[1A[2K[G[36m⠹[39m Calculating metrics...
-[2K[1A[2K[G[36m⠸[39m Calculating metrics...
-[2K[1A[2K[G[36m⠼[39m Calculating metrics...
-[2K[1A[2K[G[36m⠴[39m Calculating metrics...
-[2K[1A[2K[G[36m⠦[39m Calculating metrics... (1/225) [2m.temp_check_ram.py[22m
-[2K[1A[2K[G[36m⠧[39m Calculating metrics... (19/225) [2mdocs/docs/items/index.md[22m
-[2K[1A[2K[G[36m⠇[39m Calculating metrics... (84/225) [2msrc/agent/model_router.py[22m
-[2K[1A[2K[G[36m⠏[39m Calculating metrics... (153/225) [2msrc/vision/packaging.py[22m
-[2K[1A[2K[G[36m⠋[39m Calculating metrics... (225/225) [2mtests/test_vision_tools.py[22m
+[2K[1A[2K[G[36m⠹[39m Collect file... (1/235) [2m.gitignore[22m
+[2K[1A[2K[G[36m⠸[39m Running security check...
+[2K[1A[2K[G[36m⠼[39m Running security check... (167/226) [2mtests/regressions/test_bug_0002_ram_addres[22m
+[2ms_mismatch.py[22m
+[2K[1A[2K[1A[2K[G[36m⠴[39m Processing files...
+[2K[1A[2K[G[36m⠦[39m Generating output...
+[2K[1A[2K[G[36m⠧[39m Calculating metrics...
+[2K[1A[2K[G[36m⠇[39m Calculating metrics...
+[2K[1A[2K[G[36m⠏[39m Calculating metrics... (1/226) [2m.temp_check_ram.py[22m
+[2K[1A[2K[G[36m⠋[39m Calculating metrics... (82/226) [2msrc/agent/pipeline_engine.py[22m
+[2K[1A[2K[G[36m⠙[39m Calculating metrics... (191/226) [2mtests/test_mgba_controller_frame_capture.py[22m
 [2K[1A[2K[G[32m✔[39m Packing completed successfully!
 
 [37m📈 Top 5 Files by Token Count:[39m
@@ -31,7 +23,7 @@ You can add a config file for additional settings. Please check https://github.c
 [37m2. [39m [37magent_log.txt[39m [2m(13,654 tokens, 43,990 chars, 2.8%)[22m
 [37m3. [39m [37mrouter_telemetry.jsonl[39m [2m(12,641 tokens, 34,167 chars, 2.6%)[22m
 [37m4. [39m [37msrc/environment/mgba_controller.py.backup[39m [2m(11,768 tokens, 55,735 chars, 2.4%)[22m
-[37m5. [39m [37msrc/agent/qwen_controller.py[39m [2m(10,786 tokens, 49,328 chars, 2.2%)[22m
+[37m5. [39m [37msrc/agent/qwen_controller.py[39m [2m(10,894 tokens, 50,548 chars, 2.2%)[22m
 
 🔢 Token Count Tree:
 [2m────────────────────[22m
@@ -60,7 +52,7 @@ You can add a config file for additional settings. Please check https://github.c
 ├── SKILL_IMPROVEMENTS_SUMMARY.md [2m(1,857 tokens)[22m
 ├── STANDUP_REPORT.md [2m(2,080 tokens)[22m
 ├── test_budget.json [2m(21 tokens)[22m
-├── token_tree.txt [2m(331 tokens)[22m
+├── token_tree.txt [2m(213 tokens)[22m
 ├── config/ [2m(4,223 tokens)[22m
 │   ├── mgba_config.ini [2m(325 tokens)[22m
 │   ├── sprite_library.yaml [2m(765 tokens)[22m
@@ -98,7 +90,7 @@ You can add a config file for additional settings. Please check https://github.c
 │       ├── decoder_v2.py [2m(2,338 tokens)[22m
 │       ├── findings.md [2m(557 tokens)[22m
 │       └── test_decoder.py [2m(1,250 tokens)[22m
-├── scripts/ [2m(11,241 tokens)[22m
+├── scripts/ [2m(11,456 tokens)[22m
 │   ├── __init__.py [2m(8 tokens)[22m
 │   ├── bench_sweep.ps1 [2m(54 tokens)[22m
 │   ├── bench_sweep.sh [2m(61 tokens)[22m
@@ -108,6 +100,7 @@ You can add a config file for additional settings. Please check https://github.c
 │   ├── finalize_and_snapshot.bat [2m(1,075 tokens)[22m
 │   ├── finalize_and_snapshot.sh [2m(830 tokens)[22m
 │   ├── generate_montage_video.py [2m(4,264 tokens)[22m
+│   ├── push_now.bat [2m(215 tokens)[22m
 │   ├── push_to_github.bat [2m(355 tokens)[22m
 │   ├── push_to_github.sh [2m(377 tokens)[22m
 │   ├── quick_smoke_test.sh [2m(322 tokens)[22m
@@ -126,10 +119,10 @@ You can add a config file for additional settings. Please check https://github.c
 │       ├── heal_when_low_hp.yaml [2m(113 tokens)[22m
 │       ├── take_stairs_when_visible.yaml [2m(98 tokens)[22m
 │       └── use_food_when_hungry.yaml [2m(119 tokens)[22m
-├── src/ [2m(242,579 tokens)[22m
+├── src/ [2m(242,687 tokens)[22m
 │   ├── __main__.py [2m(26 tokens)[22m
 │   ├── main.py [2m(1,979 tokens)[22m
-│   ├── agent/ [2m(36,406 tokens)[22m
+│   ├── agent/ [2m(36,514 tokens)[22m
 │   │   ├── __init__.py [2m(131 tokens)[22m
 │   │   ├── agent_core.py [2m(5,930 tokens)[22m
 │   │   ├── context_cap.py [2m(761 tokens)[22m
@@ -138,7 +131,7 @@ You can add a config file for additional settings. Please check https://github.c
 │   │   ├── model_router.py [2m(5,915 tokens)[22m
 │   │   ├── pipeline_engine.py [2m(2,358 tokens)[22m
 │   │   ├── prompt_cache.py [2m(2,468 tokens)[22m
-│   │   ├── qwen_controller.py [2m(10,786 tokens)[22m
+│   │   ├── qwen_controller.py [2m(10,894 tokens)[22m
 │   │   └── timebudgets.py [2m(441 tokens)[22m
 │   ├── dashboard/ [2m(14,687 tokens)[22m
 │   │   ├── api.py [2m(3,319 tokens)[22m
@@ -232,7 +225,7 @@ You can add a config file for additional settings. Please check https://github.c
 │       └── tools/ [2m(4,607 tokens)[22m
 │           ├── dump_quads.py [2m(2,664 tokens)[22m
 │           └── dump_sprites.py [2m(1,943 tokens)[22m
-└── tests/ [2m(134,818 tokens)[22m
+└── tests/ [2m(134,826 tokens)[22m
     ├── __init__.py [2m(3 tokens)[22m
     ├── conftest.py [2m(2,270 tokens)[22m
     ├── test_ascii_renderer.py [2m(1,887 tokens)[22m
@@ -246,7 +239,7 @@ You can add a config file for additional settings. Please check https://github.c
     ├── test_content_api_batch.py [2m(2,537 tokens)[22m
     ├── test_content_api.py [2m(3,198 tokens)[22m
     ├── test_context_cap.py [2m(606 tokens)[22m
-    ├── test_current_frame.py [2m(751 tokens)[22m
+    ├── test_current_frame.py [2m(759 tokens)[22m
     ├── test_embeddings.py [2m(1,855 tokens)[22m
     ├── test_grid_parser.py [2m(4,497 tokens)[22m
     ├── test_inference_queue_stages.py [2m(1,488 tokens)[22m
@@ -312,9 +305,9 @@ These files have been excluded from the output.[39m
 
 [37m📊 Pack Summary:[39m
 [2m────────────────[22m
-[37m  Total Files:[39m [37m225[39m files
-[37m Total Tokens:[39m [37m494,593[39m tokens
-[37m  Total Chars:[39m [37m2,210,882[39m chars
+[37m  Total Files:[39m [37m226[39m files
+[37m Total Tokens:[39m [37m494,830[39m tokens
+[37m  Total Chars:[39m [37m2,212,958[39m chars
 [37m       Output:[39m [37mrepomix-output.xml[39m
 [37m     Security:[39m [37m[37m✔ No suspicious files detected[37m[39m
 

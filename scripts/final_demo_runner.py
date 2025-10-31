@@ -89,12 +89,15 @@ def generate_video(run_dir: Path) -> bool:
     print("=" * 60)
 
     script_path = Path(__file__).parent / "generate_montage_video.py"
+    output_path = Path("docs/assets/agent_demo.mp4")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
     cmd = [
         sys.executable, str(script_path),
         "--run-dir", str(run_dir),
-        "--output", "agent_demo.mp4",
-        "--fps", "15",
-        "--duration", "180",  # 3 minutes
+        "--output", str(output_path),
+        "--fps", "30",
+        "--duration", "150",  # Target 120-180s
         "--voiceover",
         "--voiceover-voice", "af_heart",
         "--voiceover-lang", "a",
@@ -117,10 +120,30 @@ def generate_video(run_dir: Path) -> bool:
             print("STDERR:", stderr[:500])
         return False
 
-    output_path = Path("agent_demo.mp4")
     if output_path.exists():
         size_mb = output_path.stat().st_size / (1024 * 1024)
-        print(f"✓ Video generated: agent_demo.mp4 ({size_mb:.1f} MB)")
+        print(f"✓ Video generated: {output_path} ({size_mb:.1f} MB)")
+
+        # Validate video
+        try:
+            result = subprocess.run(
+                ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", str(output_path)],
+                capture_output=True, text=True, timeout=10
+            )
+            if result.returncode == 0:
+                import json
+                data = json.loads(result.stdout)
+                duration = float(data.get("format", {}).get("duration", 0))
+                print(f"  Duration: {duration:.1f}s (target: 120-180s)")
+                if duration < 120:
+                    print("  ⚠️  Duration shorter than 120s - may need more frames")
+                elif duration > 180:
+                    print("  ⚠️  Duration longer than 180s - consider increasing sampling")
+            else:
+                print("  ⚠️  Could not validate video with ffprobe")
+        except (subprocess.TimeoutExpired, json.JSONDecodeError, FileNotFoundError):
+            print("  ⚠️  ffprobe not available for validation")
+
         return True
 
     return False

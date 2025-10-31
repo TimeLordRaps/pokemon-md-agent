@@ -386,3 +386,22 @@
 2025-10-31 00:56:48,142 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
 2025-10-31 00:56:49,840 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
 2025-10-31 00:56:49,959 - src.agent.agent_core - INFO - Step 1/50 complete - Action: random
+2025-10-31 01:33:21,103 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 01:33:21,105 - src.agent.agent_core - INFO - Found 1 ROM file(s): ['Pokemon Mystery Dungeon - Red Rescue Team (USA, Australia).gba']
+2025-10-31 01:33:21,196 - src.agent.agent_core - INFO - Successfully connected to mGBA during initialization
+2025-10-31 01:33:21,196 - src.agent.agent_core - INFO - Agent initialized with objective: Navigate to stairs and progress through dungeon (test_mode: False)
+2025-10-31 01:33:21,196 - src.agent.agent_core - INFO - Starting agent loop (max 50 steps)
+2025-10-31 01:33:21,196 - src.agent.agent_core - INFO - Async components initialized
+2025-10-31 01:33:21,462 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 01:33:23,198 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 01:33:23,301 - src.agent.agent_core - INFO - Step 1/50 complete - Action: random
+2025-10-31 01:37:05,941 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 01:37:05,941 - src.agent.agent_core - INFO - Retrieval system enabled (placeholder)
+2025-10-31 01:37:05,941 - src.agent.agent_core - INFO - Found 1 ROM file(s): ['Pokemon Mystery Dungeon - Red Rescue Team (USA, Australia).gba']
+2025-10-31 01:37:06,052 - src.agent.agent_core - INFO - Successfully connected to mGBA during initialization
+2025-10-31 01:37:06,052 - src.agent.agent_core - INFO - Agent initialized with objective: Navigate to stairs and progress through dungeon (test_mode: False)
+2025-10-31 01:37:06,052 - src.agent.agent_core - INFO - Starting agent loop (max 50 steps)
+2025-10-31 01:37:06,052 - src.agent.agent_core - INFO - Async components initialized
+2025-10-31 01:37:06,288 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 01:37:07,958 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 01:37:08,057 - src.agent.agent_core - INFO - Step 1/50 complete - Action: random
