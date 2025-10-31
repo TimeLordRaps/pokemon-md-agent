@@ -285,9 +285,32 @@ class FetchQueue:
 class ContentAPI:
     """You.com Contents API wrapper with budget, cache, and queued fetching."""
 
-    def __init__(self, api_key: Optional[str] = None, budget_tracker: Optional[BudgetTracker] = None, cache_dir: Optional[Path] = None, max_concurrent_fetches: int = 5):
-        self.api_key = api_key or os.getenv('YOU_API_KEY') or os.getenv('YOUCOM_API_KEY')
-        self.base_url = "https://api.you.com"
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        budget_tracker: Optional[BudgetTracker] = None,
+        cache_dir: Optional[Path] = None,
+        max_concurrent_fetches: int = 5,
+        mock_mode: Optional[bool] = None,
+    ):
+        env_key = os.getenv('YOU_API_KEY') or os.getenv('YOUCOM_API_KEY')
+        self.api_key = (api_key or env_key or "").strip()
+
+        # Allow overriding the API base URL through environment for experimentation.
+        default_base = os.getenv('YOU_API_BASE', 'https://api.ydc-index.io').strip().rstrip('/')
+        self.base_url = default_base or "https://api.ydc-index.io"
+        self.backup_bases = [self.base_url, "https://api.you.com"]
+
+        # Determine whether to run in mock mode (no live API calls).
+        if mock_mode is not None:
+            self.mock_mode = mock_mode
+        else:
+            self.mock_mode = not bool(self.api_key)
+
+        if self.mock_mode and self.api_key:
+            logger.info("ContentAPI mock mode enabled explicitly; live API key will not be used.")
+        elif not self.mock_mode and not self.api_key:
+            logger.warning("YOU_API_KEY missing but mock mode disabled; fallback mock content will be used.")
 
         # Budget tracking
         self.budget = budget_tracker or BudgetTracker()
@@ -447,18 +470,167 @@ class ContentAPI:
 
         return pages
 
-    async def _fetch_single(self, url: str, format: str) -> Page:
-        """Fetch a single URL."""
-        # Simulate API call - in real implementation, this would call You.com API
-        # For now, return mock data
-        await asyncio.sleep(0.1)  # Simulate network delay
-
+    def _build_mock_page(self, url: str, format: str, error: Optional[str] = None, status_code: int = 200) -> Page:
+        """Create a placeholder page when live fetch is unavailable."""
+        message = error or "Live You.com fetch not performed (mock mode)."
+        content = (
+            f"# Placeholder Content\n\n"
+            f"- URL: {url}\n"
+            f"- Note: {message}\n"
+            f"\nLive You.com content is unavailable in this run."
+        )
         return Page(
             url=url,
-            title=f"Mock Title for {url}",
-            content=f"# Mock Content\n\nThis is mock content for {url}",
-            format=format
+            title=f"Placeholder for {url}",
+            content=content,
+            format=format,
+            status_code=status_code,
+            error=error
         )
+
+    async def _fetch_single(self, url: str, format: str) -> Page:
+        """Fetch a single URL."""
+        normalized_format = (format or "markdown").lower()
+
+        if self.mock_mode:
+            await asyncio.sleep(0.05)
+            return self._build_mock_page(url, normalized_format, error=None, status_code=200)
+
+        try:
+            return await asyncio.to_thread(self._fetch_single_live, url, normalized_format)
+        except PermissionError as auth_error:
+            logger.error("You.com API authentication failed: %s", auth_error)
+            return self._build_mock_page(url, normalized_format, error=str(auth_error), status_code=401)
+        except Exception as exc:
+            logger.error("You.com API fetch failed for %s: %s", url, exc)
+            return self._build_mock_page(url, normalized_format, error=f"Live fetch failed: {exc}", status_code=502)
+
+    def _fetch_single_live(self, url: str, format: str) -> Page:
+        """Blocking helper that performs the real You.com Contents API request."""
+        if not self.api_key:
+            raise PermissionError("YOU_API_KEY environment variable is not set.")
+
+        payload_variants = [
+            {
+                "urls": [{"url": url, "format": format}],
+                "output": format,
+            },
+            {
+                "input": {"urls": [url], "response_format": format},
+            },
+        ]
+
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "X-API-Key": self.api_key,
+            "X-YOU-API-KEY": self.api_key,
+            "Authorization": f"Bearer {self.api_key}",
+        }
+
+        last_error: Optional[str] = None
+
+        for base in self.backup_bases:
+            base = base.rstrip('/')
+            if not base:
+                continue
+
+            for endpoint in ("/v1/contents", "/v1/content"):
+                full_url = f"{base}{endpoint}"
+
+                for payload in payload_variants:
+                    try:
+                        response = self.session.post(
+                            full_url,
+                            json=payload,
+                            headers=headers,
+                            timeout=20,
+                        )
+                    except requests.RequestException as request_error:
+                        last_error = f"{full_url}: {request_error}"
+                        continue
+
+                    if response.status_code in (401, 403):
+                        raise PermissionError(
+                            f"You.com API rejected the request ({response.status_code}). "
+                            "Double-check YOU_API_KEY permissions."
+                        )
+
+                    if response.status_code == 404:
+                        last_error = f"{full_url} responded 404 (endpoint not available)."
+                        continue
+
+                    if not response.ok:
+                        body = response.text[:200]
+                        last_error = f"{full_url} returned HTTP {response.status_code}: {body}"
+                        continue
+
+                    try:
+                        data = response.json()
+                    except ValueError as json_error:
+                        last_error = f"{full_url} returned invalid JSON: {json_error}"
+                        continue
+
+                    entry = self._extract_primary_entry(data)
+                    if not entry:
+                        last_error = f"{full_url} response missing content entry."
+                        continue
+
+                    content, derived_format = self._extract_content(entry, format)
+                    if not content:
+                        last_error = f"{full_url} response entry missing content body."
+                        continue
+
+                    title = entry.get("title") or entry.get("url") or url
+                    resolved_url = entry.get("url") or url
+
+                    return Page(
+                        url=resolved_url,
+                        title=title,
+                        content=content,
+                        format=derived_format or format,
+                        status_code=response.status_code,
+                    )
+
+        raise RuntimeError(last_error or "Unable to fetch content from You.com API.")
+
+    @staticmethod
+    def _extract_primary_entry(data: Any) -> Optional[Dict[str, Any]]:
+        """Extract the first meaningful entry from the API response."""
+        if isinstance(data, dict):
+            for key in ("contents", "data", "result", "items", "documents"):
+                value = data.get(key)
+                if isinstance(value, list) and value:
+                    first = value[0]
+                    if isinstance(first, dict):
+                        return first
+            if all(isinstance(item, dict) for item in data.values()):
+                # Occasionally the API might return a dictionary keyed by URLs.
+                first_value = next(iter(data.values()))
+                if isinstance(first_value, dict):
+                    return first_value
+        elif isinstance(data, list) and data and isinstance(data[0], dict):
+            return data[0]
+        return None
+
+    @staticmethod
+    def _extract_content(entry: Dict[str, Any], requested_format: str) -> tuple[str, str]:
+        """Extract content body and inferred format from an entry."""
+        content_fields = [
+            ("markdown", "markdown"),
+            ("content", requested_format or "markdown"),
+            ("text", "markdown"),
+            ("answer", "markdown"),
+            ("html", "html"),
+            ("body", requested_format or "markdown"),
+        ]
+
+        for field, fmt in content_fields:
+            value = entry.get(field)
+            if isinstance(value, str) and value.strip():
+                return value, fmt
+
+        return "", requested_format
 
     def check_gate_token(self, gate_token: str) -> bool:
         """Check if gate token allows another call (max 2 per gate)."""

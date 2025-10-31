@@ -63,6 +63,27 @@ dungeon_id: 0         # Should match loaded dungeon
 - If not: Download `mGBASocketServer.lua` from the mGBA-http repository
 - Load it via Lua Console → File → Load script
 
+### Step 1.4: Validate You.com Content API (optional but recommended)
+```bash
+# Windows PowerShell (expects YOU_API_KEY already configured)
+python -m scripts.check_you_api --url https://www.serebii.net/dungeon/redblue/d001.shtml --live
+
+# macOS/Linux
+python -m scripts.check_you_api --url https://www.serebii.net/dungeon/redblue/d001.shtml --live
+```
+
+**Expected Output:**
+```
+YOU_API_KEY configured: yes
+Mock mode: False
+• https://www.serebii.net/dungeon/redblue/d001.shtml -> OK | <first line preview>
+```
+
+**Troubleshooting:**
+- If you see `Mock mode: True`, the key is missing — export `YOU_API_KEY` and rerun.
+- `ERROR (You.com API rejected the request (401)...)` → key invalid or expired.
+- To skip live calls (offline demos), omit `--live`; the system will generate placeholder content.
+
 ---
 
 ## Phase 2: Execute Demo (2-3 minutes)
@@ -81,9 +102,10 @@ python scripts/final_demo_runner.py
 2. **Validation** (~5 sec)
    - Checks trajectory contains ≥10 frames
 
-3. **Video Generation** (~10-20 sec)
+3. **Video + Voiceover Generation** (~10-20 sec)
    - Samples frames at 15 FPS
    - Target duration: 180 seconds (3 minutes)
+   - Runs Kokoro TTS (hexgrad/Kokoro-82M) for narration
    - Output: `agent_demo.mp4`
 
 **Console Output:**
@@ -116,7 +138,7 @@ ls -la agent_demo.mp4 && ffprobe agent_demo.mp4
 **Expected:**
 - File size: 10-50 MB (typical)
 - Duration: ~180 seconds
-- Codec: h264 or h265
+- Codec: h264 or h265, AAC audio track (Kokoro voiceover)
 
 ---
 
@@ -206,6 +228,7 @@ cd /path/to/pokemon-md-agent
 
 # Verify setup
 python .temp_check_ram.py
+python -m scripts.check_you_api --url https://www.serebii.net/dungeon/redblue/d001.shtml --live
 
 # Run demo
 python scripts/final_demo_runner.py

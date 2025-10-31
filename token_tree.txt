@@ -4,68 +4,53 @@
 [2mNo custom config found at repomix.config.json5, repomix.config.jsonc, repomix.config.json or global config at C:\Users\tyler\AppData\Local\Repomix\repomix.config.json5, C:\Users\tyler\AppData\Local\Repomix\repomix.config.jsonc, C:\Users\tyler\AppData\Local\Repomix\repomix.config.json.
 You can add a config file for additional settings. Please check https://github.com/yamadashy/repomix for more information.[22m
 [36m⠙[39m Searching for files...
-[2K[1A[2K[G[36m⠹[39m Collect file... (18/221) [2mconfig/sprite_library.yaml[22m
+[2K[1A[2K[G[36m⠹[39m Collecting files...
 [2K[1A[2K[G[36m⠸[39m Running security check...
-[2K[1A[2K[G[36m⠼[39m Processing files...
-[2K[1A[2K[G[36m⠴[39m Processing file... (212/212) [2mtoken_tree.txt[22m
-[2K[1A[2K[G[36m⠦[39m Calculating metrics...
+[2K[1A[2K[G[36m⠼[39m Running security check... (169/211) [2mtests/test_embeddings.py[22m
+[2K[1A[2K[G[36m⠴[39m Processing files...
+[2K[1A[2K[G[36m⠦[39m Generating output...
 [2K[1A[2K[G[36m⠧[39m Calculating metrics...
 [2K[1A[2K[G[36m⠇[39m Calculating metrics...
-[2K[1A[2K[G[36m⠏[39m Calculating metrics... (77/212) [2msrc/embeddings/__init__.py[22m
-[2K[1A[2K[G[36m⠋[39m Calculating metrics... (116/212) [2msrc/retrieval/gatekeeper.py[22m
-[2K[1A[2K[G[36m⠙[39m Calculating metrics... (201/212) [2mtests/test_skills.py[22m
+[2K[1A[2K[G[36m⠏[39m Calculating metrics... (17/211) [2mdocs/maintenance.md[22m
+[2K[1A[2K[G[36m⠋[39m Calculating metrics... (87/211) [2msrc/environment/netio/adaptive_socket.py[22m
+[2K[1A[2K[G[36m⠙[39m Calculating metrics... (201/211) [2mtests/test_skills.py[22m
 [2K[1A[2K[G[32m✔[39m Packing completed successfully!
 
 [37m📈 Top 5 Files by Token Count:[39m
 [2m──────────────────────────────[22m
-[37m1. [39m [37msrc/environment/mgba_controller.py[39m [2m(13,625 tokens, 66,136 chars, 3%)[22m
-[37m2. [39m [37mrouter_telemetry.jsonl[39m [2m(12,641 tokens, 34,167 chars, 2.8%)[22m
-[37m3. [39m [37msrc/environment/mgba_controller.py.backup[39m [2m(11,768 tokens, 55,735 chars, 2.6%)[22m
-[37m4. [39m [37msrc/agent/qwen_controller.py[39m [2m(10,669 tokens, 48,705 chars, 2.4%)[22m
-[37m5. [39m [37msrc/vision/grid_parser.py[39m [2m(9,630 tokens, 46,522 chars, 2.1%)[22m
+[37m1. [39m [37mdocs/you_api_reference.html[39m [2m(35,314 tokens, 104,176 chars, 7.3%)[22m
+[37m2. [39m [37msrc/environment/mgba_controller.py[39m [2m(13,625 tokens, 66,136 chars, 2.8%)[22m
+[37m3. [39m [37msrc/environment/mgba_controller.py.backup[39m [2m(11,768 tokens, 55,735 chars, 2.4%)[22m
+[37m4. [39m [37msrc/agent/qwen_controller.py[39m [2m(10,669 tokens, 48,705 chars, 2.2%)[22m
+[37m5. [39m [37msrc/vision/grid_parser.py[39m [2m(9,630 tokens, 46,522 chars, 2%)[22m
 
 🔢 Token Count Tree:
 [2m────────────────────[22m
 ├── .env.example [2m(75 tokens)[22m
-├── .gitignore [2m(222 tokens)[22m
-├── .temp_check_ram.py [2m(706 tokens)[22m
-├── agent_log.txt [2m(6,629 tokens)[22m
+├── .gitignore [2m(661 tokens)[22m
 ├── AGENTS.md [2m(5,581 tokens)[22m
 ├── analyze_dumps.py [2m(3,136 tokens)[22m
 ├── checkpoint.md [2m(339 tokens)[22m
 ├── demo_agent.py [2m(347 tokens)[22m
+├── DEMO_EXECUTION_SUMMARY.md [2m(2,953 tokens)[22m
+├── DEMO_READY.md [2m(1,875 tokens)[22m
+├── GITHUB_UPLOAD_CHECKLIST.md [2m(2,607 tokens)[22m
 ├── LICENSE [2m(224 tokens)[22m
 ├── MANIFEST.in [2m(85 tokens)[22m
+├── PRODUCTION_RUNBOOK.md [2m(1,658 tokens)[22m
 ├── pyproject.toml [2m(950 tokens)[22m
 ├── pytorch_cuda_research.md [2m(941 tokens)[22m
-├── requirements.txt [2m(441 tokens)[22m
-├── router_telemetry.jsonl [2m(12,641 tokens)[22m
+├── REPO_UPLOAD_STATUS.md [2m(2,647 tokens)[22m
+├── requirements.txt [2m(468 tokens)[22m
+├── SKILL_IMPROVEMENTS_SUMMARY.md [2m(1,857 tokens)[22m
 ├── STANDUP_REPORT.md [2m(2,080 tokens)[22m
 ├── test_budget.json [2m(21 tokens)[22m
-├── token_tree.txt [2m(216 tokens)[22m
-├── .roo/ [2m(1,469 tokens)[22m
-│   ├── findings/ [2m(1,163 tokens)[22m
-│   │   ├── environment_changelog.md [2m(353 tokens)[22m
-│   │   └── vision_changelog.md [2m(810 tokens)[22m
-│   ├── locks/ [2m(95 tokens)[22m
-│   │   ├── codex_prototyping_decoder.lock [2m(20 tokens)[22m
-│   │   ├── environment_agent.lock [2m(37 tokens)[22m
-│   │   └── vision_agent.lock [2m(38 tokens)[22m
-│   └── status/ [2m(211 tokens)[22m
-│       ├── environment_status.json [2m(67 tokens)[22m
-│       └── vision_status.json [2m(144 tokens)[22m
-├── .serena/ [2m(1,255 tokens)[22m
-│   ├── .gitignore [2m(1 tokens)[22m
-│   └── project.yml [2m(1,254 tokens)[22m
 ├── config/ [2m(4,223 tokens)[22m
 │   ├── mgba_config.ini [2m(325 tokens)[22m
 │   ├── sprite_library.yaml [2m(765 tokens)[22m
 │   └── addresses/ [2m(3,133 tokens)[22m
 │       └── pmd_red_us_v1.json [2m(3,133 tokens)[22m
-├── demos/ [2m(5,809 tokens)[22m
-│   ├── embedding_visualization.py [2m(4,152 tokens)[22m
-│   └── rag_demo.py [2m(1,657 tokens)[22m
-├── docs/ [2m(12,564 tokens)[22m
+├── docs/ [2m(50,433 tokens)[22m
 │   ├── agent-scaffold.md [2m(252 tokens)[22m
 │   ├── build_indexes.py [2m(1,903 tokens)[22m
 │   ├── maintenance.md [2m(688 tokens)[22m
@@ -73,7 +58,9 @@ You can add a config file for additional settings. Please check https://github.c
 │   ├── optimization_roadmap.md [2m(2,161 tokens)[22m
 │   ├── rag-system-architecture.md [2m(505 tokens)[22m
 │   ├── ram-primitives.md [2m(1,423 tokens)[22m
+│   ├── skills_pause_checkpoint.md [2m(2,555 tokens)[22m
 │   ├── vision_tools.md [2m(2,283 tokens)[22m
+│   ├── you_api_reference.html [2m(35,314 tokens)[22m
 │   └── docs/ [2m(1,518 tokens)[22m
 │       ├── index.md [2m(197 tokens)[22m
 │       ├── dungeons/ [2m(538 tokens)[22m
@@ -82,9 +69,9 @@ You can add a config file for additional settings. Please check https://github.c
 │       │   └── index.md [2m(366 tokens)[22m
 │       └── species/ [2m(417 tokens)[22m
 │           └── index.md [2m(417 tokens)[22m
-├── examples/ [2m(2,253 tokens)[22m
+├── examples/ [2m(2,521 tokens)[22m
 │   ├── navigate_to_stairs.py [2m(322 tokens)[22m
-│   └── quickstart.py [2m(1,931 tokens)[22m
+│   └── quickstart.py [2m(2,199 tokens)[22m
 ├── prototypes/ [2m(6,627 tokens)[22m
 │   └── wram_decoder_fix/ [2m(6,627 tokens)[22m
 │       ├── analyze_dumps.py [2m(1,906 tokens)[22m
@@ -92,17 +79,22 @@ You can add a config file for additional settings. Please check https://github.c
 │       ├── decoder_v2.py [2m(2,338 tokens)[22m
 │       ├── findings.md [2m(557 tokens)[22m
 │       └── test_decoder.py [2m(1,250 tokens)[22m
-├── scripts/ [2m(1,641 tokens)[22m
-│   ├── bench_sweep.ps1 [2m(80 tokens)[22m
-│   ├── bench_sweep.sh [2m(82 tokens)[22m
-│   ├── final_demo_runner.py [2m(347 tokens)[22m
+├── scripts/ [2m(8,783 tokens)[22m
+│   ├── __init__.py [2m(8 tokens)[22m
+│   ├── bench_sweep.ps1 [2m(54 tokens)[22m
+│   ├── bench_sweep.sh [2m(61 tokens)[22m
+│   ├── demo_with_youcom.py [2m(1,373 tokens)[22m
+│   ├── final_demo_runner.py [2m(1,202 tokens)[22m
+│   ├── generate_montage_video.py [2m(4,264 tokens)[22m
+│   ├── push_to_github.bat [2m(355 tokens)[22m
+│   ├── push_to_github.sh [2m(377 tokens)[22m
 │   ├── quick_smoke_test.sh [2m(322 tokens)[22m
 │   ├── sync_profiling.ps1 [2m(124 tokens)[22m
 │   ├── sync_profiling.sh [2m(97 tokens)[22m
 │   ├── test_ci.ps1 [2m(17 tokens)[22m
 │   ├── test_ci.sh [2m(18 tokens)[22m
-│   ├── test_fast.ps1 [2m(106 tokens)[22m
-│   ├── test_fast.sh [2m(104 tokens)[22m
+│   ├── test_fast.ps1 [2m(80 tokens)[22m
+│   ├── test_fast.sh [2m(87 tokens)[22m
 │   ├── test_full.ps1 [2m(92 tokens)[22m
 │   ├── test_full.sh [2m(81 tokens)[22m
 │   └── validate_integration.sh [2m(171 tokens)[22m
@@ -112,7 +104,7 @@ You can add a config file for additional settings. Please check https://github.c
 │       ├── heal_when_low_hp.yaml [2m(113 tokens)[22m
 │       ├── take_stairs_when_visible.yaml [2m(98 tokens)[22m
 │       └── use_food_when_hungry.yaml [2m(119 tokens)[22m
-├── src/ [2m(239,079 tokens)[22m
+├── src/ [2m(240,805 tokens)[22m
 │   ├── __main__.py [2m(26 tokens)[22m
 │   ├── main.py [2m(1,979 tokens)[22m
 │   ├── agent/ [2m(36,147 tokens)[22m
@@ -126,23 +118,23 @@ You can add a config file for additional settings. Please check https://github.c
 │   │   ├── prompt_cache.py [2m(2,468 tokens)[22m
 │   │   ├── qwen_controller.py [2m(10,669 tokens)[22m
 │   │   └── timebudgets.py [2m(441 tokens)[22m
-│   ├── dashboard/ [2m(13,360 tokens)[22m
+│   ├── dashboard/ [2m(13,368 tokens)[22m
 │   │   ├── api.py [2m(3,319 tokens)[22m
-│   │   ├── content_api.py [2m(4,329 tokens)[22m
+│   │   ├── content_api.py [2m(4,337 tokens)[22m
 │   │   └── uploader.py [2m(5,712 tokens)[22m
 │   ├── embeddings/ [2m(19,070 tokens)[22m
 │   │   ├── __init__.py [2m(97 tokens)[22m
 │   │   ├── extractor.py [2m(4,852 tokens)[22m
 │   │   ├── temporal_silo.py [2m(9,027 tokens)[22m
 │   │   └── vector_store.py [2m(5,094 tokens)[22m
-│   ├── environment/ [2m(44,257 tokens)[22m
+│   ├── environment/ [2m(44,324 tokens)[22m
 │   │   ├── __init__.py [2m(67 tokens)[22m
 │   │   ├── action_executor.py [2m(2,489 tokens)[22m
 │   │   ├── config.py [2m(1,138 tokens)[22m
 │   │   ├── fps_adjuster.py [2m(2,047 tokens)[22m
 │   │   ├── mgba_controller.py [2m(13,625 tokens)[22m
 │   │   ├── mgba_controller.py.backup [2m(11,768 tokens)[22m
-│   │   ├── ram_decoders.py [2m(2,513 tokens)[22m
+│   │   ├── ram_decoders.py [2m(2,580 tokens)[22m
 │   │   ├── ram_watch.py [2m(1,065 tokens)[22m
 │   │   ├── rom_gating.py [2m(1,399 tokens)[22m
 │   │   ├── save_manager.py [2m(2,449 tokens)[22m
@@ -189,10 +181,11 @@ You can add a config file for additional settings. Please check https://github.c
 │   │       └── policies.py [2m(490 tokens)[22m
 │   ├── router/ [2m(2,461 tokens)[22m
 │   │   └── policy_v2.py [2m(2,461 tokens)[22m
-│   ├── skills/ [2m(8,984 tokens)[22m
+│   ├── skills/ [2m(10,635 tokens)[22m
 │   │   ├── __init__.py [2m(330 tokens)[22m
 │   │   ├── dsl.py [2m(1,035 tokens)[22m
 │   │   ├── prompting.py [2m(669 tokens)[22m
+│   │   ├── python_runtime_async.py [2m(1,651 tokens)[22m
 │   │   ├── python_runtime.py [2m(1,601 tokens)[22m
 │   │   ├── runtime.py [2m(1,507 tokens)[22m
 │   │   ├── spec.py [2m(2,708 tokens)[22m
@@ -217,7 +210,7 @@ You can add a config file for additional settings. Please check https://github.c
 │       └── tools/ [2m(4,607 tokens)[22m
 │           ├── dump_quads.py [2m(2,664 tokens)[22m
 │           └── dump_sprites.py [2m(1,943 tokens)[22m
-└── tests/ [2m(133,065 tokens)[22m
+└── tests/ [2m(133,041 tokens)[22m
     ├── __init__.py [2m(3 tokens)[22m
     ├── conftest.py [2m(2,270 tokens)[22m
     ├── test_ascii_renderer.py [2m(1,887 tokens)[22m
@@ -274,30 +267,22 @@ You can add a config file for additional settings. Please check https://github.c
     ├── test_uploader_rate_limit.py [2m(1,872 tokens)[22m
     ├── test_vision_tools.py [2m(4,737 tokens)[22m
     ├── test_wram_bounds.py [2m(2,504 tokens)[22m
-    └── regressions/ [2m(10,987 tokens)[22m
+    └── regressions/ [2m(10,963 tokens)[22m
         ├── test_bug_0001_model_name_mismatch.py [2m(2,160 tokens)[22m
         ├── test_bug_0002_ram_address_mismatch.py [2m(1,801 tokens)[22m
-        ├── test_mgba_http_snapshot.py [2m(4,637 tokens)[22m
+        ├── test_mgba_http_snapshot.py [2m(4,613 tokens)[22m
         └── test_wram_decoder_first_mon.py [2m(2,389 tokens)[22m
 
 [37m🔎 Security Check:[39m
 [2m──────────────────[22m
 [32m✔[39m [37mNo suspicious files detected.[39m
 
-[37m📄 Binary Files Detected:[39m
-[2m─────────────────────────[22m
-[33m2 files detected as binary by content inspection:[39m
-[37m1.[39m [37mconfig/save_files/game_start_save.ss0[39m
-[37m2.[39m [37mtest_saves/ann_index.db[39m
-[33m
-These files have been excluded from the output.[39m
-[33mPlease review these files if you expected them to contain text content.[39m
 
 [37m📊 Pack Summary:[39m
 [2m────────────────[22m
-[37m  Total Files:[39m [37m212[39m files
-[37m Total Tokens:[39m [37m449,729[39m tokens
-[37m  Total Chars:[39m [37m2,031,021[39m chars
+[37m  Total Files:[39m [37m211[39m files
+[37m Total Tokens:[39m [37m482,006[39m tokens
+[37m  Total Chars:[39m [37m2,145,896[39m chars
 [37m       Output:[39m [37mrepomix-output.xml[39m
 [37m     Security:[39m [37m[37m✔ No suspicious files detected[37m[39m
 

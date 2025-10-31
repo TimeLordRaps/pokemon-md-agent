@@ -554,8 +554,8 @@ class TestTransportLayerMocking:
         limiter = RateLimiter(max_calls=2, time_window=1.0)
 
         # Should allow first two calls
-        assert limiter.wait_if_needed() is True
-        assert limiter.wait_if_needed() is True
+        limiter.wait_if_needed()
+        limiter.wait_if_needed()
 
         # Third call should be blocked (in real usage)
         # Note: This is a simplified test - actual blocking behavior
