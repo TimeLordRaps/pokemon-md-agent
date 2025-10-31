@@ -289,3 +289,100 @@
 2025-10-30 23:52:41,308 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
 2025-10-30 23:52:41,334 - src.agent.agent_core - ERROR - Error at step 50: 'MGBAController' object has no attribute 'current_frame'
 2025-10-30 23:52:41,335 - src.agent.agent_core - INFO - Agent loop complete
+2025-10-31 00:37:49,996 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 00:37:49,996 - src.agent.agent_core - INFO - Found 1 ROM file(s): ['Pokemon Mystery Dungeon - Red Rescue Team (USA, Australia).gba']
+2025-10-31 00:37:50,103 - src.agent.agent_core - INFO - Successfully connected to mGBA during initialization
+2025-10-31 00:37:50,103 - src.agent.agent_core - INFO - Agent initialized with objective: Navigate to stairs and progress through dungeon (test_mode: False)
+2025-10-31 00:37:50,103 - src.agent.agent_core - INFO - Starting agent loop (max 50 steps)
+2025-10-31 00:37:50,104 - src.agent.agent_core - INFO - Async components initialized
+2025-10-31 00:37:50,336 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:37:52,039 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:37:52,154 - src.agent.agent_core - INFO - Step 1/50 complete - Action: random
+2025-10-31 00:37:52,396 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:37:54,055 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:37:54,165 - src.agent.agent_core - INFO - Step 2/50 complete - Action: random
+2025-10-31 00:37:54,271 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:37:55,943 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:37:56,066 - src.agent.agent_core - INFO - Step 3/50 complete - Action: random
+2025-10-31 00:37:56,204 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:37:57,876 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:37:57,980 - src.agent.agent_core - INFO - Step 4/50 complete - Action: random
+2025-10-31 00:37:58,169 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-31 00:37:59,853 - src.agent.agent_core - INFO - Action: random | Rationale: Stuck detected: Very high behavioral divergence detected
+2025-10-31 00:37:59,959 - src.agent.agent_core - INFO - Step 5/50 complete - Action: random
+2025-10-31 00:38:00,139 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:01,836 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:01,959 - src.agent.agent_core - INFO - Step 6/50 complete - Action: random
+2025-10-31 00:38:02,099 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:03,766 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:03,866 - src.agent.agent_core - INFO - Step 7/50 complete - Action: random
+2025-10-31 00:38:04,059 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:05,729 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:05,847 - src.agent.agent_core - INFO - Step 8/50 complete - Action: random
+2025-10-31 00:38:06,018 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:07,702 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:07,810 - src.agent.agent_core - INFO - Step 9/50 complete - Action: random
+2025-10-31 00:38:07,911 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-31 00:38:09,591 - src.agent.agent_core - INFO - Action: random | Rationale: Stuck detected: Very high behavioral divergence detected
+2025-10-31 00:38:09,698 - src.agent.agent_core - INFO - Step 10/50 complete - Action: random
+2025-10-31 00:38:09,812 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:11,498 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:11,600 - src.agent.agent_core - INFO - Step 11/50 complete - Action: random
+2025-10-31 00:38:11,804 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:13,488 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:13,594 - src.agent.agent_core - INFO - Step 12/50 complete - Action: random
+2025-10-31 00:38:13,762 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:15,433 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:15,538 - src.agent.agent_core - INFO - Step 13/50 complete - Action: random
+2025-10-31 00:38:15,728 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:17,401 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:17,518 - src.agent.agent_core - INFO - Step 14/50 complete - Action: random
+2025-10-31 00:38:17,691 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-31 00:38:19,364 - src.agent.agent_core - INFO - Action: random | Rationale: Stuck detected: Very high behavioral divergence detected
+2025-10-31 00:38:19,465 - src.agent.agent_core - INFO - Step 15/50 complete - Action: random
+2025-10-31 00:38:19,553 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:21,255 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:21,372 - src.agent.agent_core - INFO - Step 16/50 complete - Action: random
+2025-10-31 00:38:21,546 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:23,259 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:23,379 - src.agent.agent_core - INFO - Step 17/50 complete - Action: random
+2025-10-31 00:38:23,567 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:25,236 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:25,345 - src.agent.agent_core - INFO - Step 18/50 complete - Action: random
+2025-10-31 00:38:25,460 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:27,129 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:27,230 - src.agent.agent_core - INFO - Step 19/50 complete - Action: random
+2025-10-31 00:38:27,388 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-31 00:38:29,054 - src.agent.agent_core - INFO - Action: random | Rationale: Stuck detected: Very high behavioral divergence detected
+2025-10-31 00:38:29,161 - src.agent.agent_core - INFO - Step 20/50 complete - Action: random
+2025-10-31 00:38:29,284 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:30,968 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:31,066 - src.agent.agent_core - INFO - Step 21/50 complete - Action: random
+2025-10-31 00:38:31,243 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:32,922 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:33,022 - src.agent.agent_core - INFO - Step 22/50 complete - Action: random
+2025-10-31 00:38:33,105 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:34,782 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:34,890 - src.agent.agent_core - INFO - Step 23/50 complete - Action: random
+2025-10-31 00:38:35,023 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:36,689 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:36,796 - src.agent.agent_core - INFO - Step 24/50 complete - Action: random
+2025-10-31 00:38:36,923 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-31 00:38:38,616 - src.agent.agent_core - INFO - Action: random | Rationale: Stuck detected: Very high behavioral divergence detected
+2025-10-31 00:38:38,729 - src.agent.agent_core - INFO - Step 25/50 complete - Action: random
+2025-10-31 00:38:38,919 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:40,599 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:40,711 - src.agent.agent_core - INFO - Step 26/50 complete - Action: random
+2025-10-31 00:38:40,795 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:38:42,484 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:38:42,586 - src.agent.agent_core - INFO - Step 27/50 complete - Action: random
+2025-10-31 00:38:42,787 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:56:47,835 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 00:56:47,835 - src.agent.agent_core - INFO - Found 1 ROM file(s): ['Pokemon Mystery Dungeon - Red Rescue Team (USA, Australia).gba']
+2025-10-31 00:56:47,906 - src.agent.agent_core - INFO - Successfully connected to mGBA during initialization
+2025-10-31 00:56:47,906 - src.agent.agent_core - INFO - Agent initialized with objective: Navigate to stairs and progress through dungeon (test_mode: False)
+2025-10-31 00:56:47,907 - src.agent.agent_core - INFO - Starting agent loop (max 50 steps)
+2025-10-31 00:56:47,907 - src.agent.agent_core - INFO - Async components initialized
+2025-10-31 00:56:48,142 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-31 00:56:49,840 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
+2025-10-31 00:56:49,959 - src.agent.agent_core - INFO - Step 1/50 complete - Action: random
