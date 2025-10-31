@@ -868,20 +868,34 @@ class QwenController:
         best_of_n: int = 1,
         retrieval_scores: Optional[List[float]] = None,
     ) -> str:
-        """Synchronous generate wrapper."""
+        """Synchronous generate wrapper.
+
+        Note: This is a bridge between sync and async contexts. If you're already
+        in an async context (e.g., agent.run()), use generate_async() directly with await.
+        """
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                # Create a task on the running loop instead of nested asyncio.run()
-                task = asyncio.create_task(self.generate_async(prompt, images, model_size, use_thinking, max_tokens, temperature, best_of_n, retrieval_scores))
-                text, _ = loop.run_until_complete(task)
-                return text
+                # Can't use run_until_complete on a running loop
+                # Use run_coroutine_threadsafe to schedule on the running loop
+                import concurrent.futures
+                future = asyncio.run_coroutine_threadsafe(
+                    self.generate_async(prompt, images, model_size, use_thinking, max_tokens, temperature, best_of_n, retrieval_scores),
+                    loop
+                )
+                try:
+                    text, _ = future.result(timeout=60.0)  # 60s timeout
+                    return text
+                except concurrent.futures.TimeoutError:
+                    logger.error("generate() timed out after 60s")
+                    return ""
             else:
                 text, _ = loop.run_until_complete(
                     self.generate_async(prompt, images, model_size, use_thinking, max_tokens, temperature, best_of_n, retrieval_scores)
                 )
                 return text
         except RuntimeError:
+            # No event loop in current thread, create a new one
             text, _ = asyncio.run(
                 self.generate_async(prompt, images, model_size, use_thinking, max_tokens, temperature, best_of_n, retrieval_scores)
             )
