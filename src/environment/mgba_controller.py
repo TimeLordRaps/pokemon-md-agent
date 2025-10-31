@@ -1158,7 +1158,9 @@ class MGBAController:
             image = None
             for attempt in range(5):  # Try up to 5 times
                 try:
-                    image = Image.open(temp_path)
+                    # Use context manager to ensure file handle is closed on Windows
+                    with Image.open(temp_path) as img:
+                        image = img.convert('RGB').copy()
                     break  # Success, exit retry loop
                 except OSError as e:
                     if attempt < 4:  # Don't sleep on last attempt
