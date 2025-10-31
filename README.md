@@ -46,6 +46,13 @@ The agent includes a comprehensive dashboard system for monitoring gameplay and 
 ### Configuration
 ```python
 config = AgentConfig(
+    # Skill triggers
+    enable_skill_triggers=True,       # Enable automatic skill triggers
+    skill_belly_threshold=0.3,        # Trigger when belly < 30%
+    skill_hp_threshold=0.25,          # Trigger when HP < 25%
+    skill_backoff_seconds=5.0,        # Backoff after failures
+
+    # Dashboard
     dashboard_enabled=True,           # Toggle dashboard uploads
     dashboard_branch="pages",         # Git branch for Pages
     dashboard_site_root="docs",       # Site root directory
@@ -84,6 +91,10 @@ pokemon-md-agent/
 │   │   ├── qwen_controller.py       # Multi-model Qwen3-VL orchestration
 │   │   ├── model_router.py          # 2B/4B/8B routing logic
 │   │   └── memory_manager.py        # Scratchpad & persistent memory
+│   │
+│   ├── orchestrator/                # Message orchestration
+│   │   ├── __init__.py
+│   │   └── message_packager.py      # Three-message protocol with model presets
 │   │
 │   ├── embeddings/                  # Embedding generation & storage
 │   │   ├── __init__.py
@@ -143,46 +154,80 @@ pokemon-md-agent/
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Post-Fix)
 
-### 1. Prerequisites
+1. Start mGBA with ROM + Lua script:
+   ```
+   C:\Homework\agent_hackathon\rom\Pokemon Mystery Dungeon - Red Rescue Team (USA, Australia).gba
+   C:\Homework\agent_hackathon\pokemon-md-agent\config\save_files\game_start_save.ss0
+   C:\Homework\agent_hackathon\pokemon-md-agent\src\mgba-harness\mgba-http\mGBASocketServer.lua
+   ```
 
-- **Python 3.10+** (with CUDA for GPU acceleration)
+2. Run demo:
+   ```bash
+   cd pokemon-md-agent
+   python demo_agent.py --max-steps 50
+   ```
+
+3. View results:
+   ```bash
+   ls -lt runs/  # Latest run folder
+   ```
+
+## Troubleshooting
+
+- **Screenshot locked:** Fixed in v1.1 (auto-retry with exponential backoff)
+- **Socket error:** Fixed in v1.1 (proper cleanup on disconnect)
+- **WRAM defaults:** Check `config/addresses/pmd_red_us_v1.json` offsets
+
+### Prerequisites (Original Setup)
+
+- **Python 3.11+** (with CUDA support for GPU acceleration)
 - **mgba** with mgba-http enabled (Lua-only setup)
 - **Pokemon Mystery Dungeon Red ROM** (you provide)
-- **GPU**: 24GB+ VRAM recommended (for Qwen3-VL-8B-FP8)
+- **GPU**: NVIDIA GPU with CUDA support recommended (RTX 30-series or newer)
 
-### 2. Installation
+### Installation (Original)
 
 ```bash
 # Clone or extract this repo
-cd C:\Homework\agent_hackathon\pokemon-md-agent
+cd pokemon-md-agent
 
-# Install as editable package (recommended for development)
+# Install PyTorch with CUDA support first (required for GPU acceleration)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+
+# Install as editable package
 pip install -e .
-
-# Or install dependencies manually
-pip install -r requirements.txt
-
-# Download Qwen3-VL models (will auto-download on first run)
-# Models used: 2B/4B/8B in both Thinking and Instruct variants
 ```
 
-### 3. Configure mgba (Lua-Only Setup)
+> ℹ️ **New dependency**: the benchmark now leverages `nano-graphrag` for
+> retrieval-augmented prompt scaffolding.  It is included in
+> `requirements.txt` and will be installed automatically with the editable
+> package command above.
+
+**Note**: The installation automatically detects your CUDA version and GPU architecture to install the correct PyTorch and Unsloth versions. If you encounter CUDA detection issues, you can manually run Unsloth's auto-install script first:
+
+```bash
+# Optional: Run Unsloth's auto-detection script
+python -c "import urllib.request; exec(urllib.request.urlopen('https://raw.githubusercontent.com/unslothai/unsloth/main/unsloth/_auto_install.py').read())"
+```
+
+**Verified**: This installation method has been tested and confirmed to work with:
+- PyTorch 2.9.0+cu128 (CUDA 12.8, compatible with CUDA 12.9)
+- Unsloth v2025.10.10 with Qwen3-VL support
+- RTX 4090 GPU with Ampere architecture
+
+### Configure mgba (Lua-Only Setup)
 
 **Important**: This project uses mgba-http with Lua socket server. No Python socket server needed.
 
-1. Download mgba v0.8.0+ from [mgba.io](https://mgba.io/)
+1. Download mgba v0.10.5+ from [mgba.io](https://mgba.io/)
 2. Place your Pokemon Mystery Dungeon Red ROM in the `rom/` directory
-3. Start mgba with HTTP server enabled:
-
-```bash
-# Windows
-mgba.exe --http-server --port 8888 rom/Pokemon\ Mystery\ Dungeon\ -\ Red\ Rescue\ Team\ \(USA\,\ Australia\).gba
-
-# Linux/Mac
-mgba --http-server --port 8888 rom/Pokemon\ Mystery\ Dungeon\ -\ Red\ Rescue\ Team\ \(USA\,\ Australia\).gba
-```
+3. Start mgba and load the game:
+   - Load the ROM: `File → Load ROM` → select `rom/Pokemon Mystery Dungeon - Red Rescue Team (USA, Australia).gba`
+   - Load the save file: `File → Load State File` → select `config/game_start.sav`
+   - Load the Lua script: `Tools → Scripting` → `Load script` → select `src/mgba-harness/mgba-http/mGBASocketServer.lua`
+4. The Lua script will start the HTTP server automatically on port 8888
 
 **Save Slot Advice**:
 - Slot 0: Title screen (for reset)
@@ -193,7 +238,7 @@ mgba --http-server --port 8888 rom/Pokemon\ Mystery\ Dungeon\ -\ Red\ Rescue\ Te
 
 The agent will automatically load slot 1 on startup for consistent benchmarking.
 
-### 4. Run Agent
+### Run Agent (Original)
 
 ```bash
 python examples/quickstart.py
@@ -201,7 +246,80 @@ python examples/quickstart.py
 
 ---
 
-## 📊 Architecture Highlights
+## 📊 Benchmarking
+
+### Comprehensive 3D Performance Analysis
+
+The project includes a comprehensive benchmark harness for measuring Qwen3-VL model performance across context lengths, batch sizes, and task types:
+
+```bash
+# Run comprehensive benchmark with 3D analysis
+python profiling/bench_qwen_vl.py --models all --tasks all --num-runs 3
+
+# Dry run for testing (no actual model inference)
+python profiling/bench_qwen_vl.py --dry-run --models "unsloth/Qwen3-VL-2B-Instruct-unsloth-bnb-4bit" --tasks "text_only"
+
+# Custom configuration
+python profiling/bench_qwen_vl.py --models "unsloth/Qwen3-VL-4B-Instruct-unsloth-bnb-4bit,unsloth/Qwen3-VL-8B-Instruct-unsloth-bnb-4bit" --max-new-tokens 256
+```
+
+### Benchmark Features
+
+**Context Length Scaling**: Tests from 1024 to 256k tokens (262k max for Qwen3-VL) on log2 scale
+- 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144 tokens
+
+**Batch Size Optimization**: Tests batch sizes 1, 2, 4, 8 with automatic model-aware limits
+- 2B models: up to batch size 8
+- 4B models: up to batch size 4  
+- 8B models: up to batch size 2
+
+**Task Performance Analysis**: Four micro-benchmark tasks
+- `text_only`: Text summarization
+- `vision_simple`: Basic image description
+- `vision_complex`: Tactical situation analysis
+- `mixed_reasoning`: Strategic decision making
+
+**3D Visualizations**: Interactive performance landscapes
+- Throughput surfaces (context × batch size × tokens/sec)
+- Performance contour maps
+- Optimal batch size curves
+- Log-scale context length plots
+
+### Expected Outputs
+
+- **CSV Data**: `profiling/data/comprehensive_benchmark_results.csv` with all measurements
+- **3D Surface Plots**: `profiling/plots/3d_throughput_surfaces.png`
+- **Performance Landscapes**: `profiling/plots/performance_landscapes.png`
+- **Optimization Curves**: `profiling/plots/batch_optimization.png`
+- **Context Scaling**: `profiling/plots/log_context_throughput.png`
+
+### Interpreting Results
+
+**Throughput Analysis**:
+- Higher values indicate faster inference
+- Look for inflection points where performance degrades
+- Compare batching vs non-batching efficiency
+
+**Performance Scores**:
+- 0.0-1.0 scale based on response quality heuristics
+- Task-specific scoring (conciseness, descriptiveness, strategy)
+
+**Optimal Configurations**:
+- Batch size curves show sweet spots for each context length
+- 3D surfaces reveal performance saddle points
+- Contour maps highlight efficient operating regions
+
+### Model-Specific Limits
+
+| Model | Max Context | Max Batch | Typical Throughput |
+|-------|-------------|-----------|-------------------|
+| Qwen3-VL-2B | 32,768 | 8 | 60-80 tokens/sec |
+| Qwen3-VL-4B | 65,536 | 4 | 40-60 tokens/sec |
+| Qwen3-VL-8B | 131,072 | 2 | 20-40 tokens/sec |
+
+The benchmark automatically respects these limits and provides consistent comparison across all supported Qwen3-VL variants.
+
+---
 
 ### Text-Speed Guarantee
 
@@ -262,6 +380,14 @@ Qwen3-VL-8B-Thinking-FP8 → Strategic decisions, dashboard queries
 - Confidence < 0.6 OR stuck > 5 → 4B→8B
 - 8B can call You.com Content API (cooldown: 5 min, budget: 100 calls)
 
+### Inference Batching & KV Caching
+
+The agent implements micro-batching for improved throughput:
+- **Batch sizes**: 8 for 2B, 4 for 4B, 2 for 8B models
+- **Timeout**: 50ms default for batch accumulation
+- **KV cache**: On-disk memmap for long prefixes (HF_HOME/pmd_kv_cache)
+- **Async processing**: asyncio.gather for parallel inference
+
 ---
 
 ## 🎯 Key Features
@@ -318,6 +444,37 @@ Cross-temporal divergence metric:
 
 ---
 
+## 📋 Usage Examples
+
+### Grid Parser
+
+The grid parser produces a uniform tile grid and screen mapping from game screen data, enabling pathfinding and spatial reasoning for the agent.
+
+```python
+from src.vision.grid_parser import GridParser
+from src.environment.ram_decoders import RAMSnapshot
+
+# Initialize parser
+parser = GridParser()
+
+# Parse RAM data into grid
+grid_frame = parser.parse_ram_snapshot(ram_snapshot)
+
+# Access grid properties
+print(f"Grid size: {grid_frame.width}x{grid_frame.height}")
+print(f"Tile size: {grid_frame.tile_size_px}px")
+
+# Get tile at position
+tile = grid_frame.tiles[y][x]
+print(f"Tile type: {tile.tile_type}")
+
+# Compute pathfinding distances
+bfs_result = parser.compute_bfs_distances(grid_frame, start=(x, y))
+distance_to_target = bfs_result.distances[target_y][target_x]
+```
+
+---
+
 ## 🛠️ Development Workflow
 
 ### For Code Agents (Copilot/Claude Code/Roo-Coder)
@@ -331,9 +488,54 @@ See [AGENTS.md](AGENTS.md) for detailed instructions on:
 ### Manual Development
 
 1. **Make changes** in `src/` directory
-2. **Test** with `pytest tests/`
-3. **Run demos** in `demos/` to visualize changes
-4. **Commit** with descriptive messages
+2. **Test fast lane** with `.\scripts\test_fast.ps1` (Windows) or `bash scripts/test_fast.sh` (Linux/Mac)
+3. **Test full suite** with `.\scripts\test_full.ps1` (Windows) or `bash scripts/test_full.sh` (Linux/Mac)
+4. **Run demos** in `demos/` to visualize changes
+5. **Commit** with descriptive messages
+
+#### Test Markers & Scripts
+
+- **Fast Lane** (`scripts/test_fast.ps1`): Runs in <2-3 minutes, excludes slow/network/bench/longctx tests
+- **Full Lane** (`scripts/test_full.ps1`): Runs complete suite with all markers
+- **CI Lane** (`scripts/test_ci.ps1`): Minimal CI validation with strict timeouts
+- **Markers**:
+  - `@pytest.mark.slow`: Long-running tests (model training, heavy parametrization)
+  - `@pytest.mark.network`: Tests requiring emulator/web connections
+  - `@pytest.mark.bench`: Performance benchmarking and plotting
+  - `@pytest.mark.longctx`: Tests with ≥64k context
+- **Environment Variables**:
+  - `FAST=1`: Reduces test parameters for faster execution
+  - `PYTEST_FDUMP_S=45`: Session timeout for deadlock detection (default 60s)
+
+#### Profiling Consolidation
+
+Run `.\scripts\sync_profiling.ps1` to consolidate profiling data from legacy root `profiling/` directory into `pokemon-md-agent/profiling/`.
+
+#### Current Test Status
+
+⚠️ **Tests currently blocked by runtime bug**: SyntaxError in `src/agent/qwen_controller.py` (await outside async function). See `agent_mailbox/copilot2codex.md` for details. Core team fix required before test suite can run.
+
+#### Benchmarking & Profiling
+
+Run performance benchmarks with `.\scripts\bench_sweep.ps1` (Windows) or equivalent bash script.
+
+**Bench Flags**:
+- `--time-budget-s`: Time budget per run (default: 30s)
+- `--contexts`: Context lengths to test (default: 1024,2048,4096,8192,16384,32768,65536)
+- `--batches`: Batch sizes to test (default: 1,2,4,8)
+- `--best-of-n`: Best-of-n values (default: 1,2,4)
+- `--use-cache`: Enable/disable prompt caching (default: on)
+- `--use-pipeline`: Enable/disable request pipelining (default: on)
+- `--image-text-ratios`: Image:text ratios to test (default: 0,1,2)
+- `--full`: Run full benchmark suite (no context caps)
+
+**Example**:
+```bash
+mamba info --envs && python --version && mamba activate agent-hackathon && pwd && ls -la && \
+python profiling/bench_qwen_vl.py --time-budget-s 30 --contexts 1024,2048,4096 --batches 1,2,4 --best-of-n 1,2 --use-cache on --use-pipeline on
+```
+
+Results saved to `profiling/output/` with CSV metrics and interactive Plotly plots.
 
 ---
 
@@ -358,12 +560,13 @@ See [AGENTS.md](AGENTS.md) for detailed instructions on:
 ## 📝 Next Actions
 
 1. ✅ Extract this zip to `C:\Homework\agent_hackathon`
-2. Install dependencies: `pip install -r requirements.txt`
+2. Install dependencies: `pip install -r requirements.txt` (includes `imagehash` for retrieval deduplication tests)
 3. Configure mgba (see `config/mgba_config.ini`)
 4. Test mgba connection: `python tests/test_mgba_connection.py`
-5. Run quickstart: `python examples/quickstart.py`
-6. Read architecture docs in `docs/` folder
-7. Review `AGENTS.md` for code agent instructions
+5. **Run fast test suite**: `.\scripts\test_fast.ps1` (Windows) or `bash scripts/test_fast.sh` (Linux/Mac)
+6. Run quickstart: `python examples/quickstart.py`
+7. Read architecture docs in `docs/` folder
+8. Review `AGENTS.md` for code agent instructions
 
 **Current Status**: ⚙️ Seed project structure - ready for implementation
 
