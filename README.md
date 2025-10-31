@@ -129,7 +129,19 @@ Multi-model Qwen3-VL agent with hierarchical RAG system, dynamic temporal resolu
 
 ## 📊 Dashboard & Monitoring
 
-The agent includes a comprehensive dashboard system for monitoring gameplay and retrieving external knowledge:
+The agent includes a comprehensive dashboard system for monitoring gameplay and retrieving external knowledge.
+
+### HF_HOME Path Sanitization
+
+**Critical Fix Applied**: All HF_HOME environment variable usages have been sanitized to handle quoted paths, normalize separators, and support user path expansion. This resolves model loading failures on Windows systems where HF_HOME may contain quotes or need path expansion.
+
+Applied sanitization template:
+- Strip surrounding quotes (`"`, `'`)
+- Expand user paths (`~` → actual home directory)
+- Normalize path separators for cross-platform compatibility
+- Added comprehensive test coverage in `test_path_sanitization.py`
+
+**Verification**: Model loading tested with real Qwen3-VL models from HuggingFace Hub, confirming proper cache directory resolution and tokenizer loading.
 
 ### Dashboard Features
 - **Live Updates**: Real-time trajectory logging and meta-view generation
@@ -138,6 +150,85 @@ The agent includes a comprehensive dashboard system for monitoring gameplay and 
 - **Build Budget**: Coalesces commits to ≤10/hour to avoid GitHub Actions limits
 - **LFS Avoidance**: Keeps artifacts under 8MB; no Git LFS unless required
 - **Resolution Modes**: 2× (480×320) default for dashboard, 1× (240×160) for Qwen-VL benchmarking
+
+---
+
+## 👁️ Vision Prompts & Game State Schema
+
+**Phase 1 Implementation** (Complete): Structured JSON schema for vision model outputs.
+
+### GameState Schema
+
+The agent uses a **Pydantic-validated GameState schema** for consistent vision model outputs:
+
+```python
+from src.models.game_state_schema import GameState, Entity, GameStateEnum
+
+# Models must return JSON matching this schema
+state = GameState(
+    player_pos=(12, 8),
+    player_hp=45,
+    floor=3,
+    state=GameStateEnum.EXPLORING,
+    enemies=[Entity(x=14, y=8, type="enemy", species="Geodude")],
+    items=[Entity(x=10, y=6, type="item", name="Apple")],
+    confidence=0.95,
+    threats=["Geodude approaching"],
+    opportunities=["Move up to dodge"]
+)
+```
+
+**Key Features:**
+- ✅ **51 unit tests** (1.28s runtime) covering validation, serialization, edge cases
+- ✅ **Type-safe coordinates** (0-indexed bounds checking, negative rejection)
+- ✅ **Confidence scoring** (0-1 range, quality metrics)
+- ✅ **JSON roundtrip** (validation + serialization)
+- ✅ **Few-shot examples** (3-5 predefined examples for in-context learning)
+
+### Quick Validation
+
+```bash
+# Activate environment
+mamba activate agent-hackathon
+
+# Run schema tests (51 tests)
+python -m pytest tests/test_game_state_schema.py tests/test_game_state_utils.py -v
+
+# Quick validation
+python scripts/test_vision_schema.py
+
+# (Windows) PowerShell validation script
+.\scripts\validate_vision_schema.ps1 -RunTests
+```
+
+### Utility Functions
+
+Located in `src/models/game_state_utils.py`:
+
+```python
+# Parse model output with validation
+state = parse_model_output(json_str, partial_ok=True, confidence_threshold=0.7)
+
+# Validate state quality
+report = validate_game_state(state)
+print(f"Quality: {report['quality_score']:.2f}")
+print(f"Warnings: {report['warnings']}")
+
+# Generate few-shot examples
+examples = generate_few_shot_examples(num_examples=3)
+
+# Format for agent decisions
+text = format_state_for_decision(state)
+```
+
+### Next Steps (Phases 2-5)
+
+1. **Phase 2**: System prompts for instruct/thinking variants
+2. **Phase 3**: Few-shot in-context examples
+3. **Phase 4**: Model selection strategy (2B/4B/8B by task)
+4. **Phase 5**: A/B testing + prompt optimization
+
+See [PROMPT_OPTIMIZATION_GUIDE.md](docs/PROMPT_OPTIMIZATION_GUIDE.md) for full 5-phase plan.
 
 ### Upload Modes
 1. **Git Push**: Direct push to `pages` branch (recommended for development)
