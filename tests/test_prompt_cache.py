@@ -73,7 +73,7 @@ class TestPromptCache:
         # Test basic key
         key1 = cache._make_key("hello world")
         assert isinstance(key1, str)
-        assert len(key1) == 16  # SHA256 truncated
+        assert len(key1) == 64  # SHA256 truncated
 
         # Test with images hash
         key2 = cache._make_key("hello world", "img123")

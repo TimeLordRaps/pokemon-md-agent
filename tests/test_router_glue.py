@@ -16,6 +16,7 @@ from src.orchestrator.router_glue import (
     UncertaintyResult,
     ModelSwitchReason,
     RouterGlueError,
+    to_model_payload,
 )
 from src.router.policy_v2 import PolicyV2, ModelSize, RoutingDecision
 from src.retrieval.stuckness_detector import StucknessAnalysis, StucknessStatus
@@ -39,7 +40,8 @@ class TestRouterGlue:
             selected_model=ModelSize.SIZE_4B,
             confidence_threshold_met=True,
             stuck_counter=0,
-            reasoning="Test decision"
+            reasoning="Test decision",
+            use_thinking=False
         )
         return policy
 
@@ -80,6 +82,29 @@ class TestRouterGlue:
         high_distances = [0.9, 0.95, 0.99]
         high_uncertainty = router_glue.compute_uncertainty_from_rag(high_distances)
         assert high_uncertainty > uncertainty
+
+    def test_execute_turn_loop_invokes_maintenance(self, policy_v2):
+        """Ensure maintenance daemon is stepped exactly once per turn."""
+        maintenance = Mock()
+        maintenance.step.return_value = None
+        router_glue = RouterGlue(
+            policy_v2=policy_v2,
+            uncertainty_threshold_low=0.55,
+            uncertainty_threshold_high=0.7,
+            stuck_threshold=5,
+            entropy_threshold=0.8,
+            maintenance_daemon=maintenance,
+        )
+
+        copilot_input = Mock()
+        copilot_input.retrieved_thumbnails = []
+
+        with patch("src.orchestrator.message_packager.pack_from_copilot", return_value=[]), \
+             patch.object(router_glue, "_generate_action", return_value="move_forward"):
+            action = router_glue.execute_turn_loop(copilot_input, perception_data={}, stuck_counter=0)
+
+        maintenance.step.assert_called_once()
+        assert action == "move_forward"
 
     def test_policy_thresholds_application(self, router_glue):
         """Test application of policy_v2 thresholds and hysteresis."""
@@ -244,6 +269,98 @@ class TestRouterGlueError:
         """Test RouterGlueError with cause."""
         cause = ValueError("Original error")
         error = RouterGlueError("Wrapped error", cause)
+
+class TestToModelPayload:
+    """Test to_model_payload function."""
+
+    def test_to_model_payload_basic_transformation(self):
+        """Test basic transformation from packaged blob to model payload format."""
+        blob = {
+            'system': 'You are an AI assistant.',
+            'plan': 'Plan to solve the problem.',
+            'act': 'Take action now.'
+        }
+
+        result = to_model_payload(blob)
+
+        assert result == blob  # Function currently returns the same dict
+        assert 'system' in result
+        assert 'plan' in result
+        assert 'act' in result
+        assert result['system'] == 'You are an AI assistant.'
+        assert result['plan'] == 'Plan to solve the problem.'
+        assert result['act'] == 'Take action now.'
+
+    def test_to_model_payload_with_package_triplet_format(self):
+        """Test transformation with typical package_triplet output format."""
+        blob = {
+            'system': 'System prompt with context.',
+            'plan': 'Multi-step plan for task execution.',
+            'act': 'Execute the next action based on perception.'
+        }
+
+        result = to_model_payload(blob)
+
+        # Verify it's pure format transformation - no routing logic
+        assert result == blob
+        # Ensure all expected keys are present and unchanged
+        assert set(result.keys()) == {'system', 'plan', 'act'}
+
+    def test_to_model_payload_empty_blob(self):
+        """Test transformation with empty blob."""
+        blob = {}
+
+        result = to_model_payload(blob)
+
+        assert result == blob
+        assert result == {}
+
+    def test_to_model_payload_preserves_extra_keys(self):
+        """Test that extra keys in blob are preserved (though not expected per spec)."""
+        blob = {
+            'system': 'System message.',
+            'plan': 'Plan message.',
+            'act': 'Act message.',
+            'extra_key': 'extra_value'  # This shouldn't happen per spec, but test robustness
+        }
+
+        result = to_model_payload(blob)
+
+        # Current implementation preserves all keys
+        assert result == blob
+        assert 'extra_key' in result
+
+    def test_to_model_payload_immutability(self):
+        """Test that function doesn't modify the input blob."""
+        original_blob = {
+            'system': 'Original system.',
+            'plan': 'Original plan.',
+            'act': 'Original act.'
+        }
+        blob_copy = original_blob.copy()
+
+        result = to_model_payload(original_blob)
+
+        # Input should remain unchanged
+        assert original_blob == blob_copy
+        # Result should be equivalent
+        assert result == original_blob
+
+    def test_to_model_payload_no_routing_logic(self):
+        """Test that function contains no routing logic - pure transformation."""
+        # This test verifies the function doesn't introduce routing decisions
+        # by checking it doesn't access any routing-related state or make decisions
+
+        blob1 = {'system': 'A', 'plan': 'B', 'act': 'C'}
+        blob2 = {'system': 'X', 'plan': 'Y', 'act': 'Z'}
+
+        result1 = to_model_payload(blob1)
+        result2 = to_model_payload(blob2)
+
+        assert result1 == blob1
+        assert result2 == blob2
+        # No side effects or routing decisions
+        assert result1 != result2
         # RouterGlueError doesn't set __cause__ in __init__, so this test is incorrect
         # Remove this test as it's testing implementation details not in the actual code
         pass

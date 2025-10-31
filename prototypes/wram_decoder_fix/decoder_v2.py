@@ -73,8 +73,25 @@ class WRAMDecoderV2:
         try:
             data = self.controller.peek(address, size)
             if data is None or len(data) != size:
-                self.logger.warning(f"Failed to read {size} bytes from 0x{address:08X}")
-                return None
+                if data is None:
+                    self.logger.warning(f"Failed to read {size} bytes from 0x{address:08X}")
+                    return None
+                if len(data) < size:
+                    self.logger.warning(
+                        "Short read from 0x%08X: expected %d bytes, got %d. Padding with zeros.",
+                        address,
+                        size,
+                        len(data),
+                    )
+                    data = data + b"\x00" * (size - len(data))
+                else:
+                    self.logger.debug(
+                        "Read %d bytes from 0x%08X exceeding expected %d; truncating.",
+                        len(data),
+                        address,
+                        size,
+                    )
+                    data = data[:size]
             return data
         except Exception as e:
             self.logger.error(f"Error reading {size} bytes from 0x{address:08X}: {e}")

@@ -42,7 +42,8 @@ class TestWRAMDecoderFirstMon:
 
     def test_decode_first_mon_success(self, decoder, mock_controller):
         """Test successful decoding of first monster."""
-        # Mock monster list pointer and count
+        # Use a distinct address for the monster struct
+        monster_struct_addr = 0x02005000
         monster_data = (
             b'\x01\x00'  # species_id = 1
             b'\x0A'      # level = 10
@@ -58,11 +59,16 @@ class TestWRAMDecoderFirstMon:
             b'\x00' * 28  # rest of struct
         )
 
-        mock_controller.peek.side_effect = [
-            b'\x39\x41\x00\x02',  # list_ptr = 0x02004139 (little-endian)
-            b'\x02',              # count = 2
-            monster_data,         # First monster struct (48 bytes)
-        ]
+        def peek_side_effect(address, size):
+            if address == 0x02004139 and size == 4:
+                return monster_struct_addr.to_bytes(4, 'little')  # pointer to monster struct
+            if address == 0x0200413D and size == 1:
+                return b'\x02'  # count
+            if address == monster_struct_addr and size == 48:
+                return monster_data
+            return None
+
+        mock_controller.peek.side_effect = peek_side_effect
 
         result = decoder.decode_first_mon()
 

@@ -17,6 +17,7 @@ from src.router.policy_v2 import PolicyV2, ModelSize, RoutingDecision
 
 if TYPE_CHECKING:
     from .message_packager import CopilotInput, Message
+    from src.retrieval.maint.daemon import TemporalSiloMaintenanceDaemon, MaintenanceMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,7 @@ class RouterGlue:
         entropy_threshold: float = 0.8,
         prefetch_callback: Optional[Callable[[ModelSize], None]] = None,
         hotswap_callback: Optional[Callable[[ModelSize], None]] = None,
+        maintenance_daemon: Optional["TemporalSiloMaintenanceDaemon"] = None,
     ):
         """
         Initialize router glue.
@@ -97,6 +99,7 @@ class RouterGlue:
         self.entropy_threshold = entropy_threshold
         self.prefetch_callback = prefetch_callback
         self.hotswap_callback = hotswap_callback
+        self._maintenance_daemon = maintenance_daemon
 
         # Async executor for prefetch operations
         self.executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="router_prefetch")
@@ -109,6 +112,12 @@ class RouterGlue:
             stuck_threshold,
             entropy_threshold
         )
+
+    def attach_maintenance_daemon(
+        self, daemon: "TemporalSiloMaintenanceDaemon"
+    ) -> None:
+        """Attach or replace the maintenance daemon."""
+        self._maintenance_daemon = daemon
 
     def compute_uncertainty(self, perception_data: Dict[str, Any]) -> UncertaintyResult:
         """
@@ -370,8 +379,15 @@ class RouterGlue:
             reasoning
         )
 
+        # Determine use_thinking based on uncertainty
+        use_thinking = False
+        if perception_data:
+            uncertainty_result = self.compute_uncertainty(perception_data)
+            use_thinking = uncertainty_result.should_switch_model and uncertainty_result.recommended_model == final_model
+
         return RoutingDecision(
             selected_model=final_model,
+            use_thinking=use_thinking,
             confidence_threshold_met=base_decision.confidence_threshold_met,
             stuck_counter=stuck_counter,
             reasoning=reasoning,
@@ -481,6 +497,7 @@ class RouterGlue:
             logger.info("Generated action: %s", action_string)
 
             # Step 5: Act - return action string only (env executes)
+            self._run_maintenance_cycle()
             return action_string
 
         except Exception as e:
@@ -516,6 +533,47 @@ class RouterGlue:
                 return "wait"
 
         return "wait"  # Default action
+
+    def _run_maintenance_cycle(self) -> None:
+        """Invoke temporal silo maintenance if a daemon is attached."""
+        if self._maintenance_daemon is None:
+            return
+
+        try:
+            metrics = self._maintenance_daemon.step()
+            if metrics is None:
+                return
+
+            total_compact = sum(metrics.total_removed_compaction.values())
+            total_expire = sum(metrics.total_removed_retention.values())
+
+            if total_compact or total_expire:
+                logger.info(
+                    "Temporal maintenance removed entries (compact=%d, expire=%d)",
+                    total_compact,
+                    total_expire,
+                )
+            else:
+                logger.debug("Temporal maintenance cycle completed with no removals")
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.warning("Maintenance daemon step failed: %s", exc)
+
+
+def to_model_payload(blob: dict) -> dict:
+    """
+    Transform packaged blob into model payload format.
+
+    Takes the dict from package_triplet and transforms it into the format
+    expected by the model payload, which means wrapping it or adjusting keys
+    as needed for the router. Pure format transformation with no routing logic.
+
+    Args:
+        blob: Dict with 'system', 'plan', 'act' keys from package_triplet
+
+    Returns:
+        Dict in model payload format
+    """
+    return dict(blob)
 
     def get_stats(self) -> Dict[str, Any]:
         """

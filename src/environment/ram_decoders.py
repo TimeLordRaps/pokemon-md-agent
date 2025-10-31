@@ -81,6 +81,15 @@ class RAMSnapshot:
     timestamp: float
 
 
+@dataclass(frozen=True)
+class StructFieldSpec:
+    """Description of a packed struct field."""
+    name: str
+    offset: int
+    size: int
+    field_type: str
+
+
 class PMDRedDecoder:
     """Decoder for PMD Red Rescue Team RAM data."""
 
@@ -90,6 +99,17 @@ class PMDRedDecoder:
         """Initialize decoder with address configuration."""
         validate_rom_sha1(self.ROM_SHA1)
         self.addresses = addresses_config
+        entities_cfg = self.addresses["entities"]
+        self._monster_struct_size: int = entities_cfg["monster_struct_size"]["value"]
+        self._monster_field_specs: Dict[str, StructFieldSpec] = {
+            name: StructFieldSpec(
+                name=name,
+                offset=field_cfg["offset"],
+                size=field_cfg["size"],
+                field_type=field_cfg["type"],
+            )
+            for name, field_cfg in entities_cfg["monster_fields"].items()
+        }
 
     def decode_uint8(self, data: bytes, offset: int) -> int:
         """Decode uint8 from data at offset."""
@@ -167,31 +187,74 @@ class PMDRedDecoder:
             "stairs_y": self.decode_uint8(data, base["stairs_y"]["address"])
         }
 
+    def _unpack_struct_field(self, buffer: memoryview, spec: StructFieldSpec) -> Any:
+        """Decode a field from a contiguous struct buffer."""
+        end_offset = spec.offset + spec.size
+        if end_offset > len(buffer):
+            raise ValueError(f"Field {spec.name} exceeds struct bounds")
+
+        field_type = spec.field_type
+        if field_type in {"uint8", "bitfield"}:
+            value = struct.unpack_from('<B', buffer, spec.offset)[0]
+        elif field_type == "bool":
+            value = struct.unpack_from('<B', buffer, spec.offset)[0]
+            return value != 0
+        elif field_type == "uint16":
+            value = struct.unpack_from('<H', buffer, spec.offset)[0]
+        elif field_type == "uint32":
+            value = struct.unpack_from('<I', buffer, spec.offset)[0]
+        elif field_type == "int8":
+            value = struct.unpack_from('<b', buffer, spec.offset)[0]
+        elif field_type == "int16":
+            value = struct.unpack_from('<h', buffer, spec.offset)[0]
+        elif field_type == "int32":
+            value = struct.unpack_from('<i', buffer, spec.offset)[0]
+        else:
+            # Return raw bytes for unsupported types
+            return bytes(buffer[spec.offset:end_offset])
+
+        return value
+
+    def _decode_monster_struct(self, struct_bytes: bytes) -> Dict[str, Any]:
+        """Decode a contiguous monster struct into a dictionary."""
+        buffer = memoryview(struct_bytes)
+        decoded: Dict[str, Any] = {}
+
+        for name, spec in self._monster_field_specs.items():
+            try:
+                decoded[name] = self._unpack_struct_field(buffer, spec)
+            except (ValueError, struct.error):
+                decoded[name] = None
+
+        return decoded
+
     def decode_monsters(self, data: bytes) -> List[Dict[str, Any]]:
         """Decode monster list from RAM data."""
         entities = self.addresses["entities"]
-        monster_struct_size = entities["monster_struct_size"]["value"]
-
         count = self.decode_uint8(data, entities["monster_count"]["address"])
         ptr = self.decode_uint32(data, entities["monster_list_ptr"]["address"])
 
         monsters = []
-        for i in range(min(count, entities["monster_count"]["max"])):
-            offset = ptr + (i * monster_struct_size)
-            fields = entities["monster_fields"]
+        if ptr <= 0 or count == 0:
+            return monsters
 
-            monster = {
-                "species_id": self.decode_uint16(data, offset + fields["species_id"]["offset"]),
-                "level": self.decode_uint8(data, offset + fields["level"]["offset"]),
-                "hp_current": self.decode_uint16(data, offset + fields["hp_current"]["offset"]),
-                "hp_max": self.decode_uint16(data, offset + fields["hp_max"]["offset"]),
-                "status": self.decode_uint8(data, offset + fields["status"]["offset"]),
-                "affiliation": self.decode_uint8(data, offset + fields["affiliation"]["offset"]),
-                "tile_x": self.decode_uint8(data, offset + fields["tile_x"]["offset"]),
-                "tile_y": self.decode_uint8(data, offset + fields["tile_y"]["offset"]),
-                "direction": self.decode_uint8(data, offset + fields["direction"]["offset"]),
-                "visible": self.decode_bool(data, offset + fields["visible"]["offset"])
-            }
+        max_monsters = min(count, entities["monster_count"]["max"])
+        struct_size = self._monster_struct_size
+        data_len = len(data)
+
+        for i in range(max_monsters):
+            struct_offset = ptr + (i * struct_size)
+            struct_end = struct_offset + struct_size
+
+            if struct_offset < 0 or struct_end > data_len:
+                # Refuse partial buffers or invalid pointers
+                break
+
+            struct_bytes = data[struct_offset:struct_end]
+            if len(struct_bytes) != struct_size:
+                break
+
+            monster = self._decode_monster_struct(struct_bytes)
             monsters.append(monster)
 
         return monsters

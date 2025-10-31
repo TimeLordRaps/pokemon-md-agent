@@ -8,6 +8,8 @@ import asyncio
 import json
 import logging
 import time
+import random
+import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -19,6 +21,97 @@ import hashlib
 import requests
 
 logger = logging.getLogger(__name__)
+
+
+async def retry_request(
+    request_func,
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+    max_delay: float = 60.0,
+    backoff_factor: float = 2.0,
+    jitter: bool = True,
+    *args,
+    **kwargs
+) -> requests.Response:
+    """Retry HTTP requests with exponential backoff and Retry-After header respect.
+
+    Args:
+        request_func: Function that makes the HTTP request (e.g., requests.get, requests.put)
+        max_retries: Maximum number of retry attempts
+        base_delay: Base delay in seconds for exponential backoff
+        max_delay: Maximum delay between retries
+        backoff_factor: Factor to multiply delay by on each retry
+        jitter: Add random jitter to delay to avoid thundering herd
+        *args, **kwargs: Arguments to pass to request_func
+
+    Returns:
+        requests.Response: The response from the successful request
+
+    Raises:
+        requests.RequestException: If all retries are exhausted
+    """
+    last_exception = None
+
+    for attempt in range(max_retries + 1):
+        try:
+            response = request_func(*args, **kwargs)
+
+            # Check for rate limiting (429) or server errors
+            if response.status_code == 429:
+                retry_after = response.headers.get('Retry-After')
+                if retry_after:
+                    try:
+                        delay = float(retry_after)
+                        logger.warning(f"Rate limited (429), waiting {delay}s as per Retry-After header")
+                        await asyncio.sleep(delay)
+                        continue
+                    except ValueError:
+                        pass  # Invalid Retry-After header, fall back to exponential backoff
+
+                # Exponential backoff for 429 without Retry-After
+                delay = min(base_delay * (backoff_factor ** attempt), max_delay)
+                if jitter:
+                    delay *= (0.5 + random.random() * 0.5)  # 50-100% of calculated delay
+
+                logger.warning(f"Rate limited (429), attempt {attempt + 1}/{max_retries + 1}, waiting {delay:.2f}s")
+                await asyncio.sleep(delay)
+                continue
+
+            elif response.status_code >= 500:
+                # Retry on server errors
+                if attempt < max_retries:
+                    delay = min(base_delay * (backoff_factor ** attempt), max_delay)
+                    if jitter:
+                        delay *= (0.5 + random.random() * 0.5)
+
+                    logger.warning(f"Server error {response.status_code}, attempt {attempt + 1}/{max_retries + 1}, waiting {delay:.2f}s")
+                    await asyncio.sleep(delay)
+                    continue
+
+            # Success or client error (4xx except 429) - return response
+            return response
+
+        except requests.RequestException as e:
+            last_exception = e
+            if attempt < max_retries:
+                delay = min(base_delay * (backoff_factor ** attempt), max_delay)
+                if jitter:
+                    delay *= (0.5 + random.random() * 0.5)
+
+                logger.warning(f"Request failed (attempt {attempt + 1}/{max_retries + 1}): {e}, waiting {delay:.2f}s")
+                await asyncio.sleep(delay)
+                continue
+
+    # All retries exhausted
+    if last_exception:
+        raise last_exception
+    else:
+        raise requests.RequestException(f"Request failed after {max_retries + 1} attempts")
+
+
+def is_dry_run() -> bool:
+    """Check if DRY_RUN environment variable is set to '1'."""
+    return os.getenv('DRY_RUN') == '1'
 
 
 class UploadMode(Enum):
@@ -554,7 +647,10 @@ class DashboardUploader:
     async def _get_file_sha(self, file_path: str, headers: dict, base_url: str) -> Optional[str]:
         """Get SHA of existing file."""
         url = f'{base_url}/{file_path}'
-        response = requests.get(url, headers=headers)
+        if is_dry_run():
+            logger.info(f"[DRY RUN] Would check SHA for {file_path}")
+            return None  # Assume new file in dry run
+        response = await retry_request(requests.get, url=url, headers=headers)
         if response.status_code == 200:
             return response.json()['sha']
         return None

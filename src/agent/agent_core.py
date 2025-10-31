@@ -23,6 +23,51 @@ from src.environment.ram_decoders import RAMSnapshot, PlayerState, MapData, Part
 logger = logging.getLogger(__name__)
 
 
+class AgentConfig:
+    """Configuration for PokemonMDAgent behavior."""
+ 
+    def __init__(
+        self,
+        screenshot_interval: float = 1.0,
+        memory_poll_interval: float = 0.1,
+        decision_interval: float = 0.5,
+        max_runtime_hours: float = 1.0,
+        enable_4up_capture: bool = True,
+        enable_trajectory_logging: bool = True,
+        enable_stuck_detection: bool = True,
+        enable_skill_triggers: bool = False,
+        skill_belly_threshold: float = 0.3,
+        skill_hp_threshold: float = 0.25,
+        skill_backoff_seconds: float = 5.0
+    ):
+        """Initialize agent configuration.
+ 
+        Args:
+            screenshot_interval: Seconds between screenshots
+            memory_poll_interval: Seconds between memory polls
+            decision_interval: Seconds between decisions
+            max_runtime_hours: Maximum runtime in hours
+            enable_4up_capture: Enable 4-up screenshot capture
+            enable_trajectory_logging: Enable trajectory logging
+            enable_stuck_detection: Enable stuckness detection
+            enable_skill_triggers: Enable automatic skill triggers
+            skill_belly_threshold: Belly threshold for triggers (0-1)
+            skill_hp_threshold: HP threshold for triggers (0-1)
+            skill_backoff_seconds: Seconds to wait after skill execution
+        """
+        self.screenshot_interval = screenshot_interval
+        self.memory_poll_interval = memory_poll_interval
+        self.decision_interval = decision_interval
+        self.max_runtime_hours = max_runtime_hours
+        self.enable_4up_capture = enable_4up_capture
+        self.enable_trajectory_logging = enable_trajectory_logging
+        self.enable_stuck_detection = enable_stuck_detection
+        self.enable_skill_triggers = enable_skill_triggers
+        self.skill_belly_threshold = skill_belly_threshold
+        self.skill_hp_threshold = skill_hp_threshold
+        self.skill_backoff_seconds = skill_backoff_seconds
+
+
 class AgentCore:
     """Main agent loop: perceive → reason → act."""
 
@@ -458,4 +503,198 @@ Example: MOVE_UP | Stairs likely to the north
                 # Continue on other errors (don't crash the demo)
 
         logger.info("Agent loop complete")
+
+
+class PokemonMDAgent(AgentCore):
+    """Pokemon MD Agent - orchestrates all components for autonomous gameplay."""
+ 
+    def __init__(
+        self,
+        rom_path: Path,
+        save_dir: Path,
+        config: AgentConfig,
+        test_mode: bool = False
+    ):
+        """Initialize PokemonMDAgent.
+ 
+        Args:
+            rom_path: Path to the ROM file
+            save_dir: Directory for save states
+            config: Agent configuration
+            test_mode: Enable test mode with mock components
+        """
+        # Initialize parent with default objective
+        super().__init__(
+            objective="Autonomous Pokemon MD gameplay",
+            test_mode=test_mode,
+            enable_retrieval=config.enable_trajectory_logging
+        )
+ 
+        self.rom_path = rom_path
+        self.save_dir = save_dir
+        self.config = config
+        self.running = False
+        self._stop_event = None
+ 
+        # Set up save directory
+        self.save_dir.mkdir(parents=True, exist_ok=True)
+ 
+        logger.info(
+            f"PokemonMDAgent initialized: ROM={rom_path.name}, "
+            f"runtime={config.max_runtime_hours}h, "
+            f"stuck_detection={config.enable_stuck_detection}"
+        )
+ 
+    async def _initialize(self) -> None:
+        """Initialize agent components (async version)."""
+        logger.info("Initializing PokemonMDAgent...")
+ 
+        # Connect to mGBA
+        if not self.mgba.connect_with_retry(max_retries=3):
+            raise RuntimeError("Failed to connect to mGBA")
+ 
+        logger.info("Connected to mGBA")
+ 
+        # Load save state
+        self.mgba.autoload_save()
+        logger.info("Loaded save state")
+ 
+        # Initialize async components
+        await self.qwen.initialize_async()
+        logger.info("Async components initialized")
+ 
+    async def _gather_decision_context(self) -> dict:
+        """Gather context for decision making."""
+        return self.perceive()
+ 
+    async def _execute_decision(self, decision: dict) -> None:
+        """Execute a decision.
+ 
+        Args:
+            decision: Decision dict with action and parameters
+        """
+        action = decision.get("action")
+ 
+        if action == "move":
+            direction = decision.get("direction")
+            if direction:
+                self.mgba.button_tap(direction.upper())
+ 
+        elif action == "use_item":
+            # Simplified item usage
+            self.mgba.button_tap("A")  # Open menu
+            await asyncio.sleep(0.5)
+            self.mgba.button_tap("B")  # Cancel for now
+ 
+        elif action == "interact":
+            self.mgba.button_tap("A")  # Interact
+ 
+        logger.info(f"Executed decision: {decision}")
+ 
+    async def _cleanup(self) -> None:
+        """Clean up agent resources."""
+        logger.info("Cleaning up agent...")
+ 
+        # Stop any running processes
+        if self._stop_event:
+             self._stop_event.set()
+ 
+        # Disconnect from mGBA
+        self.mgba.disconnect()
+ 
+        # Clean up async components
+        if hasattr(self.qwen, 'cleanup'):
+            await self.qwen.cleanup()
+ 
+        logger.info("Agent cleanup complete")
+ 
+    def stop(self) -> None:
+        """Stop the agent."""
+        self.running = False
+        if self._stop_event:
+            self._stop_event.set()
+ 
+    async def run(self) -> None:
+        """Main agent run loop."""
+        self.running = True
+        self._stop_event = asyncio.Event()
+ 
+        try:
+            await self._initialize()
+ 
+            logger.info("Starting agent run loop...")
+ 
+            while self.running and not self._stop_event.is_set():
+                try:
+                    # Gather context
+                    context = await self._gather_decision_context()
+ 
+                    # Make decision
+                    decision = await self.reason(context)
+ 
+                    # Execute decision
+                    await self._execute_decision(decision)
+ 
+                    # Check for skill triggers
+                    if self.config.enable_skill_triggers and 'ram' in context:
+                        await self._check_and_execute_skills(context['ram'])
+ 
+                    # Brief pause
+                    await asyncio.sleep(self.config.decision_interval)
+ 
+                except KeyboardInterrupt:
+                    logger.info("Agent interrupted by user")
+                    break
+                except Exception as e:
+                    logger.error(f"Error in agent loop: {e}")
+                    # Try to continue
+                    await asyncio.sleep(1.0)
+ 
+        finally:
+            await self._cleanup()
+ 
+    async def _check_and_execute_skills(self, ram_state: dict) -> None:
+        """Check for skill trigger conditions and execute if needed.
+ 
+        Args:
+            ram_state: RAM state from perception
+        """
+        # Simplified trigger check - in real implementation would decode actual party status
+        try:
+            # Mock party status for testing
+            party_status = ram_state.get('party_status', {})
+            if party_status:
+                self._check_skill_triggers(party_status)
+        except Exception as e:
+            logger.warning(f"Skill trigger check failed: {e}")
+ 
+    def _check_skill_triggers(self, party_status: dict) -> bool:
+        """Check if skill triggers should activate.
+ 
+        Args:
+            party_status: Party status data from RAM
+ 
+        Returns:
+            True if trigger should activate
+        """
+        # Mock implementation for testing
+        leader = party_status.get('leader', {})
+        hp = leader.get('hp', 100)
+        hp_max = leader.get('hp_max', 100)
+        belly = leader.get('belly', 100)
+ 
+        # Calculate percentages
+        hp_percent = hp / hp_max if hp_max > 0 else 1.0
+        belly_percent = belly / 200.0 if belly > 0 else 1.0  # Assume max belly is 200
+ 
+        # Check thresholds
+        if hp_percent < self.config.skill_hp_threshold:
+            logger.info(f"HP trigger: {hp_percent:.1%} < {self.config.skill_hp_threshold:.1%}")
+            return True
+ 
+        if belly_percent < self.config.skill_belly_threshold:
+            logger.info(f"Belly trigger: {belly_percent:.1%} < {self.config.skill_belly_threshold:.1%}")
+            return True
+ 
+        return False
 

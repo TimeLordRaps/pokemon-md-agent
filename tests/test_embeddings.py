@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 
 from src.embeddings.extractor import QwenEmbeddingExtractor, EmbeddingMode
 from src.embeddings.temporal_silo import TemporalSiloManager, SiloConfig
+from src.embeddings.vector_store import VectorStore
 
 
 class TestQwenEmbeddingExtractor:
@@ -196,6 +197,42 @@ class TestTemporalSiloManager:
 
         # Should only keep most recent
         assert len(silo.entries) <= 2
+
+
+def test_vector_store_stats_tracks_counts_and_bytes():
+    """Stats expose per-silo counts and byte footprint."""
+    store = VectorStore(backend="memory", embedding_dimension=4)
+    embedding = np.ones(4, dtype=np.float32)
+
+    store.add_entry(
+        entry_id="entry_A",
+        embedding=embedding,
+        metadata={"floor": 1},
+        silo_id="temporal_1frame",
+    )
+    store.add_entry(
+        entry_id="entry_B",
+        embedding=embedding,
+        metadata={"floor": 2},
+        silo_id="temporal_1frame",
+    )
+    store.add_entry(
+        entry_id="entry_C",
+        embedding=embedding,
+        metadata={"floor": 3},
+        silo_id="temporal_2frame",
+    )
+
+    stats = store.stats()
+    assert stats["total_entries"] == 3
+    assert stats["per_silo_counts"]["temporal_1frame"] == 2
+    assert stats["per_silo_counts"]["temporal_2frame"] == 1
+    assert stats["total_bytes"] == 3 * embedding.nbytes
+
+    store.clear()
+    cleared = store.stats()
+    assert cleared["total_entries"] == 0
+    assert cleared["total_bytes"] == 0
 
 
 if __name__ == "__main__":

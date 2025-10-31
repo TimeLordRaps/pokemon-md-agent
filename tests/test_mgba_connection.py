@@ -32,19 +32,25 @@ def test_mgba_controller_initialization(connected_mgba_controller: MGBAControlle
 
 @pytest.mark.integration
 @pytest.mark.live_emulator
-@pytest.mark.ram_test
+@pytest.mark.network
+@pytest.mark.timeout(15)  # 15s timeout for live emulator test
 def test_smoke_mode_connection(tmp_path: Path):
     """Validate smoke-mode connection uses fast timeouts but still reaches the emulator."""
-    controller = MGBAController(
-        host="localhost",
-        port=8888,
-        timeout=2.0,
-        cache_dir=tmp_path,
-        smoke_mode=True,
-        auto_reconnect=False,
-    )
-
+    import socket as socket_module
+    original_timeout = socket_module.getdefaulttimeout()
+    socket_module.setdefaulttimeout(5.0)
+    
+    controller = None
     try:
+        controller = MGBAController(
+            host="localhost",
+            port=8888,
+            timeout=2.0,
+            cache_dir=tmp_path,
+            smoke_mode=True,
+            auto_reconnect=False,
+        )
+
         if not controller.connect():
             pytest.skip("mGBA emulator not reachable - ensure emulator is running with Lua socket server")
 
@@ -53,18 +59,26 @@ def test_smoke_mode_connection(tmp_path: Path):
     except ConnectionError:
         pytest.skip("mGBA emulator not reachable - connection failed")
     finally:
-        controller.disconnect()
+        socket_module.setdefaulttimeout(original_timeout)
+        if controller and controller.is_connected():
+            controller.disconnect()
 
 
 @pytest.mark.integration
 @pytest.mark.live_emulator
-@pytest.mark.ram_test
+@pytest.mark.network
+@pytest.mark.timeout(15)  # 15s timeout for live emulator test
 def test_grab_frame_480x320_no_rescaling(tmp_path: Path):
     """Grab a real frame and ensure the capture dimensions match the requested scale."""
-    video_config = VideoConfig(scale=2)
-    controller = MGBAController(video_config=video_config, cache_dir=tmp_path)
-
+    import socket as socket_module
+    original_timeout = socket_module.getdefaulttimeout()
+    socket_module.setdefaulttimeout(5.0)
+    
+    controller = None
     try:
+        video_config = VideoConfig(scale=2)
+        controller = MGBAController(video_config=video_config, cache_dir=tmp_path)
+
         if not controller.connect():
             pytest.skip("mGBA emulator not reachable - ensure emulator is running with Lua socket server")
 
@@ -82,16 +96,23 @@ def test_grab_frame_480x320_no_rescaling(tmp_path: Path):
     except ConnectionError:
         pytest.skip("mGBA emulator not reachable - connection failed")
     finally:
-        controller.disconnect()
+        socket_module.setdefaulttimeout(original_timeout)
+        if controller and controller.is_connected():
+            controller.disconnect()
 
 
 # New tests for screenshot and socket fixes
 
 def test_screenshot_windows_locking(tmp_path: Path):
     """Test screenshot capture with simulated Windows file locking."""
-    controller = MGBAController(cache_dir=tmp_path)
+    import socket as socket_module
+    original_timeout = socket_module.getdefaulttimeout()
+    socket_module.setdefaulttimeout(5.0)
     
+    controller = None
     try:
+        controller = MGBAController(cache_dir=tmp_path)
+        
         if not controller.connect():
             pytest.skip("mGBA emulator not reachable - ensure emulator is running with Lua socket server")
 
@@ -107,14 +128,21 @@ def test_screenshot_windows_locking(tmp_path: Path):
     except ConnectionError:
         pytest.skip("mGBA emulator not reachable - connection failed")
     finally:
-        controller.disconnect()
+        socket_module.setdefaulttimeout(original_timeout)
+        if controller and controller.is_connected():
+            controller.disconnect()
 
 
 def test_screenshot_retry_exhaustion(tmp_path: Path):
     """Test that retry logic eventually fails if file never appears."""
-    controller = MGBAController(cache_dir=tmp_path)
+    import socket as socket_module
+    original_timeout = socket_module.getdefaulttimeout()
+    socket_module.setdefaulttimeout(5.0)
     
+    controller = None
     try:
+        controller = MGBAController(cache_dir=tmp_path)
+        
         if not controller.connect():
             pytest.skip("mGBA emulator not reachable - ensure emulator is running with Lua socket server")
 
@@ -126,28 +154,45 @@ def test_screenshot_retry_exhaustion(tmp_path: Path):
     except ConnectionError:
         pytest.skip("mGBA emulator not reachable - connection failed")
     finally:
-        controller.disconnect()
+        socket_module.setdefaulttimeout(original_timeout)
+        if controller and controller.is_connected():
+            controller.disconnect()
 
 
 def test_reconnect_multiple_times(tmp_path: Path):
     """Test that controller can connect/disconnect multiple times."""
-    controller = MGBAController(cache_dir=tmp_path)
+    import socket as socket_module
+    original_timeout = socket_module.getdefaulttimeout()
+    socket_module.setdefaulttimeout(5.0)
     
-    for i in range(3):  # Reduced from 5 to 3 for faster testing
-        # Should not raise on any iteration
-        if controller.connect():
-            assert controller.is_connected()
+    controller = None
+    try:
+        controller = MGBAController(cache_dir=tmp_path)
+        
+        for i in range(3):  # Reduced from 5 to 3 for faster testing
+            # Should not raise on any iteration
+            if controller.connect():
+                assert controller.is_connected()
+                controller.disconnect()
+                assert not controller.is_connected()
+            else:
+                pytest.skip("mGBA emulator not reachable - connection failed")
+    finally:
+        socket_module.setdefaulttimeout(original_timeout)
+        if controller and controller.is_connected():
             controller.disconnect()
-            assert not controller.is_connected()
-        else:
-            pytest.skip("mGBA emulator not reachable - connection failed")
 
 
 def test_send_command_after_disconnect(tmp_path: Path):
     """Test that sending command after disconnect raises clear error."""
-    controller = MGBAController(cache_dir=tmp_path)
+    import socket as socket_module
+    original_timeout = socket_module.getdefaulttimeout()
+    socket_module.setdefaulttimeout(5.0)
     
+    controller = None
     try:
+        controller = MGBAController(cache_dir=tmp_path)
+        
         if not controller.connect():
             pytest.skip("mGBA emulator not reachable - ensure emulator is running with Lua socket server")
 
@@ -158,3 +203,7 @@ def test_send_command_after_disconnect(tmp_path: Path):
             controller.send_command("core.platform")
     except ConnectionError:
         pytest.skip("mGBA emulator not reachable - connection failed")
+    finally:
+        socket_module.setdefaulttimeout(original_timeout)
+        if controller and controller.is_connected():
+            controller.disconnect()

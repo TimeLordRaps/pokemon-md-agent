@@ -306,3 +306,23 @@ def pack(step_state: Dict[str, Any], policy_hint: str, model_size: str = '4B') -
     logger.info("Packed messages: episodic_map=%d images, retrieval=%d images, now=%d images",
                 len(episodic_map_msg.images), len(retrieval_msg.images), len(now_msg.images))
     return messages
+
+
+def package_triplet(system: str, plan: str, act: str) -> dict:
+    """Package three strings into a dict with stable key order."""
+    return {
+        'system': system,
+        'plan': plan,
+        'act': act
+    }
+
+
+def unpack_triplet(blob: dict) -> tuple[str, str, str]:
+    """Unpack dict to tuple, validating schema and raising ValueError on drift."""
+    required_keys = {'system', 'plan', 'act'}
+    if set(blob.keys()) != required_keys:
+        raise ValueError(f"Invalid keys: expected {required_keys}, got {set(blob.keys())}")
+    for key in required_keys:
+        if not isinstance(blob[key], str):
+            raise ValueError(f"Value for '{key}' must be str, got {type(blob[key])}")
+    return blob['system'], blob['plan'], blob['act']

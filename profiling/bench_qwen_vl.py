@@ -52,6 +52,14 @@ except ImportError:
     build_guidance_schema = None
     SKILL_SCHEMA = None
 
+# Import QwenController for benchmarking
+try:
+    from src.agent.qwen_controller import QwenController
+    QWEN_AVAILABLE = True
+except ImportError:
+    QWEN_AVAILABLE = False
+    QwenController = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -249,7 +257,21 @@ class ComprehensiveQwenVLBenchmark:
             )
             self.tinywoods_dataset = None
 
-        self.controller = QwenController()
+        # Initialize QwenController if available
+        if not QWEN_AVAILABLE:
+            logger.warning("QwenController not available; benchmarks will use dry-run mode only.")
+            self.controller = None
+        else:
+            try:
+                self.controller = QwenController()
+            except Exception as exc:  # pragma: no cover - defensive logging
+                logger.warning(
+                    "Failed to initialize QwenController (%s). "
+                    "Benchmarks will use dry-run mode only.",
+                    exc,
+                )
+                self.controller = None
+
         self.results = []
 
     def generate_dummy_image(self, width: int = 480, height: int = 320) -> Image.Image:
@@ -360,6 +382,24 @@ class ComprehensiveQwenVLBenchmark:
 
         if dry_run:
             # Return mock results for dry run
+            return {
+                "model": model_name,
+                "context_length": context_length,
+                "batch_size": batch_size,
+                "task": task,
+                "vision": use_vision,
+                "latency_mean": 1.5 + random.random(),
+                "latency_std": 0.1,
+                "throughput_mean": 50 + random.random() * 20,
+                "throughput_std": 5.0,
+                "performance_mean": 0.7 + random.random() * 0.3,
+                "performance_std": 0.05,
+                "runs": num_runs,
+            }
+
+        # Force dry run if controller is not available
+        if self.controller is None:
+            logger.warning("QwenController not available; using dry-run mode for this configuration.")
             return {
                 "model": model_name,
                 "context_length": context_length,
@@ -1117,14 +1157,6 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--best-of-n",
-        type=str,
-        choices=["1", "2", "4", "8"],
-        default="1",
-        help="Best-of-n sampling (default: 1)"
-    )
-
-    parser.add_argument(
         "--image-text-ratios",
         type=str,
         default="0,1,2",
@@ -1260,6 +1292,28 @@ def build_context_grid(min_ctx: int = 1024, multiplier: float = 2.0, max_ctx: in
         contexts.append(current)
         current = int(current * multiplier)
     return contexts
+
+
+def load_models() -> List[str]:
+    """Load model list from configs/qwen_vl_models.txt armada list."""
+    models_file = Path(__file__).parent.parent / "configs" / "qwen_vl_models.txt"
+    if not models_file.exists():
+        logger.warning(f"Model list file {models_file} not found; using default models.")
+        return ComprehensiveQwenVLBenchmark.SUPPORTED_MODELS
+
+    try:
+        with open(models_file, 'r', encoding='utf-8') as f:
+            models = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+        if not models:
+            logger.warning(f"No models found in {models_file}; using default models.")
+            return ComprehensiveQwenVLBenchmark.SUPPORTED_MODELS
+        logger.info(f"Loaded {len(models)} models from {models_file}")
+        return models
+    except Exception as exc:
+        logger.warning(f"Failed to load models from {models_file} ({exc}); using default models.")
+        return ComprehensiveQwenVLBenchmark.SUPPORTED_MODELS
+
+
 def main():
     """CLI entry point."""
     args = parse_args()
@@ -1280,7 +1334,7 @@ def main():
 
     # Parse models
     if args.models == "all":
-        models = ComprehensiveQwenVLBenchmark.SUPPORTED_MODELS
+        models = load_models()
     else:
         models = [m.strip() for m in args.models.split(",")]
 

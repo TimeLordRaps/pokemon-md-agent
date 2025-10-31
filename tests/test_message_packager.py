@@ -18,7 +18,9 @@ from src.orchestrator.message_packager import (
     pack_from_copilot,
     parse_copilot_input,
     MODEL_PRESETS,
-    _validate_image_dimensions
+    _validate_image_dimensions,
+    package_triplet,
+    unpack_triplet
 )
 
 
@@ -383,3 +385,114 @@ class TestMessagePackager:
 
             # Should not raise
             _validate_image_dimensions([png_path])
+
+    def test_package_triplet_golden_snapshot(self):
+        """Golden snapshot test for package_triplet() capturing exact dict output."""
+        system = "You are a helpful assistant."
+        plan = "Analyze the user's query and provide a response."
+        act = "Respond to the user."
+
+        result = package_triplet(system, plan, act)
+
+        expected = {
+            'system': "You are a helpful assistant.",
+            'plan': "Analyze the user's query and provide a response.",
+            'act': "Respond to the user."
+        }
+
+        assert result == expected
+        # Verify key order is stable
+        assert list(result.keys()) == ['system', 'plan', 'act']
+
+    def test_package_triplet_various_inputs(self):
+        """Test package_triplet with various string inputs."""
+        # Empty strings
+        result = package_triplet("", "", "")
+        assert result == {'system': '', 'plan': '', 'act': ''}
+
+        # Unicode strings
+        result = package_triplet("systém", "plán", "akt")
+        assert result == {'system': 'systém', 'plan': 'plán', 'act': 'akt'}
+
+        # Multi-line strings
+        result = package_triplet("line1\nline2", "plan", "act")
+        assert result == {'system': 'line1\nline2', 'plan': 'plan', 'act': 'act'}
+
+    def test_unpack_triplet_roundtrip_property(self):
+        """Roundtrip property test: package then unpack should yield identical results."""
+        test_cases = [
+            ("system prompt", "planning step", "action taken"),
+            ("", "", ""),
+            ("single", "word", "values"),
+            ("multi\nline\nsystem", "plan\nwith\nnewlines", "act\nwith\nlines"),
+            ("unicode: ñáéíóú", "plan: αβγδε", "act: 日本語"),
+        ]
+
+        for system, plan, act in test_cases:
+            with self.subTest(system=system, plan=plan, act=act):
+                # Package the triplet
+                packaged = package_triplet(system, plan, act)
+
+                # Unpack it back
+                unpacked_system, unpacked_plan, unpacked_act = unpack_triplet(packaged)
+
+                # Verify identical results
+                assert unpacked_system == system
+                assert unpacked_plan == plan
+                assert unpacked_act == act
+
+    def test_unpack_triplet_valueerror_invalid_keys(self):
+        """Test ValueError for invalid keys in unpack_triplet."""
+        # Missing key
+        invalid_blob = {'system': 'sys', 'plan': 'pln'}  # Missing 'act'
+        with pytest.raises(ValueError, match="Invalid keys.*expected.*got"):
+            unpack_triplet(invalid_blob)
+
+        # Extra key
+        invalid_blob = {'system': 'sys', 'plan': 'pln', 'act': 'act', 'extra': 'key'}
+        with pytest.raises(ValueError, match="Invalid keys.*expected.*got"):
+            unpack_triplet(invalid_blob)
+
+        # Wrong key names
+        invalid_blob = {'sys': 'sys', 'pln': 'pln', 'action': 'act'}
+        with pytest.raises(ValueError, match="Invalid keys.*expected.*got"):
+            unpack_triplet(invalid_blob)
+
+    def test_unpack_triplet_valueerror_non_string_values(self):
+        """Test ValueError for non-string values in unpack_triplet."""
+        # Integer value
+        invalid_blob = {'system': 'sys', 'plan': 123, 'act': 'act'}
+        with pytest.raises(ValueError, match="Value for 'plan' must be str"):
+            unpack_triplet(invalid_blob)
+
+        # List value
+        invalid_blob = {'system': 'sys', 'plan': 'pln', 'act': ['list']}
+        with pytest.raises(ValueError, match="Value for 'act' must be str"):
+            unpack_triplet(invalid_blob)
+
+        # None value
+        invalid_blob = {'system': 'sys', 'plan': None, 'act': 'act'}
+        with pytest.raises(ValueError, match="Value for 'plan' must be str"):
+            unpack_triplet(invalid_blob)
+
+        # Dict value
+        invalid_blob = {'system': 'sys', 'plan': 'pln', 'act': {'nested': 'dict'}}
+        with pytest.raises(ValueError, match="Value for 'act' must be str"):
+            unpack_triplet(invalid_blob)
+
+    def test_unpack_triplet_valid_edge_cases(self):
+        """Test unpack_triplet with valid edge cases."""
+        # All empty strings
+        blob = {'system': '', 'plan': '', 'act': ''}
+        system, plan, act = unpack_triplet(blob)
+        assert (system, plan, act) == ('', '', '')
+
+        # Unicode strings
+        blob = {'system': 'systém', 'plan': 'plán', 'act': 'akt'}
+        system, plan, act = unpack_triplet(blob)
+        assert (system, plan, act) == ('systém', 'plán', 'akt')
+
+        # Multi-line strings
+        blob = {'system': 'line1\nline2', 'plan': 'plan', 'act': 'act'}
+        system, plan, act = unpack_triplet(blob)
+        assert (system, plan, act) == ('line1\nline2', 'plan', 'act')

@@ -1,5 +1,6 @@
 """Configuration classes for environment components."""
 
+import os
 from dataclasses import dataclass
 from typing import Dict, Tuple, Optional
 
@@ -119,3 +120,34 @@ class VideoConfig:
             return ratio_diff * 0.7 + size_diff_norm * 0.3
 
         return min(self.supported_profiles.values(), key=profile_distance)
+
+
+@dataclass
+class MGBAConfig:
+    """Configuration for mGBA emulator connection.
+    
+    Attributes:
+        port: Port for mGBA Lua socket server (default: 8888)
+        host: Host for mGBA Lua socket server (default: localhost)
+        timeout: Connection timeout in seconds (default: 10.0)
+    """
+    port: int = 8888
+    host: str = "localhost"
+    timeout: float = 10.0
+    
+    def __post_init__(self):
+        """Initialize configuration from environment variables."""
+        # Read MGBA_PORT from environment with fallback to default
+        env_port = os.environ.get('MGBA_PORT')
+        if env_port:
+            try:
+                self.port = int(env_port)
+            except ValueError:
+                pass  # Keep default if invalid
+        
+        # Could add other env vars here if needed in future
+        # host from env, timeout from env, etc.
+        
+        # Validate port range
+        if not (1 <= self.port <= 65535):
+            raise ValueError(f"Invalid MGBA_PORT: {self.port} (must be 1-65535)")

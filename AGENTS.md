@@ -236,6 +236,21 @@ if stuckness["status"] == "stuck":
 - **Expected Runtime**: 10-15 minutes
 - **Purpose**: Complete test suite with all markers
 
+**CI Lane**: `scripts/test_ci.ps1` (Windows) or `bash scripts/test_ci.sh` (Linux/Mac)
+- **Command**: Calls `scripts/test_fast.ps1`
+- **Expected Runtime**: <3 minutes
+- **Purpose**: Minimal CI validation
+
+**Bench Sweep**: `scripts/bench_sweep.ps1` (Windows) or `bash scripts/bench_sweep.sh` (Linux/Mac)
+- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python profiling/bench_qwen_vl.py --models all --csv bench_results.csv --time-budget-s 180 --full --plot bench_results.csv`
+- **Expected Runtime**: 5-10 minutes per configuration
+- **Purpose**: Performance benchmarking with parameter sweeps, saves CSV + JSONL + PNG plots to `profiling/results/<UTC_ISO>/`
+
+**Sync Profiling**: `scripts/sync_profiling.ps1` (Windows) or `bash scripts/sync_profiling.sh` (Linux/Mac)
+- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; Copy-Item "..\profiling\*" ".\profiling\" -Recurse -Force -Exclude "__pycache__"`
+- **Expected Runtime**: <1 minute
+- **Purpose**: Idempotent move of legacy profiling folder to `pokemon-md-agent/profiling/`
+
 **Markers**:
 - `@pytest.mark.slow`: Long-running tests (model training, heavy parametrization)
 - `@pytest.mark.network`: Tests requiring emulator/web connections

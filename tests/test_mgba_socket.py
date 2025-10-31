@@ -22,26 +22,36 @@ def test_framing_marker_consistency():
 class TestMGBASocketFraming:
     """Test <|END|> framing protocol."""
 
+    @pytest.mark.timeout(10)  # 10s timeout for network test
     def test_command_framing(self):
         """Test commands are properly framed with <|END|> using real socket."""
-        transport = LuaSocketTransport("127.0.0.1", 8888)
-        
-        # Connect to real emulator
-        connected = transport.connect()
-        assert connected, "Failed to connect to emulator on port 8888"
+        # Set timeout BEFORE any socket operations
+        import socket as socket_module
+        original_timeout = socket_module.getdefaulttimeout()
+        socket_module.setdefaulttimeout(5.0)
         
         try:
-            # Send a real command
-            response = transport.send_command("core.platform")
-            assert response is not None, "No response from emulator"
-            assert response != "<|ERROR|>", f"Emulator returned error: {response}"
+            transport = LuaSocketTransport("127.0.0.1", 8888, timeout=5.0)
             
-            # Verify it's a reasonable response (mGBA platform info)
-            assert len(response) > 0, "Empty response from emulator"
+            # Connect to real emulator
+            connected = transport.connect()
+            assert connected, "Failed to connect to emulator on port 8888"
             
+            try:
+                # Send a real command
+                response = transport.send_command("core.platform")
+                assert response is not None, "No response from emulator"
+                assert response != "<|ERROR|>", f"Emulator returned error: {response}"
+                
+                # Verify it's a reasonable response (mGBA platform info)
+                assert len(response) > 0, "Empty response from emulator"
+                
+            finally:
+                transport.disconnect()
         finally:
-            transport.disconnect()
+            socket_module.setdefaulttimeout(original_timeout)
 
+    @pytest.mark.timeout(5)  # 5s timeout for mock test
     @patch('socket.socket')
     def test_response_framing_parsing(self, mock_socket_class):
         """Test responses are properly parsed at <|END|> markers."""
@@ -57,6 +67,7 @@ class TestMGBASocketFraming:
         response = transport.send_command("test")
         assert response == "response_data"
 
+    @pytest.mark.timeout(5)  # 5s timeout for mock test
     @patch('socket.socket')
     def test_partial_response_handling(self, mock_socket_class):
         """Test handling of partial responses split across recv calls."""
@@ -484,7 +495,8 @@ def test_live_player_state_matches_config(connected_mgba_controller: MGBAControl
     partner_hp = controller.peek(controller.RAM_ADDRESSES["partner_hp"], addr_mgr.get_size("party_status", "partner_hp"))
     partner_max_hp = controller.peek(controller.RAM_ADDRESSES["partner_max_hp"], addr_mgr.get_size("party_status", "partner_hp_max"))
     partner_belly = controller.peek(controller.RAM_ADDRESSES["partner_belly"], addr_mgr.get_size("party_status", "partner_belly"))
-    assert None not in (partner_hp, partner_max_hp, partner_belly)
+    assert all(x is not None for x in (partner_hp, partner_max_hp, partner_belly))
+    assert isinstance(partner_hp, bytes) and isinstance(partner_max_hp, bytes) and isinstance(partner_belly, bytes)
     partner_hp_val = int.from_bytes(partner_hp, "little")
     partner_max_hp_val = int.from_bytes(partner_max_hp, "little")
     partner_belly_val = int.from_bytes(partner_belly, "little")

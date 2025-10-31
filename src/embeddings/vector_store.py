@@ -2,6 +2,7 @@
 
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
+from collections import Counter
 import logging
 import time
 import numpy as np
@@ -493,6 +494,58 @@ class VectorStore:
     def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
         """Compute cosine similarity between two vectors."""
         return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+
+    def stats(self) -> Dict[str, Any]:
+        """Summarize entry counts and memory footprint."""
+        if self.backend == "memory":
+            counts = Counter(entry.silo_id for entry in self._entries.values())
+            total_bytes = int(
+                sum(
+                    getattr(entry.embedding, "nbytes", 0)
+                    for entry in self._entries.values()
+                )
+            )
+            return {
+                "backend": self.backend,
+                "total_entries": len(self._entries),
+                "per_silo_counts": dict(counts),
+                "total_bytes": total_bytes,
+            }
+
+        if self.backend == "chromadb":
+            try:
+                total_entries = int(self._collection.count())
+            except Exception:
+                total_entries = 0
+            return {
+                "backend": self.backend,
+                "total_entries": total_entries,
+                "per_silo_counts": {},
+                "total_bytes": None,
+            }
+
+        if self.backend == "faiss":
+            counts = Counter(entry.silo_id for entry in self._entries.values())
+            total_entries = int(getattr(self._index, "ntotal", 0))
+            total_bytes = int(
+                sum(
+                    getattr(entry.embedding, "nbytes", 0)
+                    for entry in self._entries.values()
+                )
+            )
+            return {
+                "backend": self.backend,
+                "total_entries": total_entries,
+                "per_silo_counts": dict(counts),
+                "total_bytes": total_bytes,
+            }
+
+        return {
+            "backend": self.backend,
+            "total_entries": 0,
+            "per_silo_counts": {},
+            "total_bytes": 0,
+        }
     
     def get_stats(self) -> Dict[str, Any]:
         """Get statistics about the vector store.

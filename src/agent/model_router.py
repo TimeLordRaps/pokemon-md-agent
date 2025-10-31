@@ -157,6 +157,11 @@ class ModelRouter:
         self.pipeline_engine = None  # Will be set by qwen_controller
         self.use_pipeline = True  # Feature flag
 
+        # Batch size configuration (can be overridden for benchmarking)
+        self.batch_size_2b = 8
+        self.batch_size_4b = 4
+        self.batch_size_8b = 2
+
     def get_model_name(self, model_size: ModelSize, use_thinking: bool = False) -> str:
         """Get model name for given size and thinking mode."""
         return MODEL_NAMES[model_size]["thinking" if use_thinking else "instruct"]
@@ -431,11 +436,51 @@ class TwoStagePipeline:
             if not valid_requests:
                 return
 
+            # Re-check deadlines before batch processing starts
+            batch_start_time = time.time()
+            final_requests = []
+            for request in valid_requests:
+                if hasattr(request, 'deadline_s') and request.deadline_s is not None:
+                    remaining_time = request.deadline_s - batch_start_time
+                    # Estimate batch processing time (tokenize + vision for this request)
+                    estimated_time = TOKENIZE_BUDGET_S
+                    if request.images:
+                        estimated_time += len(request.images) * 0.1  # Rough vision encoding time
+                    if remaining_time < estimated_time:
+                        logger.warning(f"Batch processing would exceed deadline: {remaining_time}s remaining, need {estimated_time}s")
+                        if hasattr(request, '_future'):
+                            request._future.set_exception(DeadlineExceededError("Batch deadline exceeded"))
+                        continue
+                final_requests.append(request)
+
+            if not final_requests:
+                return
+
+            # Adjust batch size based on strictest deadline
+            batch_size_limit = len(final_requests)
+            if any(hasattr(r, 'deadline_s') and r.deadline_s is not None for r in final_requests):
+                strictest_deadline = min(r.deadline_s for r in final_requests if hasattr(r, 'deadline_s') and r.deadline_s is not None)
+                remaining_batch_time = strictest_deadline - batch_start_time
+                # Estimate time per request in batch and limit batch size
+                time_per_request = TOKENIZE_BUDGET_S + 0.05  # Base estimate
+                max_batch_size = max(1, int(remaining_batch_time / time_per_request))
+                batch_size_limit = min(batch_size_limit, max_batch_size)
+
+            # Apply batch size limit
+            if len(final_requests) > batch_size_limit:
+                logger.info(f"Limiting batch size from {len(final_requests)} to {batch_size_limit} due to deadlines")
+                # Process in smaller batches - keep first batch_size_limit, queue rest for next batch
+                next_batch = final_requests[batch_size_limit:]
+                final_requests = final_requests[:batch_size_limit]
+                # Re-queue the remaining requests
+                for req in next_batch:
+                    self.prefill_queues[group_key].append(req)
+
             # Group by common processing needs
-            prompts = [r.prompt for r in valid_requests]
-            images_list = [r.images for r in valid_requests]
-            model_sizes = [r.model_size for r in valid_requests]
-            use_thinking_flags = [r.use_thinking for r in valid_requests]
+            prompts = [r.prompt for r in final_requests]
+            images_list = [r.images for r in final_requests]
+            model_sizes = [r.model_size for r in final_requests]
+            use_thinking_flags = [r.use_thinking for r in final_requests]
 
             # Batch process tokenization and vision encoding
             results = self._batch_prefill_processing(
@@ -443,7 +488,7 @@ class TwoStagePipeline:
             )
 
             # Resolve futures
-            for request, result in zip(valid_requests, results):
+            for request, result in zip(final_requests, results):
                 if hasattr(request, '_future'):
                     request._future.set_result(result)
 
@@ -472,15 +517,53 @@ class TwoStagePipeline:
             if not valid_requests:
                 return
 
+            # Re-check deadlines before batch processing starts
+            batch_start_time = time.time()
+            final_requests = []
+            for request in valid_requests:
+                if hasattr(request, 'deadline_s') and request.deadline_s is not None:
+                    remaining_time = request.deadline_s - batch_start_time
+                    # Estimate batch decoding time (forward + decode for this request)
+                    estimated_time = FORWARD_BUDGET_S + DECODE_BUDGET_S
+                    if remaining_time < estimated_time:
+                        logger.warning(f"Batch decoding would exceed deadline: {remaining_time}s remaining, need {estimated_time}s")
+                        if hasattr(request, '_future'):
+                            request._future.set_exception(DeadlineExceededError("Batch decode deadline exceeded"))
+                        continue
+                final_requests.append(request)
+
+            if not final_requests:
+                return
+
+            # Adjust batch size based on strictest deadline
+            batch_size_limit = len(final_requests)
+            if any(hasattr(r, 'deadline_s') and r.deadline_s is not None for r in final_requests):
+                strictest_deadline = min(r.deadline_s for r in final_requests if hasattr(r, 'deadline_s') and r.deadline_s is not None)
+                remaining_batch_time = strictest_deadline - batch_start_time
+                # Estimate time per request in decode batch
+                time_per_request = (FORWARD_BUDGET_S + DECODE_BUDGET_S) / 2  # Conservative estimate
+                max_batch_size = max(1, int(remaining_batch_time / time_per_request))
+                batch_size_limit = min(batch_size_limit, max_batch_size)
+
+            # Apply batch size limit
+            if len(final_requests) > batch_size_limit:
+                logger.info(f"Limiting decode batch size from {len(final_requests)} to {batch_size_limit} due to deadlines")
+                # Process in smaller batches - keep first batch_size_limit, queue rest for next batch
+                next_batch = final_requests[batch_size_limit:]
+                final_requests = final_requests[:batch_size_limit]
+                # Re-queue the remaining requests
+                for req in next_batch:
+                    self.decode_queues[group_key].append(req)
+
             # Extract prefill results and temperatures
-            prefill_results = [r.prefill_result for r in valid_requests]
-            temperatures = [r.temperature for r in valid_requests]
+            prefill_results = [r.prefill_result for r in final_requests]
+            temperatures = [r.temperature for r in final_requests]
 
             # Batch decode
             results = self._batch_decode_processing(prefill_results, temperatures)
 
             # Resolve futures
-            for request, result in zip(valid_requests, results):
+            for request, result in zip(final_requests, results):
                 if hasattr(request, '_future'):
                     request._future.set_result(result)
 

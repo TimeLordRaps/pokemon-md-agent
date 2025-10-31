@@ -511,9 +511,9 @@ See [AGENTS.md](AGENTS.md) for detailed instructions on:
 - **Purpose**: Minimal CI validation
 
 **Bench Sweep** (`scripts/bench_sweep.ps1`):
-- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python profiling/bench_qwen_vl.py --time-budget-s 30 --contexts 1024,2048,4096,8192,16384,32768 --batches 1,2,4,8 --best-of-n 1,2,4 --use-cache on,off --use-pipeline on,off`
+- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python profiling/bench_qwen_vl.py --models all --csv bench_results.csv --time-budget-s 180 --full --plot bench_results.csv`
 - **Expected Runtime**: 5-10 minutes per configuration
-- **Purpose**: Performance benchmarking with parameter sweeps
+- **Purpose**: Performance benchmarking with parameter sweeps, saves CSV + JSONL + PNG plots to `profiling/results/<UTC_ISO>/`
 
 **Sync Profiling** (`scripts/sync_profiling.ps1`):
 - **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; Copy-Item "..\profiling\*" ".\profiling\" -Recurse -Force -Exclude "__pycache__"`

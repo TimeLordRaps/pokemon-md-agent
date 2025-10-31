@@ -15,7 +15,9 @@ import logging
 import hashlib
 from collections import defaultdict
 import imagehash
+import numpy as np
 from PIL import Image
+from .sprite_phash import compute_phash
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +59,7 @@ class DetectionConfig:
     confidence_threshold: float = 0.7
     max_detections: int = 20
     enable_grid_correlation: bool = True
+    enable_phash_computation: bool = False  # Feature flag for pHash integration
     categories: Optional[List[str]] = None
 
     def __post_init__(self):
@@ -82,6 +85,7 @@ class DetectionResult:
     bbox: Tuple[int, int, int, int]  # x, y, width, height
     metadata: Dict[str, Any]
     grid_pos: Optional[Tuple[int, int]] = None  # Grid coordinates if available
+    phash: Optional[np.ndarray] = None  # Perceptual hash as binary array when enabled
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -93,6 +97,8 @@ class DetectionResult:
         }
         if self.grid_pos:
             result["grid_pos"] = list(self.grid_pos)
+        if self.phash is not None:
+            result["phash"] = self.phash.tolist()  # Convert numpy array to list for JSON
         return result
 
 
@@ -272,6 +278,21 @@ class QwenVLSpriteDetector(BaseSpriteDetector):
             except Exception as e:
                 logger.error("Qwen detection failed: %s", e)
                 detections = self._mock_detection(image_path)
+
+        # Compute perceptual hashes if enabled
+        if self.config.enable_phash_computation:
+            try:
+                from PIL import Image
+                image = Image.open(image_path)
+                image_array = np.array(image)
+                for detection in detections:
+                    # Extract sprite region from bbox
+                    x, y, w, h = detection.bbox
+                    sprite_region = image_array[y:y+h, x:x+w]
+                    if sprite_region.size > 0:
+                        detection.phash = compute_phash(sprite_region)
+            except Exception as e:
+                logger.warning("Failed to compute perceptual hash: %s", e)
 
         # Apply filtering
         filtered = self._filter_detections(detections)
@@ -904,7 +925,7 @@ class PHashSpriteDetector(BaseSpriteDetector):
         return variance > 100  # Adjust threshold as needed
 
     def _compute_phash(self, image: Image.Image) -> str:
-        """Compute perceptual hash for an image region."""
+        """Compute perceptual hash for an image region using deterministic compute_phash."""
         # Create cache key from image content
         image_bytes = image.tobytes()
         cache_key = hashlib.md5(image_bytes).hexdigest()
@@ -913,11 +934,14 @@ class PHashSpriteDetector(BaseSpriteDetector):
         if cache_key in self._hash_cache:
             return self._hash_cache[cache_key]
 
-        # Compute pHash
-        phash = imagehash.phash(image)
+        # Convert PIL image to numpy array for compute_phash
+        image_array = np.array(image)
 
-        # Convert to hex string for storage
-        phash_hex = str(phash)
+        # Use deterministic compute_phash from sprite_phash module
+        phash_array = compute_phash(image_array)
+
+        # Convert binary array to hex string for storage (compatibility with existing code)
+        phash_hex = ''.join(str(int(bit)) for bit in phash_array)
 
         # Cache result
         self._hash_cache[cache_key] = phash_hex

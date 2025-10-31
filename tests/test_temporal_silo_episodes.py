@@ -192,3 +192,81 @@ def test_cross_episode_search_reranks_and_meets_latency_budget() -> None:
     assert scores == sorted(scores, reverse=True)
     for result in results:
         assert result.context.startswith("From episode ")
+
+
+def test_compact_preserves_first_metadata() -> None:
+    """Compaction merges duplicates yet retains the leading metadata."""
+    manager = TemporalSiloManager(silos=[1])
+    base_time = 1_700_000_000.0
+    embedding = _unit_vector(8, seed=21)
+
+    manager.store(
+        embedding=embedding,
+        trajectory_id="traj_first",
+        metadata={"action": "move", "note": "first"},
+        current_time=base_time,
+        floor=1,
+    )
+
+    manager.store(
+        embedding=embedding,
+        trajectory_id="traj_duplicate",
+        metadata={"action": "move", "note": "second"},
+        current_time=base_time + 0.5,
+        floor=1,
+    )
+
+    manager.store(
+        embedding=embedding,
+        trajectory_id="traj_other",
+        metadata={"action": "wait", "note": "third"},
+        current_time=base_time + 5.0,
+        floor=1,
+    )
+
+    silo_entries = manager.silos["temporal_1frame"].entries
+    assert len(silo_entries) == 3
+
+    removed = manager.compact("temporal_1frame", window=1)
+    assert removed == 1
+
+    compacted_entries = manager.silos["temporal_1frame"].entries
+    assert len(compacted_entries) == 2
+    assert compacted_entries[0].metadata["note"] == "first"
+    assert compacted_entries[0].metadata["action"] == "move"
+    assert compacted_entries[0].trajectory_id == "traj_first"
+    assert compacted_entries[1].trajectory_id == "traj_other"
+
+
+def test_expire_older_than_removes_stale_entries(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Retention removes entries older than the specified horizon."""
+    manager = TemporalSiloManager(silos=[1])
+    base_time = 1_700_000_000.0
+    embedding = _unit_vector(8, seed=33)
+
+    manager.store(
+        embedding=embedding,
+        trajectory_id="stale_traj",
+        metadata={"action": "move"},
+        current_time=base_time - 200.0,
+        floor=2,
+    )
+
+    manager.store(
+        embedding=embedding,
+        trajectory_id="recent_traj",
+        metadata={"action": "move"},
+        current_time=base_time - 5.0,
+        floor=2,
+    )
+
+    monkeypatch.setattr("src.embeddings.temporal_silo.time.time", lambda: base_time)
+
+    removed = manager.expire_older_than(60)
+    assert removed == 1
+
+    remaining_entries = manager.silos["temporal_1frame"].entries
+    assert len(remaining_entries) == 1
+    survivor = remaining_entries[0]
+    assert survivor.trajectory_id == "recent_traj"
+    assert manager._episode_last_activity.get(survivor.episode_id) == survivor.timestamp

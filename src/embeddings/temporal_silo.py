@@ -1,7 +1,7 @@
 """7 temporal resolution silos for hierarchical RAG system.
 Changed lines & context scanned: composite index (floor, silo, ts), 7 silos, cross-floor search."""
 
-from typing import List, Dict, Optional, Any, Tuple, Iterable
+from typing import List, Dict, Optional, Any, Tuple, Iterable, Set
 from dataclasses import dataclass, field
 from enum import Enum
 from collections import defaultdict
@@ -384,6 +384,84 @@ class TemporalSilo:
             index=index,
             entries=list(entries),
         )
+
+    def _remove_entries_by_id(self, removal_ids: Set[int]) -> int:
+        """Remove entries referenced by object id and keep indexes in sync."""
+        if not removal_ids:
+            return 0
+
+        removed_entries = [entry for entry in self.entries if id(entry) in removal_ids]
+        if not removed_entries:
+            return 0
+
+        self.entries = [entry for entry in self.entries if id(entry) not in removal_ids]
+        self.last_sample_time = self.entries[-1].timestamp if self.entries else 0.0
+
+        affected_episodes: Set[int] = {entry.episode_id for entry in removed_entries}
+
+        for episode_id in list(self.episode_entries.keys()):
+            updated_entries = [
+                entry for entry in self.episode_entries[episode_id]
+                if id(entry) not in removal_ids
+            ]
+            if updated_entries:
+                self.episode_entries[episode_id] = updated_entries
+            else:
+                affected_episodes.add(episode_id)
+                del self.episode_entries[episode_id]
+                self._episode_indexes.pop(episode_id, None)
+
+        if self._faiss_available:
+            for episode_id in affected_episodes:
+                self._rebuild_episode_index(episode_id)
+
+        return len(removed_entries)
+
+    def compact(self, window_seconds: int) -> int:
+        """Merge adjacent duplicate actions within the provided time window."""
+        if window_seconds < 0:
+            raise ValueError(f"window_seconds must be non-negative, got {window_seconds}")
+
+        if len(self.entries) < 2:
+            return 0
+
+        window = float(window_seconds)
+        removal_ids: Set[int] = set()
+        reference_entry: Optional[SiloEntry] = None
+
+        for entry in self.entries:
+            if reference_entry is None:
+                reference_entry = entry
+                continue
+
+            action_current = entry.metadata.get("action")
+            action_reference = reference_entry.metadata.get("action")
+
+            if (
+                action_current is not None
+                and action_current == action_reference
+                and entry.floor == reference_entry.floor
+                and (entry.timestamp - reference_entry.timestamp) <= window
+            ):
+                removal_ids.add(id(entry))
+                continue
+
+            reference_entry = entry
+
+        return self._remove_entries_by_id(removal_ids)
+
+    def expire_older_than(self, cutoff_timestamp: float) -> int:
+        """Remove entries older than the cutoff timestamp."""
+        if not self.entries:
+            return 0
+
+        removal_ids = {
+            id(entry)
+            for entry in self.entries
+            if entry.timestamp < cutoff_timestamp
+        }
+
+        return self._remove_entries_by_id(removal_ids)
     
     def get_stats(self) -> Dict[str, Any]:
         """Get statistics about this silo.
@@ -584,6 +662,23 @@ class TemporalSiloManager:
         self._register_episode_start_if_needed(episode_id, current_time)
         self._episode_last_activity[episode_id] = current_time
 
+    def _refresh_episode_activity(self) -> None:
+        """Recompute last-activity timestamps after bulk mutations."""
+        latest_activity: Dict[int, float] = {}
+
+        for silo in self.silos.values():
+            for entry in silo.entries:
+                prior = latest_activity.get(entry.episode_id)
+                if prior is None or entry.timestamp > prior:
+                    latest_activity[entry.episode_id] = entry.timestamp
+
+        for episode_id in list(self._episode_last_activity.keys()):
+            if episode_id not in latest_activity:
+                del self._episode_last_activity[episode_id]
+
+        for episode_id, timestamp in latest_activity.items():
+            self._episode_last_activity[episode_id] = timestamp
+
     def _handle_floor_change_episode(
         self,
         floor: int,
@@ -758,6 +853,37 @@ class TemporalSiloManager:
                     }
                 )
             )
+
+    def compact(self, silo_id: str, window: int) -> int:
+        """Compact adjacent duplicate actions within a silo."""
+        if window < 0:
+            raise ValueError(f"window must be non-negative, got {window}")
+
+        silo = self.silos.get(silo_id)
+        if silo is None:
+            raise ValueError(f"Unknown silo ID: {silo_id}")
+
+        removed = silo.compact(window)
+        if removed:
+            self._refresh_episode_activity()
+
+        return removed
+
+    def expire_older_than(self, seconds: int) -> int:
+        """Expire entries older than the provided age across all silos."""
+        if seconds < 0:
+            raise ValueError(f"seconds must be non-negative, got {seconds}")
+
+        cutoff = time.time() - float(seconds)
+        total_removed = 0
+
+        for silo in self.silos.values():
+            total_removed += silo.expire_older_than(cutoff)
+
+        if total_removed:
+            self._refresh_episode_activity()
+
+        return total_removed
     
     def cross_silo_search(
         self,

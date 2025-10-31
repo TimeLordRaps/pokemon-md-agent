@@ -1,168 +1,287 @@
-"""Tests for FAISS index warming optimization."""
+"""Tests for local ANN index with file locking and path safety."""
 
 import pytest
 import tempfile
 import os
 import numpy as np
+import time
+import threading
+from pathlib import Path
 from unittest.mock import patch, MagicMock
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from src.retrieval.local_ann_index import LocalANNIndex
+from src.retrieval.local_ann_index import LocalANNIndex, FileLock, _normalize_path, AtomicFileWriter
 
 
-class TestFAISSIndexWarming:
-    """Test FAISS index warming functionality."""
+class TestFileLock:
+    """Test file locking functionality."""
+
+    def test_file_lock_creation(self):
+        """Test file lock creation and basic functionality."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            test_path = Path(tmp_dir) / "test.db"
+            lock = FileLock(test_path)
+            
+            # Should create without error
+            assert lock.file_path == test_path
+            assert lock.platform is not None
+
+    def test_file_lock_acquire_release(self):
+        """Test acquiring and releasing file locks."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            test_path = Path(tmp_dir) / "test.db"
+            lock = FileLock(test_path)
+            
+            # Acquire lock
+            acquired = lock.acquire(timeout=1.0)
+            assert acquired
+            assert lock._acquired
+            
+            # Release lock
+            lock.release()
+            assert not lock._acquired
+
+    def test_concurrent_file_locking(self):
+        """Test that concurrent locks work correctly."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            test_path = Path(tmp_dir) / "test.db"
+            
+            results = []
+            
+            def acquire_lock(thread_id):
+                lock = FileLock(test_path)
+                if lock.acquire(timeout=5.0):
+                    results.append(f"Thread {thread_id} acquired lock")
+                    time.sleep(0.1)  # Hold lock briefly
+                    lock.release()
+                    results.append(f"Thread {thread_id} released lock")
+                    return True
+                else:
+                    results.append(f"Thread {thread_id} failed to acquire lock")
+                    return False
+            
+            # Test with multiple threads
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                futures = [executor.submit(acquire_lock, i) for i in range(3)]
+                results_list = [f.result() for f in futures]
+            
+            # All threads should succeed
+            assert all(results_list)
+            # Verify proper sequencing
+            assert len(results) == 6  # 3 acquire + 3 release
+
+
+class TestPathNormalization:
+    """Test path normalization and validation."""
+
+    def test_relative_path_normalization(self):
+        """Test that relative paths are properly normalized."""
+        # Test various path formats
+        test_cases = [
+            "test.db",
+            "./test.db",
+            "subdir/test.db",
+            "subdir/../test.db"
+        ]
+        
+        for path_str in test_cases:
+            normalized = _normalize_path(path_str)
+            assert isinstance(normalized, Path)
+            assert not str(normalized).startswith('/')
+
+    def test_absolute_path_rejection(self):
+        """Test that absolute paths are rejected."""
+        with pytest.raises(ValueError, match="Absolute paths not allowed"):
+            _normalize_path("/absolute/path/test.db")
+        
+        with pytest.raises(ValueError, match="Absolute paths not allowed"):
+            _normalize_path("C:\\absolute\\path\\test.db")
+
+    def test_path_with_dots(self):
+        """Test handling of paths with '..' components."""
+        with patch('pathlib.Path.resolve') as mock_resolve:
+            # Mock resolve to return a non-absolute path to test warning
+            mock_path = Path("relative/path/../test.db")
+            mock_resolve.return_value = mock_path
+            
+            normalized = _normalize_path("relative/path/../test.db")
+            # Should still work but may generate warning
+            assert isinstance(normalized, Path)
+
+
+class TestLocalANNIndex:
+    """Test LocalANNIndex with file locking."""
 
     @pytest.fixture
-    def temp_dir(self):
-        """Create temporary directory for tests."""
-        with tempfile.TemporaryDirectory() as tmp:
-            yield tmp
+    def temp_db_path(self):
+        """Create a temporary database path."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            yield Path(tmp_dir) / "test_index.db"
 
-    @pytest.fixture
-    def sample_vectors(self):
-        """Generate sample vectors for testing."""
-        np.random.seed(42)
-        return np.random.randn(100, 128).astype(np.float32)
+    def test_index_initialization_with_file_path(self, temp_db_path):
+        """Test index initialization with file path."""
+        index = LocalANNIndex(db_path=str(temp_db_path), vector_dim=128)
+        
+        # Should initialize successfully
+        assert index.vector_dim == 128
+        assert index.db_path == temp_db_path
+        assert index.db_path_str == os.fspath(temp_db_path)
+        
+        index.close()
 
-    def test_index_warming_not_implemented(self):
-        """Test that index warming is not yet implemented."""
-        # This test will fail until we implement the warming
-        # It's a placeholder to ensure we implement it
-        index = LocalANNIndex(vector_dim=128)
+    def test_memory_index_initialization(self):
+        """Test in-memory index initialization."""
+        index = LocalANNIndex(db_path=":memory:", vector_dim=128)
+        
+        assert index.vector_dim == 128
+        assert index.db_path_str == ":memory:"
+        
+        index.close()
 
-        # Add some test data
+    def test_add_vector_with_file_locking(self, temp_db_path):
+        """Test adding vectors with file locking."""
+        index = LocalANNIndex(db_path=str(temp_db_path), vector_dim=128)
+        
+        # Add a vector
+        vector = np.random.randn(128).astype(np.float32)
+        success = index.add_vector("test_vector", vector, {"metadata": "test"})
+        
+        assert success
+        stats = index.get_stats()
+        assert stats["total_entries"] == 1
+        assert stats["db_path"] == str(temp_db_path)
+        
+        index.close()
+
+    def test_search_functionality(self, temp_db_path):
+        """Test search functionality."""
+        index = LocalANNIndex(db_path=str(temp_db_path), vector_dim=128)
+        
+        # Add multiple vectors
+        vectors = []
         for i in range(10):
             vector = np.random.randn(128).astype(np.float32)
-            index.add_vector(f"test_{i}", vector)
+            index.add_vector(f"vector_{i}", vector, {"id": i})
+            vectors.append(vector)
+        
+        # Search with first vector
+        query_vector = vectors[0]
+        results = index.search(query_vector, k=5)
+        
+        assert len(results) == 5
+        # First result should be the most similar (should be the query vector itself)
+        assert results[0].entry_id == "vector_0"
+        
+        index.close()
 
-        # This should work but warming doesn't exist yet
-        stats = index.get_stats()
-        assert "total_entries" in stats
-        assert stats["total_entries"] == 10
-
-    def test_memory_mapped_index_concept(self):
-        """Test concept of memory-mapped index loading."""
-        # This is a conceptual test - FAISS MMAP isn't implemented yet
-        # But we test the interface we plan to use
-
-        with patch('faiss.read_index') as mock_read:
-            mock_index = MagicMock()
-            mock_read.return_value = mock_index
-
-            # Simulate what our warming code would do
-            index_path = "/fake/path/index.faiss"
-            loaded_index = mock_read(index_path, io_flags=0x12345)  # Fake MMAP flag
-
-            mock_read.assert_called_once_with(index_path, io_flags=0x12345)
-            assert loaded_index is mock_index
-
-    def test_parallel_loading_concept(self):
-        """Test concept of parallel index loading."""
-        # Simulate loading multiple indexes in parallel
-        index_paths = [f"/fake/path/silo_{i}.faiss" for i in range(3)]
-
-        def load_index(path):
-            return f"loaded_{path.split('_')[-1].split('.')[0]}"
-
-        with ThreadPoolExecutor(max_workers=3) as executor:
-            futures = [executor.submit(load_index, path) for path in index_paths]
+    def test_concurrent_vector_addition(self, temp_db_path):
+        """Test concurrent vector addition without corruption."""
+        index = LocalANNIndex(db_path=str(temp_db_path), vector_dim=64)
+        
+        def add_vectors(thread_id):
+            success_count = 0
+            for i in range(5):
+                vector_id = f"thread_{thread_id}_vector_{i}"
+                vector = np.random.randn(64).astype(np.float32)
+                if index.add_vector(vector_id, vector):
+                    success_count += 1
+            return success_count
+        
+        # Add vectors concurrently
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = [executor.submit(add_vectors, i) for i in range(4)]
             results = [f.result() for f in futures]
+        
+        # All threads should have added some vectors
+        total_added = sum(results)
+        assert total_added >= 15  # At least some should succeed
+        
+        # Check final count
+        final_stats = index.get_stats()
+        assert final_stats["total_entries"] <= index.max_elements
+        
+        index.close()
 
-        assert len(results) == 3
-        assert "loaded_0" in results
-        assert "loaded_1" in results
-        assert "loaded_2" in results
-
-    def test_cache_freshness_check_concept(self):
-        """Test concept of cache freshness checking."""
-        # Simulate checking if cache is fresh
-        index_mtime = 1000.0  # Index file modification time
-        data_mtime = 900.0    # Data modification time
-
-        # Cache should be valid if index is newer than data
-        is_fresh = index_mtime > data_mtime
-        assert is_fresh
-
-        # Cache should be invalid if data is newer
-        data_mtime = 1100.0
-        is_fresh = index_mtime > data_mtime
-        assert not is_fresh
-
-    def test_index_serialization_concept(self):
-        """Test concept of index serialization."""
-        with patch('faiss.write_index') as mock_write:
-            mock_index = MagicMock()
-
-            # Simulate what our rebuild code would do
-            index_path = "/fake/path/index.faiss"
-            mock_write(mock_index, index_path)
-
-            mock_write.assert_called_once_with(mock_index, index_path)
-
-    def test_warming_performance_target(self):
-        """Test that warming meets performance targets."""
-        # Create a small index to test baseline performance
-        index = LocalANNIndex(vector_dim=128)
-
-        # Add test vectors
-        for i in range(50):
+    def test_clear_with_locking(self, temp_db_path):
+        """Test clear operation with file locking."""
+        index = LocalANNIndex(db_path=str(temp_db_path), vector_dim=128)
+        
+        # Add some vectors
+        for i in range(10):
             vector = np.random.randn(128).astype(np.float32)
-            index.add_vector(f"test_{i}", vector)
+            index.add_vector(f"vector_{i}", vector)
+        
+        assert index.get_stats()["total_entries"] == 10
+        
+        # Clear the index
+        index.clear()
+        
+        assert index.get_stats()["total_entries"] == 0
+        
+        index.close()
 
-        # Measure search time (should be fast with small index)
-        query = np.random.randn(128).astype(np.float32)
-        import time
-        start = time.time()
-        results = index.search(query, k=10)
-        search_time = time.time() - start
+    def test_index_stats(self, temp_db_path):
+        """Test index statistics."""
+        index = LocalANNIndex(db_path=str(temp_db_path), vector_dim=128)
+        
+        # Initially empty
+        stats = index.get_stats()
+        assert stats["total_entries"] == 0
+        assert stats["vector_dim"] == 128
+        assert stats["db_path"] == str(temp_db_path)
+        
+        # Add some vectors and check stats
+        for i in range(5):
+            vector = np.random.randn(128).astype(np.float32)
+            index.add_vector(f"vector_{i}", vector)
+        
+        final_stats = index.get_stats()
+        assert final_stats["total_entries"] == 5
+        assert final_stats["avg_insert_time_ms"] > 0
+        
+        index.close()
 
-        # Should be much faster than 500ms target for small index
-        assert search_time < 0.1  # 100ms for small index
-        assert len(results) == 10
+    def test_path_normalization_in_constructor(self, temp_db_path):
+        """Test that path is normalized in constructor."""
+        # Test with string path
+        index = LocalANNIndex(db_path=str(temp_db_path), vector_dim=128)
+        assert isinstance(index.db_path, Path)
+        assert isinstance(index.db_path_str, str)
+        
+        # Test with Path object
+        index2 = LocalANNIndex(db_path=temp_db_path, vector_dim=128)
+        assert isinstance(index2.db_path, Path)
+        
+        index.close()
+        index2.close()
 
-    def test_memory_usage_estimation(self):
-        """Test memory usage estimation for indexes."""
-        # Rough estimation: FAISS index memory usage
-        vector_dim = 1024
-        num_vectors = 10000
 
-        # FAISS FlatIP index memory per vector (rough estimate)
-        bytes_per_vector = vector_dim * 4  # float32
-        estimated_bytes = num_vectors * bytes_per_vector
+class TestAtomicFileWriter:
+    """Test atomic file operations."""
 
-        # Should be reasonable size
-        estimated_mb = estimated_bytes / (1024 * 1024)
-        assert estimated_mb < 100  # Less than 100MB for 10k vectors
+    def test_atomic_write_creation(self):
+        """Test atomic file writer creation."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            test_path = Path(tmp_dir) / "test_file.dat"
+            writer = AtomicFileWriter(test_path)
+            
+            assert writer.file_path == test_path
 
-    def test_warming_fallback_behavior(self):
-        """Test that warming falls back gracefully."""
-        # If warming fails, system should still work
-        index = LocalANNIndex(vector_dim=128)
-
-        # Even without warming, basic functionality should work
-        vector = np.random.randn(128).astype(np.float32)
-        success = index.add_vector("test", vector)
-        assert success
-
-        results = index.search(vector, k=1)
-        assert len(results) == 1
-        assert results[0].entry_id == "test"
-
-    def test_silo_index_management(self):
-        """Test management of multiple silo indexes."""
-        # Simulate multiple silos
-        silos = ["current", "species", "items", "dungeons"]
-
-        # Each silo would have its own index
-        silo_indexes = {}
-        for silo in silos:
-            silo_indexes[silo] = f"/cache/path/{silo}_index.faiss"
-
-        # Verify all silos have indexes
-        assert len(silo_indexes) == 4
-        assert all(path.endswith('.faiss') for path in silo_indexes.values())
-
-        # Simulate parallel loading order
-        load_order = list(silo_indexes.keys())
-        assert "current" in load_order  # Most important first
+    def test_atomic_write_operation(self):
+        """Test atomic file write operation."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            test_path = Path(tmp_dir) / "test_file.dat"
+            writer = AtomicFileWriter(test_path)
+            
+            # Write data atomically
+            test_data = b"Hello, atomic world!"
+            success = writer.write(test_data)
+            
+            assert success
+            assert test_path.exists()
+            
+            # Read back and verify
+            with open(test_path, 'rb') as f:
+                read_data = f.read()
+            
+            assert read_data == test_data

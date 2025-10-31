@@ -249,3 +249,108 @@ def test_detection_with_qwen_controller(tmp_path):
     detections = detector_with_controller.detect(image_path)
     assert len(detections) == 1
     assert detections[0].label == "test_sprite"
+
+
+def test_is_near_duplicate_threshold_boundaries():
+    """Test is_near_duplicate at exact threshold boundaries."""
+    from src.vision.sprite_phash import is_near_duplicate
+    
+    # Test exact threshold boundaries
+    base_hash = np.zeros(64, dtype=np.uint8)
+    
+    # Test exactly at threshold (should be True)
+    exactly_8_diff = np.zeros(64, dtype=np.uint8)
+    exactly_8_diff[:8] = 1  # Exactly 8 bits different
+    assert is_near_duplicate(base_hash, exactly_8_diff, threshold=8) == True
+    
+    # Test just over threshold (should be False)
+    over_threshold = np.zeros(64, dtype=np.uint8)
+    over_threshold[:9] = 1  # 9 bits different
+    assert is_near_duplicate(base_hash, over_threshold, threshold=8) == False
+    
+    # Test custom thresholds
+    threshold_5 = np.zeros(64, dtype=np.uint8)
+    threshold_5[:5] = 1  # 5 bits different
+    assert is_near_duplicate(base_hash, threshold_5, threshold=5) == True
+    assert is_near_duplicate(base_hash, threshold_5, threshold=4) == False
+    
+    # Test very low threshold (0 = exact match only)
+    exact_match = base_hash.copy()
+    assert is_near_duplicate(base_hash, exact_match, threshold=0) == True
+    
+    one_bit_diff = np.zeros(64, dtype=np.uint8)
+    one_bit_diff[0] = 1
+    assert is_near_duplicate(base_hash, one_bit_diff, threshold=0) == False
+
+
+def test_near_duplicate_error_handling():
+    """Test is_near_duplicate error handling for dtype/shape mismatches."""
+    from src.vision.sprite_phash import is_near_duplicate
+    
+    # Valid arrays
+    hash1 = np.array([1, 0, 1, 0], dtype=np.uint8)
+    hash2 = np.array([0, 1, 0, 1], dtype=np.uint8)
+    
+    # Test valid call
+    result = is_near_duplicate(hash1, hash2, threshold=2)
+    assert isinstance(result, bool)
+    
+    # Test dtype mismatch
+    hash3 = np.array([1, 0, 1, 0], dtype=np.int32)
+    with pytest.raises(ValueError, match="Hash dtypes must match"):
+        is_near_duplicate(hash1, hash3)
+    
+    # Test shape mismatch
+    hash4 = np.array([1, 0, 1], dtype=np.uint8)
+    with pytest.raises(ValueError, match="Hash shapes must match"):
+        is_near_duplicate(hash1, hash4)
+    
+    # Test default threshold behavior
+    hash5 = np.array([1, 0, 1, 0], dtype=np.uint8)
+    hash6 = np.array([0, 0, 0, 0], dtype=np.uint8)  # 2 bits different
+    assert is_near_duplicate(hash5, hash6) == True  # Default threshold=8
+    
+    hash7 = np.array([1, 1, 1, 1], dtype=np.uint8)  # 4 bits different
+    assert is_near_duplicate(hash5, hash7) == True  # Still within 8
+    
+    hash8 = np.array([0, 0, 0, 1], dtype=np.uint8)  # 2 bits different
+    assert is_near_duplicate(hash5, hash8) == True  # Still within 8
+    
+    hash9 = np.array([0, 1, 1, 1], dtype=np.uint8)  # 3 bits different
+    assert is_near_duplicate(hash5, hash9) == True  # Still within 8  # > 8 bits
+
+
+def test_near_duplicate_detection():
+    """Test is_near_duplicate function with golden hash tests."""
+    from src.vision.sprite_phash import compute_phash, is_near_duplicate, hamming_distance
+    
+    # Create synthetic 16x16 sprite (golden hash test)
+    golden_sprite = np.zeros((16, 16), dtype=np.uint8)
+    golden_sprite[4:12, 4:12] = 255  # White square
+    golden_hash = compute_phash(golden_sprite)
+    
+    # Test identical sprite (0 bits different)
+    identical_sprite = golden_sprite.copy()
+    identical_hash = compute_phash(identical_sprite)
+    
+    assert is_near_duplicate(golden_hash, identical_hash, threshold=8) == True
+    distance = hamming_distance(golden_hash, identical_hash)
+    assert distance == 0
+    
+    # Create near-duplicate sprite (≤8 bits different)
+    near_duplicate = golden_sprite.copy()
+    near_duplicate[4:12, 4:8] = 128  # Slight modification
+    near_hash = compute_phash(near_duplicate)
+    
+    near_distance = hamming_distance(golden_hash, near_hash)
+    assert near_distance <= 8, f"Near duplicate distance {near_distance} > 8"
+    assert is_near_duplicate(golden_hash, near_hash, threshold=8) == True
+    
+    # Create different sprite (>8 bits different)
+    different_sprite = np.zeros((16, 16), dtype=np.uint8)
+    different_sprite[8:16, 8:16] = 255  # Different position
+    different_hash = compute_phash(different_sprite)
+    
+    different_distance = hamming_distance(golden_hash, different_hash)
+    assert different_distance > 8, f"Different sprite distance {different_distance} ≤ 8"
+    assert is_near_duplicate(golden_hash, different_hash, threshold=8) == False

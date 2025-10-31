@@ -2,10 +2,161 @@
 import pytest
 import numpy as np
 import time
-from unittest.mock import Mock
+import shutil
+import os
+from unittest.mock import Mock, patch
+from pathlib import Path
 
 from src.retrieval.auto_retrieve import AutoRetriever, RetrievalQuery, RetrievedTrajectory
+from src.retrieval.gatekeeper import RetrievalGatekeeper, GatekeeperStatus
 from src.embeddings.temporal_silo import SiloEntry, EpisodeRetrieval
+
+
+class TestRetrievalGatekeeper:
+    """Test RetrievalGatekeeper functionality with disk space checking."""
+
+    def test_init_with_disk_space_checking(self):
+        """Test gatekeeper initialization with disk space parameters."""
+        gatekeeper = RetrievalGatekeeper(
+            max_tokens_per_hour=100,
+            min_free_space_mb=500,
+            check_disk_space=True
+        )
+        
+        assert gatekeeper.max_tokens_per_hour == 100
+        assert gatekeeper.min_free_space_mb == 500
+        assert gatekeeper.check_disk_space is True
+
+    def test_init_without_disk_space_checking(self):
+        """Test gatekeeper initialization without disk space checking."""
+        gatekeeper = RetrievalGatekeeper(
+            check_disk_space=False
+        )
+        
+        assert gatekeeper.check_disk_space is False
+        assert gatekeeper.min_free_space_mb == 100  # default value
+
+    def test_disk_space_check_sufficient_space(self):
+        """Test disk space check with sufficient space."""
+        gatekeeper = RetrievalGatekeeper(
+            min_free_space_mb=10,
+            check_disk_space=True
+        )
+        
+        # Mock sufficient disk space (mock returns 1GB free)
+        with patch('shutil.disk_usage') as mock_disk_usage:
+            # Mock returns (total, used, free) - free = 1GB
+            mock_disk_usage.return_value = (1024**3, 0, 1024**3)
+            
+            result = gatekeeper._check_disk_space()
+            assert result is True
+
+    def test_disk_space_check_insufficient_space(self):
+        """Test disk space check with insufficient space."""
+        gatekeeper = RetrievalGatekeeper(
+            min_free_space_mb=1000,
+            check_disk_space=True
+        )
+        
+        # Mock insufficient disk space (mock returns 100MB free)
+        with patch('shutil.disk_usage') as mock_disk_usage:
+            # Mock returns (total, used, free) - free = 100MB
+            free_bytes = 100 * 1024 * 1024  # 100MB
+            mock_disk_usage.return_value = (1024**3, 1024**3 - free_bytes, free_bytes)
+            
+            result = gatekeeper._check_disk_space()
+            assert result is False
+
+    def test_disk_space_check_error_handling(self):
+        """Test disk space check error handling."""
+        gatekeeper = RetrievalGatekeeper(
+            min_free_space_mb=100,
+            check_disk_space=True
+        )
+        
+        # Mock disk usage error
+        with patch('shutil.disk_usage', side_effect=Exception("Disk access error")):
+            # Should return True (proceed) on error but log warning
+            result = gatekeeper._check_disk_space()
+            assert result is True
+
+    def test_disk_space_stats_reporting(self):
+        """Test that disk space info is included in stats."""
+        gatekeeper = RetrievalGatekeeper(
+            min_free_space_mb=100,
+            check_disk_space=True
+        )
+        
+        with patch('shutil.disk_usage') as mock_disk_usage:
+            # Mock returns 500MB free
+            free_bytes = 500 * 1024 * 1024  # 500MB
+            mock_disk_usage.return_value = (1024**3, 1024**3 - free_bytes, free_bytes)
+            
+            stats = gatekeeper.get_stats()
+            
+            assert "free_space_mb" in stats
+            assert "min_free_space_mb" in stats
+            assert "disk_space_check_enabled" in stats
+            assert stats["free_space_mb"] == 500
+            assert stats["min_free_space_mb"] == 100
+            assert stats["disk_space_check_enabled"] is True
+
+    def test_disk_space_check_disabled_in_stats(self):
+        """Test that disk space is not included when disabled."""
+        gatekeeper = RetrievalGatekeeper(
+            check_disk_space=False
+        )
+        
+        stats = gatekeeper.get_stats()
+        
+        # Should not include disk space info when disabled
+        assert "free_space_mb" not in stats
+        assert "min_free_space_mb" not in stats
+
+    def test_check_and_gate_with_disk_space_check(self):
+        """Test complete gate check including disk space."""
+        gatekeeper = RetrievalGatekeeper(
+            min_free_space_mb=10,
+            check_disk_space=True
+        )
+        
+        # Mock sufficient disk space
+        with patch('shutil.disk_usage') as mock_disk_usage:
+            mock_disk_usage.return_value = (1024**3, 0, 1024**3)
+            
+            status, token, metadata = gatekeeper.check_and_gate(
+                "test query",
+                context={"shallow_hits": 5},
+                force_allow=False
+            )
+            
+            # Should be allowed
+            assert status == GatekeeperStatus.ALLOW
+            assert token is not None
+            assert metadata["shallow_confidence"] is not None
+
+    def test_check_and_gate_with_disk_space_rejection(self):
+        """Test gate check rejection due to insufficient disk space."""
+        gatekeeper = RetrievalGatekeeper(
+            min_free_space_mb=1000,
+            check_disk_space=True
+        )
+        
+        # Mock insufficient disk space
+        with patch('shutil.disk_usage') as mock_disk_usage:
+            free_bytes = 100 * 1024 * 1024  # 100MB
+            mock_disk_usage.return_value = (1024**3, 1024**3 - free_bytes, free_bytes)
+            
+            status, token, metadata = gatekeeper.check_and_gate(
+                "test query",
+                context={"shallow_hits": 5}
+            )
+            
+            # Should be denied due to insufficient disk space
+            assert status == GatekeeperStatus.DENY
+            assert token is None
+            assert metadata["reason"] == "insufficient_disk_space"
+            assert metadata["min_free_space_mb"] == 1000
 
 
 class TestAutoRetriever:

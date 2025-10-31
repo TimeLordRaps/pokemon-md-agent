@@ -7,7 +7,31 @@ import numpy as np
 from dataclasses import dataclass
 from enum import Enum
 from PIL import Image
-from skimage.metrics import structural_similarity as ssim
+try:
+    from skimage.metrics import structural_similarity as ssim
+except Exception:  # skimage may not be installed in lightweight test environments
+    def ssim(a, b, data_range=None):
+        """Lightweight fallback for structural similarity (approximate).
+
+        This fallback returns a simple normalized similarity based on MSE.
+        It's not a drop-in replacement for skimage's SSIM but is sufficient
+        for unit tests and environments where skimage isn't available.
+        """
+        try:
+            # Ensure arrays are float
+            fa = a.astype(float)
+            fb = b.astype(float)
+            mse = ((fa - fb) ** 2).mean()
+            # Normalize by possible dynamic range
+            if data_range is None:
+                dr = float(fa.max() - fa.min()) if fa.max() != fa.min() else 255.0
+            else:
+                dr = float(data_range) if data_range != 0 else 255.0
+            # Compute simple similarity in [0,1]
+            sim = 1.0 - (mse / (dr * dr + 1e-12))
+            return float(max(0.0, min(1.0, sim)))
+        except Exception:
+            return 0.0
 
 logger = logging.getLogger(__name__)
 

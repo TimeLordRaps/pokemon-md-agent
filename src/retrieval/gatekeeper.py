@@ -6,6 +6,8 @@ from enum import Enum
 import logging
 import time
 import hashlib
+import shutil
+import os
 
 if TYPE_CHECKING:
     from ..dashboard.content_api import ContentAPI
@@ -49,6 +51,8 @@ class RetrievalGatekeeper:
         token_lifetime_seconds: int = 300,  # 5 minutes
         min_confidence_threshold: float = 0.6,
         content_api: Optional['ContentAPI'] = None,
+        min_free_space_mb: int = 100,  # Minimum free disk space in MB
+        check_disk_space: bool = True,  # Whether to check disk space
     ):
         """Initialize gatekeeper.
 
@@ -57,11 +61,15 @@ class RetrievalGatekeeper:
             token_lifetime_seconds: How long tokens are valid
             min_confidence_threshold: Minimum confidence to proceed
             content_api: Optional ContentAPI for gate bursts
+            min_free_space_mb: Minimum free space required in MB
+            check_disk_space: Whether to perform disk space checks
         """
         self.max_tokens_per_hour = max_tokens_per_hour
         self.token_lifetime_seconds = token_lifetime_seconds
         self.min_confidence_threshold = min_confidence_threshold
         self.content_api = content_api
+        self.min_free_space_mb = min_free_space_mb
+        self.check_disk_space = check_disk_space
 
         # Token tracking
         self.active_tokens: Dict[str, GateToken] = {}
@@ -72,10 +80,11 @@ class RetrievalGatekeeper:
         self.cache_max_age = 3600  # 1 hour
 
         logger.info(
-            "RetrievalGatekeeper initialized: max_tokens=%d/hour, token_lifetime=%ds, content_api=%s",
+            "RetrievalGatekeeper initialized: max_tokens=%d/hour, token_lifetime=%ds, content_api=%s, min_free_space=%dMB",
             max_tokens_per_hour,
             token_lifetime_seconds,
-            "enabled" if content_api else "disabled"
+            "enabled" if content_api else "disabled",
+            min_free_space_mb
         )
 
     def check_and_gate(
@@ -143,6 +152,14 @@ class RetrievalGatekeeper:
             return GatekeeperStatus.DENY, None, {
                 **metadata,
                 "reason": "budget_exceeded"
+            }
+
+        # Check disk space if enabled
+        if self.check_disk_space and not self._check_disk_space():
+            return GatekeeperStatus.DENY, None, {
+                **metadata,
+                "reason": "insufficient_disk_space",
+                "min_free_space_mb": self.min_free_space_mb
             }
 
         # All checks passed - create token
@@ -258,6 +275,38 @@ class RetrievalGatekeeper:
 
         # Check if we can issue more tokens
         return len(self.hourly_usage) < self.max_tokens_per_hour
+    
+    def _check_disk_space(self) -> bool:
+        """Check if there's sufficient disk space available.
+        
+        Returns:
+            True if sufficient disk space is available, False otherwise
+        """
+        try:
+            # Get current working directory for disk space check
+            current_dir = os.getcwd()
+            
+            # Get disk usage statistics
+            total, used, free = shutil.disk_usage(current_dir)
+            
+            # Convert to MB
+            free_mb = free // (1024 * 1024)
+            
+            if free_mb < self.min_free_space_mb:
+                logger.warning(
+                    f"Insufficient disk space: {free_mb}MB free, {self.min_free_space_mb}MB required. "
+                    f"Free up disk space or reduce the min_free_space_mb threshold."
+                )
+                return False
+            
+            logger.debug(f"Disk space check passed: {free_mb}MB free, {self.min_free_space_mb}MB required")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to check disk space: {e}")
+            # On error, allow operation to proceed but log warning
+            logger.warning("Disk space check failed - proceeding without disk space validation")
+            return True
 
     def _create_token(self, query_hash: str) -> GateToken:
         """Create a new gate token."""
@@ -370,12 +419,30 @@ class RetrievalGatekeeper:
         """Get gatekeeper statistics."""
         current_time = time.time()
 
+        # Get disk space info if available
+        disk_space_info = {}
+        if self.check_disk_space:
+            try:
+                current_dir = os.getcwd()
+                total, used, free = shutil.disk_usage(current_dir)
+                disk_space_info = {
+                    "free_space_mb": free // (1024 * 1024),
+                    "min_free_space_mb": self.min_free_space_mb,
+                    "disk_space_check_enabled": self.check_disk_space
+                }
+            except Exception as e:
+                disk_space_info = {
+                    "disk_space_error": str(e),
+                    "disk_space_check_enabled": self.check_disk_space
+                }
+
         return {
             "active_tokens": len(self.active_tokens),
             "hourly_usage": len(self.hourly_usage),
             "cache_size": len(self.shallow_cache),
             "budget_remaining": max(0, self.max_tokens_per_hour - len(self.hourly_usage)),
             "uptime_seconds": current_time - (current_time // 3600 * 3600),  # Since hour start
+            **disk_space_info,
         }
 
     def reset_budget(self) -> None:
