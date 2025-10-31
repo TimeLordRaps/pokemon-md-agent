@@ -409,6 +409,11 @@ class MGBAController:
         self._command_latencies: Dict[str, List[float]] = {}
         self._domain_counters: Dict[str, int] = {"memory": 0, "button": 0, "core": 0, "screenshot": 0}
 
+        # Frame tracking
+        self.current_frame_data: Optional[np.ndarray] = None
+        self._current_frame: Optional[int] = None
+        self._frame_counter: int = 0
+
         logger.info("Initialized MGBAController at %s:%d (scale=%dx, smoke=%s)", self.host, self.port, self.video_config.scale, self.smoke_mode)
 
     def _start_heartbeat(self) -> None:
@@ -1192,6 +1197,11 @@ class MGBAController:
             # Cleanup temp file
             temp_path.unlink(missing_ok=True)
 
+            # Store frame data for agent access
+            self.current_frame_data = np.array(image)
+            self._current_frame = self.current_frame()
+            self._frame_counter += 1
+
             return image
 
         except (OSError, ValueError) as e:
@@ -1630,6 +1640,24 @@ class MGBAController:
             Current effective FPS
         """
         return self.fps_adjuster.get_current_fps()
+
+    def current_frame(self) -> Optional[int]:
+        """Get current frame number from emulator.
+
+        Returns:
+            Current frame number or None if failed
+        """
+        if self._current_frame is not None:
+            return self._current_frame
+
+        try:
+            response = self.send_command("core.currentFrame")
+            if response and response != "<|ERROR|>":
+                self._current_frame = int(response)
+                return self._current_frame
+        except (ValueError, TypeError):
+            logger.debug("Failed to parse frame number from response")
+        return None
 
     def zoom_out_temporally(self) -> bool:
         """Zoom out temporally (lower FPS for longer time spans).

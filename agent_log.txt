@@ -183,3 +183,109 @@
 2025-10-30 18:30:36,786 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
 2025-10-30 18:30:36,786 - src.agent.agent_core - ERROR - Error at step 37: No ROM files found in rom/ directory
 2025-10-30 18:33:31,901 - src.agent.agent_core - INFO - File logging initialized
+2025-10-30 23:52:21,291 - src.agent.agent_core - INFO - File logging initialized
+2025-10-30 23:52:21,366 - src.agent.agent_core - INFO - Successfully connected to mGBA during initialization
+2025-10-30 23:52:21,366 - src.agent.agent_core - INFO - Agent initialized with objective: Navigate to stairs and progress through dungeon (test_mode: False)
+2025-10-30 23:52:21,366 - src.agent.agent_core - INFO - Starting agent loop (max 50 steps)
+2025-10-30 23:52:21,366 - src.agent.agent_core - INFO - Async components initialized
+2025-10-30 23:52:21,601 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:21,631 - src.agent.agent_core - ERROR - Error at step 1: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:21,862 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:21,895 - src.agent.agent_core - ERROR - Error at step 2: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:22,460 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:22,491 - src.agent.agent_core - ERROR - Error at step 3: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:22,728 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:22,758 - src.agent.agent_core - ERROR - Error at step 4: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:23,029 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:23,057 - src.agent.agent_core - ERROR - Error at step 5: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:23,623 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:23,651 - src.agent.agent_core - ERROR - Error at step 6: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:23,892 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:23,919 - src.agent.agent_core - ERROR - Error at step 7: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:24,520 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:24,550 - src.agent.agent_core - ERROR - Error at step 8: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:24,791 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:24,819 - src.agent.agent_core - ERROR - Error at step 9: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:25,056 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:25,085 - src.agent.agent_core - ERROR - Error at step 10: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:25,647 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:25,677 - src.agent.agent_core - ERROR - Error at step 11: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:25,912 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:25,943 - src.agent.agent_core - ERROR - Error at step 12: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:26,543 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:26,573 - src.agent.agent_core - ERROR - Error at step 13: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:26,809 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:26,840 - src.agent.agent_core - ERROR - Error at step 14: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:27,078 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-30 23:52:27,104 - src.agent.agent_core - ERROR - Error at step 15: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:27,710 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:27,738 - src.agent.agent_core - ERROR - Error at step 16: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:27,974 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:28,002 - src.agent.agent_core - ERROR - Error at step 17: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:28,572 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:28,602 - src.agent.agent_core - ERROR - Error at step 18: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:28,874 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:28,904 - src.agent.agent_core - ERROR - Error at step 19: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:29,107 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-30 23:52:29,138 - src.agent.agent_core - ERROR - Error at step 20: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:29,709 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:29,739 - src.agent.agent_core - ERROR - Error at step 21: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:30,012 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:30,041 - src.agent.agent_core - ERROR - Error at step 22: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:30,585 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:30,614 - src.agent.agent_core - ERROR - Error at step 23: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:30,881 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:30,912 - src.agent.agent_core - ERROR - Error at step 24: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:31,146 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-30 23:52:31,177 - src.agent.agent_core - ERROR - Error at step 25: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:31,741 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:31,771 - src.agent.agent_core - ERROR - Error at step 26: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:32,041 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:32,072 - src.agent.agent_core - ERROR - Error at step 27: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:32,607 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:32,637 - src.agent.agent_core - ERROR - Error at step 28: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:32,906 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:32,934 - src.agent.agent_core - ERROR - Error at step 29: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:33,206 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-30 23:52:33,236 - src.agent.agent_core - ERROR - Error at step 30: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:33,766 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:33,796 - src.agent.agent_core - ERROR - Error at step 31: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:34,066 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:34,095 - src.agent.agent_core - ERROR - Error at step 32: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:34,633 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:34,661 - src.agent.agent_core - ERROR - Error at step 33: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:34,931 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:34,957 - src.agent.agent_core - ERROR - Error at step 34: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:35,228 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-30 23:52:35,257 - src.agent.agent_core - ERROR - Error at step 35: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:35,793 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:35,822 - src.agent.agent_core - ERROR - Error at step 36: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:36,092 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:36,120 - src.agent.agent_core - ERROR - Error at step 37: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:36,656 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:36,681 - src.agent.agent_core - ERROR - Error at step 38: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:36,956 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:36,982 - src.agent.agent_core - ERROR - Error at step 39: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:37,254 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-30 23:52:37,279 - src.agent.agent_core - ERROR - Error at step 40: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:37,817 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:37,845 - src.agent.agent_core - ERROR - Error at step 41: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:38,114 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:38,142 - src.agent.agent_core - ERROR - Error at step 42: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:38,680 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:38,708 - src.agent.agent_core - ERROR - Error at step 43: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:38,979 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:39,007 - src.agent.agent_core - ERROR - Error at step 44: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:39,276 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-30 23:52:39,307 - src.agent.agent_core - ERROR - Error at step 45: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:39,843 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:39,871 - src.agent.agent_core - ERROR - Error at step 46: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:40,142 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:40,170 - src.agent.agent_core - ERROR - Error at step 47: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:40,709 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:40,736 - src.agent.agent_core - ERROR - Error at step 48: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:41,009 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
+2025-10-30 23:52:41,036 - src.agent.agent_core - ERROR - Error at step 49: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:41,308 - src.agent.agent_core - WARNING - Agent stuck: Very high behavioral divergence detected
+2025-10-30 23:52:41,334 - src.agent.agent_core - ERROR - Error at step 50: 'MGBAController' object has no attribute 'current_frame'
+2025-10-30 23:52:41,335 - src.agent.agent_core - INFO - Agent loop complete

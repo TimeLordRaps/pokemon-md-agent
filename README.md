@@ -30,6 +30,25 @@ Multi-model Qwen3-VL agent with hierarchical RAG system, dynamic temporal resolu
 
 ---
 
+## ⚡ Quick Start (2 minutes)
+
+1. **Activate environment:**
+   ```bash
+   mamba activate agent-hackathon
+   ```
+
+2. **Run demo (50 steps + 3-min video):**
+   ```bash
+   cd pokemon-md-agent
+   python scripts/final_demo_runner.py
+   ```
+
+3. **View results:**
+   - Video: `docs/assets/agent_demo.mp4`
+   - Logs: `runs/demo_*/trajectory_*.jsonl`
+
+---
+
 ## ⚡ Quick Start (5 minutes)
 
 ### Prerequisites

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Mystery Dungeon Agent Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .video-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        video {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        p {
+            line-height: 1.6;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pokemon Mystery Dungeon Autonomous Agent Demo</h1>
+    <p>This demo showcases an AI agent playing Pokemon Mystery Dungeon Red Rescue Team using Qwen3-VL vision models. The agent navigates Tiny Woods B1F, makes decisions, and solves the floor autonomously.</p>
+
+    <div class="video-container">
+        <video controls>
+            <source src="assets/agent_demo.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <p><strong>Demo Details:</strong></p>
+    <ul>
+        <li>Agent uses multi-model Qwen3-VL (2B/4B/8B variants)</li>
+        <li>Hierarchical RAG with 7 temporal resolution silos</li>
+        <li>Dynamic FPS adjustment for optimal performance</li>
+        <li>Live dashboard integration (when available)</li>
+        <li>Skill-based action execution</li>
+    </ul>
+
+    <p>For more information, see the <a href="https://github.com/TimeLordRaps/pokemon-md-agent">GitHub repository</a>.</p>
+</body>
+</html>
