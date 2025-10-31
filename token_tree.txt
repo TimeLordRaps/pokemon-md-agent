@@ -4,31 +4,40 @@
 [2mNo custom config found at repomix.config.json5, repomix.config.jsonc, repomix.config.json or global config at C:\Users\tyler\AppData\Local\Repomix\repomix.config.json5, C:\Users\tyler\AppData\Local\Repomix\repomix.config.jsonc, C:\Users\tyler\AppData\Local\Repomix\repomix.config.json.
 You can add a config file for additional settings. Please check https://github.com/yamadashy/repomix for more information.[22m
 [36m⠙[39m Searching for files...
-[2K[1A[2K[G[36m⠹[39m Collecting files...
-[2K[1A[2K[G[36m⠸[39m Running security check...
-[2K[1A[2K[G[36m⠼[39m Running security check... (179/224) [2mtests/test_current_frame.py[22m
-[2K[1A[2K[G[36m⠴[39m Processing files...
-[2K[1A[2K[G[36m⠦[39m Generating output...
-[2K[1A[2K[G[36m⠧[39m Calculating metrics...
-[2K[1A[2K[G[36m⠇[39m Calculating metrics...
-[2K[1A[2K[G[36m⠏[39m Calculating metrics... (6/224) [2mconfig/mgba_config.ini[22m
-[2K[1A[2K[G[36m⠋[39m Calculating metrics... (94/224) [2msrc/embeddings/temporal_silo.py[22m
-[2K[1A[2K[G[36m⠙[39m Calculating metrics... (224/224) [2mtests/test_vision_tools.py[22m
+[2K[1A[2K[G[36m⠹[39m Searching for files...
+[2K[1A[2K[G[36m⠸[39m Collecting files...
+[2K[1A[2K[G[36m⠼[39m Collect file... (45/234) [2mprototypes/wram_decoder_fix/test_decoder.py[22m
+[2K[1A[2K[G[36m⠴[39m Collect file... (201/234) [2mtests/test_model_router_deadline.py[22m
+[2K[1A[2K[G[36m⠦[39m Running security check...
+[2K[1A[2K[G[36m⠧[39m Running security check... (143/225) [2msrc/skills/python_runtime.py[22m
+[2K[1A[2K[G[36m⠇[39m Processing files...
+[2K[1A[2K[G[36m⠏[39m Processing file... (20/225) [2mdocs/docs/items/index.md[22m
+[2K[1A[2K[G[36m⠋[39m Generating output...
+[2K[1A[2K[G[36m⠙[39m Generating output...
+[2K[1A[2K[G[36m⠹[39m Calculating metrics...
+[2K[1A[2K[G[36m⠸[39m Calculating metrics...
+[2K[1A[2K[G[36m⠼[39m Calculating metrics...
+[2K[1A[2K[G[36m⠴[39m Calculating metrics...
+[2K[1A[2K[G[36m⠦[39m Calculating metrics... (1/225) [2m.temp_check_ram.py[22m
+[2K[1A[2K[G[36m⠧[39m Calculating metrics... (19/225) [2mdocs/docs/items/index.md[22m
+[2K[1A[2K[G[36m⠇[39m Calculating metrics... (84/225) [2msrc/agent/model_router.py[22m
+[2K[1A[2K[G[36m⠏[39m Calculating metrics... (153/225) [2msrc/vision/packaging.py[22m
+[2K[1A[2K[G[36m⠋[39m Calculating metrics... (225/225) [2mtests/test_vision_tools.py[22m
 [2K[1A[2K[G[32m✔[39m Packing completed successfully!
 
 [37m📈 Top 5 Files by Token Count:[39m
 [2m──────────────────────────────[22m
 [37m1. [39m [37msrc/environment/mgba_controller.py[39m [2m(13,821 tokens, 67,150 chars, 2.8%)[22m
-[37m2. [39m [37mrouter_telemetry.jsonl[39m [2m(12,641 tokens, 34,167 chars, 2.6%)[22m
-[37m3. [39m [37msrc/environment/mgba_controller.py.backup[39m [2m(11,768 tokens, 55,735 chars, 2.4%)[22m
-[37m4. [39m [37msrc/agent/qwen_controller.py[39m [2m(10,786 tokens, 49,328 chars, 2.2%)[22m
-[37m5. [39m [37magent_log.txt[39m [2m(10,367 tokens, 33,306 chars, 2.1%)[22m
+[37m2. [39m [37magent_log.txt[39m [2m(13,654 tokens, 43,990 chars, 2.8%)[22m
+[37m3. [39m [37mrouter_telemetry.jsonl[39m [2m(12,641 tokens, 34,167 chars, 2.6%)[22m
+[37m4. [39m [37msrc/environment/mgba_controller.py.backup[39m [2m(11,768 tokens, 55,735 chars, 2.4%)[22m
+[37m5. [39m [37msrc/agent/qwen_controller.py[39m [2m(10,786 tokens, 49,328 chars, 2.2%)[22m
 
 🔢 Token Count Tree:
 [2m────────────────────[22m
 ├── .gitignore [2m(329 tokens)[22m
 ├── .temp_check_ram.py [2m(706 tokens)[22m
-├── agent_log.txt [2m(10,367 tokens)[22m
+├── agent_log.txt [2m(13,654 tokens)[22m
 ├── AGENTS.md [2m(5,581 tokens)[22m
 ├── analyze_dumps.py [2m(3,136 tokens)[22m
 ├── checkpoint.md [2m(339 tokens)[22m
@@ -45,12 +54,13 @@ You can add a config file for additional settings. Please check https://github.c
 ├── pyproject.toml [2m(950 tokens)[22m
 ├── pytorch_cuda_research.md [2m(941 tokens)[22m
 ├── REPO_UPLOAD_STATUS.md [2m(2,647 tokens)[22m
+├── REPORT_SMART.md [2m(2,182 tokens)[22m
 ├── requirements.txt [2m(468 tokens)[22m
 ├── router_telemetry.jsonl [2m(12,641 tokens)[22m
 ├── SKILL_IMPROVEMENTS_SUMMARY.md [2m(1,857 tokens)[22m
 ├── STANDUP_REPORT.md [2m(2,080 tokens)[22m
 ├── test_budget.json [2m(21 tokens)[22m
-├── token_tree.txt [2m(198 tokens)[22m
+├── token_tree.txt [2m(331 tokens)[22m
 ├── config/ [2m(4,223 tokens)[22m
 │   ├── mgba_config.ini [2m(325 tokens)[22m
 │   ├── sprite_library.yaml [2m(765 tokens)[22m
@@ -302,9 +312,9 @@ These files have been excluded from the output.[39m
 
 [37m📊 Pack Summary:[39m
 [2m────────────────[22m
-[37m  Total Files:[39m [37m224[39m files
-[37m Total Tokens:[39m [37m488,976[39m tokens
-[37m  Total Chars:[39m [37m2,190,762[39m chars
+[37m  Total Files:[39m [37m225[39m files
+[37m Total Tokens:[39m [37m494,593[39m tokens
+[37m  Total Chars:[39m [37m2,210,882[39m chars
 [37m       Output:[39m [37mrepomix-output.xml[39m
 [37m     Security:[39m [37m[37m✔ No suspicious files detected[37m[39m
 
