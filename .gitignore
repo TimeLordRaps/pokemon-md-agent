@@ -1,188 +1,89 @@
-# Python
+# -------- Python
 __pycache__/
 *.py[cod]
-*.pyc
-*.pyo
+*.pyd
 *.egg-info/
-*.egg
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
 .eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
+dist/
+build/
 pip-wheel-metadata/
-share/python-wheels/
-.installed.cfg
-MANIFEST
-
-# Testing & Coverage
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
 .pytest_cache/
+.mypy_cache/
+.cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
 
-# Environments
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-.conda/
-
-# IDE & Editors
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# -------- OS cruft
 .DS_Store
-*.sublime-*
-.project
-.pydevproject
-.settings/
-
-# OS Files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# Game ROMs & Saves (never commit)
-*.gba
-*.GB
-*.gbc
-*.rom
-*.bin
-*.sav
-*.ss[0-9]
-
-# Cache & Temporary Files
-.cache/
-.pytest_cache/
-.roo/
-*.tmp
-*.temp
-*.log
-*.swp
-.ipynb_checkpoints/
-*checkpoint.ipynb
-
-# Project-Specific Outputs
-logs/
-runs/
-snapshots/
-demos/
-screenshots/
-embeddings_cache/
-*.db
-*.sqlite
-*.sqlite3
-
-# Agent Runtime Data
-agent_log.txt
-agent_*.log
-test_saves/
-memory.json
-router_telemetry.jsonl
-
-# Large Generated Files (never commit)
-*.mp4
-*.avi
-*.mov
-*.mkv
-*.webm
-*.flv
-*.png
-*.jpg
-*.jpeg
-*.webp
-
-# Model & Weights (use git-lfs if needed)
-*.pt
-*.pth
-*.ckpt
-*.safetensors
-*.bin
-unsloth_compiled_cache/
-
-# Virtual Env & Packages
-mamba-lock.yml
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Distribution & Build
-dist/
-build/
-*.egg-info/
-
-# Profiling & Benchmarks
-profiling/
-profile_results/
-.benchmark/
-
-# Misc Temporary/Debug
-.temp_check_ram.py
-inspect_connection.py
-test_connect.py
-temp_handshake.py
-debug_*.py
-test_*.txt
-
-# Large repomix/output files
-repomix-output.xml
-token_tree.txt
-
-# Node modules (if any frontend)
-node_modules/
-npm-debug.log
-yarn-error.log
-
-# Credentials & Secrets (NEVER commit)
-.env
-.env.local
-.env.*.local
-secrets.json
-credentials.json
-config.local.py
-config/secrets.json
-
-# macOS
-.AppleDouble
-.LSOverride
-._*
-.apdisk
-
-# Windows
-$RECYCLE.BIN/
-.Thumbs.db
-thumbs.db
-*.lnk
-
-# Linux
-*~
-.directory
-
-# IDE metadata
+# -------- IDE / Agents
+.vscode/
+.idea/
 .roo/
 .serena/
 .claude/
+*.code-workspace
+
+# -------- Environments / secrets
+.env
+.env.*
+*.secrets*
+secrets.json
+
+# -------- Artifacts, logs, runs
+runs/
+snapshots/
+logs/
+artifacts/
+outputs/
+checkpoints/
+*.log
+
+# -------- Video & audio (blocked by default)
+*.mp4
+*.avi
+*.mov
+*.webm
+*.wav
+*.mp3
+
+# -------- Game / ROM assets
+rom/
+*.gba
+*.gb
+*.gbc
+*.sav
+*.ss[0-9]
+
+# -------- mGBA / dumps
+config/mgba_config.ini.local
+*.dmp
+
+# -------- Models & caches
+unsloth_compiled_cache/
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+huggingface/
+hf_cache/
+transformers_cache/
+
+# -------- Node / static sites (if present)
+node_modules/
+.next/
+out/
+
+# -------- Profiling / reports
+profiling/
+coverage/
+*.prof
+
+# -------- ALLOWLIST for GitHub Pages demo video only
+!docs/
+!docs/assets/
+!docs/assets/**/*.mp4
+!docs/assets/**/*.webm

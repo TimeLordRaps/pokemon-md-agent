@@ -20,6 +20,16 @@ Multi-model Qwen3-VL agent with hierarchical RAG system, dynamic temporal resolu
 
 ---
 
+## 🎬 Demo Video
+
+**[Watch the 3-minute agent demo (MP4)](docs/assets/agent_demo.mp4)** — 180 seconds of autonomous gameplay with Kokoro TTS narration, automatically generated from agent trajectory and You.com knowledge retrieval.
+
+**Submission snapshot:**
+- Branch: `deadline-2025-10-30-2355-PT` (frozen @ 23:55 UTC-7)
+- Tag: `deadline-2025-10-30-2359-PT` (final submission timestamp)
+
+---
+
 ## ⚡ Quick Start (5 minutes)
 
 ### Prerequisites
@@ -37,21 +47,39 @@ Multi-model Qwen3-VL agent with hierarchical RAG system, dynamic temporal resolu
    cp "Pokemon Mystery Dungeon - Red Rescue Team.sav" ./rom/
    ```
 
-2. **Create & activate conda environment:**
+2. **Create & activate conda environment (installs Kokoro TTS + MoviePy):**
    ```bash
    mamba create -n agent-hackathon python=3.11 -y
    mamba activate agent-hackathon
    pip install -r requirements.txt
    ```
 
-3. **Start mGBA with Lua socket server** (Windows PowerShell example):
+3. **Configure You.com Content API (optional but recommended):**
+   ```powershell
+   # Persist YOUR key in PowerShell profile or current session
+   $Env:YOU_API_KEY = "<your-you-api-key>"
+
+   # Smoke test (live mode) - replace URL with a domain you expect the agent to use
+   python -m scripts.check_you_api --url https://www.serebii.net/dungeon/redblue/d001.shtml --live
+   ```
+
+   ```bash
+   # macOS/Linux example
+   export YOU_API_KEY="<your-you-api-key>"
+   python -m scripts.check_you_api --url https://www.serebii.net/dungeon/redblue/d001.shtml --live
+   ```
+
+   - Success prints `• https://... -> OK | ...`
+   - If you skip this step (or the key is invalid) the agent falls back to placeholder content.
+
+4. **Start mGBA with Lua socket server** (Windows PowerShell example):
    ```powershell
    # Ensure mGBA-http is loaded (Lua console > File > Load script > mGBASocketServer.lua)
    # Server defaults to port 8888
    # Verify with: python .temp_check_ram.py
    ```
 
-4. **Run final demo (50-step agent + 3-min video):**
+5. **Run final demo (50-step agent + 3-min video + Kokoro voiceover):**
    ```bash
    mamba activate agent-hackathon
    cd pokemon-md-agent
@@ -60,7 +88,7 @@ Multi-model Qwen3-VL agent with hierarchical RAG system, dynamic temporal resolu
 
    **Output:**
    - `runs/demo_*/trajectory_*.jsonl` - Full trajectory data
-   - `agent_demo.mp4` - 3-minute montage video (key frames)
+   - `agent_demo.mp4` - 3-minute montage video (key frames + Kokoro TTS narration)
    - Console logs show real-time progress
 
 ### Expected Timeline
@@ -102,6 +130,8 @@ The agent includes a comprehensive dashboard system for monitoring gameplay and 
 - **Monthly Budget**: 1,000 calls/month default, persisted to `~/.cache/pmd-red/youcom_budget.json`
 - **Gate Policy**: Requires ≥3 on-device shallow hits before issuing gate burst (max 2 content calls)
 - **Cool-down**: Per-gate invocation permits 2 calls max (bulk defaults + focused deep-dive)
+- **Environment**: Set `YOU_API_KEY` (and optionally `YOU_API_BASE`) before running the agent
+- **Smoke Test**: `python -m scripts.check_you_api --url https://example.com --live` validates credentials before demos
 
 ### Configuration
 ```python
