@@ -1,0 +1,18 @@
+{
+  "generated_at": "2025-10-31T00:00:00Z",
+  "status": "video_validated",
+  "video": "docs/assets/agent_demo.mp4",
+  "duration_seconds": 180,
+  "video_stream": {
+    "codec": "h264",
+    "width": 240,
+    "height": 160
+  },
+  "frames_validated": {
+    "sampled": 300,
+    "valid": 300,
+    "valid_ratio": 1.0
+  },
+  "narration": null,
+  "events": []
+}

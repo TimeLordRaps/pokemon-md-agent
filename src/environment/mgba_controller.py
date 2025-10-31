@@ -511,7 +511,12 @@ class MGBAController:
             try:
                 address = self.address_manager.get_address(category, field)
                 self.RAM_ADDRESSES[old_key] = address
-                logger.debug(f"Mapped '{old_key}' -> {category}.{field} @ 0x{address:08X}")
+                # Use safe formatting for address since tests may patch AddressManager
+                try:
+                    addr_repr = f"0x{int(address):08X}"
+                except Exception:
+                    addr_repr = str(address)
+                logger.debug("Mapped '%s' -> %s.%s @ %s", old_key, category, field, addr_repr)
             except ValueError as e:
                 logger.warning(f"Could not map '{old_key}': {e}")
 
@@ -1153,7 +1158,9 @@ class MGBAController:
             image = None
             for attempt in range(5):  # Try up to 5 times
                 try:
-                    image = Image.open(temp_path)
+                    # Use context manager to ensure file handle is closed on Windows
+                    with Image.open(temp_path) as img:
+                        image = img.convert('RGB').copy()
                     break  # Success, exit retry loop
                 except OSError as e:
                     if attempt < 4:  # Don't sleep on last attempt
