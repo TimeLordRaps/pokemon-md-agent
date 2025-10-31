@@ -1,0 +1,20 @@
+name: heal_when_low_hp
+description: Use healing item when HP is critically low
+cooldown: 60.0
+triggers:
+  - type: ram_condition
+    condition: is_low_hp
+preconditions:
+  - has_recovery_item
+  - not_in_battle
+actions:
+  - type: use_item
+    params:
+      item_type: recovery
+      predicate: first_available
+fallback:
+  - type: wait
+    params:
+      frames: 120
+priority: 30
+max_executions: 5

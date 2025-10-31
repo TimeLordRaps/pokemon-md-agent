@@ -1,54 +1,35 @@
-"""RAM decoders for Pokemon MD Red Rescue Team."""
+"""Pure decoders for PMD Red Rescue Team RAM structures.
 
-from typing import Dict, Any, Optional, List
-from dataclasses import dataclass
-from pathlib import Path
+All decoders are ROM SHA-1 gated to ensure compatibility.
+"""
+
 import json
 import struct
-import logging
-from enum import IntFlag
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass
 
-from .mgba_controller import MGBAController
-
-logger = logging.getLogger(__name__)
-
-
-class StatusCondition(IntFlag):
-    """Status condition bit flags."""
-    NONE = 0
-    SLEEP = 1 << 0
-    PARALYSIS = 1 << 1
-    BURN = 1 << 2
-    POISON = 1 << 3
-    CONFUSION = 1 << 4
-    CURSE = 1 << 5
-
-
-class Affiliation(IntFlag):
-    """Entity affiliation."""
-    ALLY = 0
-    ENEMY = 1
-    NEUTRAL = 2
+from .rom_gating import validate_rom_sha1
 
 
 @dataclass
 class Entity:
-    """Entity structure (Pokemon or NPC)."""
+    """Game entity (monster/player)."""
     species_id: int
     level: int
     hp_current: int
     hp_max: int
-    status: StatusCondition
-    affiliation: Affiliation
+    status: int
+    affiliation: int  # 0=ally, 1=enemy, 2=neutral
     tile_x: int
     tile_y: int
-    direction: int  # 0=up, 1=right, 2=down, 3=left
+    direction: int
     visible: bool
 
 
 @dataclass
 class Item:
-    """Item structure."""
+    """Ground item."""
     item_id: int
     tile_x: int
     tile_y: int
@@ -56,518 +37,207 @@ class Item:
 
 
 @dataclass
-class PlayerState:
-    """Player state information."""
-    floor_number: int
-    dungeon_id: int
-    turn_counter: int
-    player_tile_x: int
-    player_tile_y: int
-    partner_tile_x: int
-    partner_tile_y: int
-    room_flag: bool
-
-
-@dataclass
-class PartyStatus:
-    """Party status information."""
-    leader_hp: int
-    leader_hp_max: int
-    leader_belly: int
-    leader_status: StatusCondition
-    partner_hp: int
-    partner_hp_max: int
-    partner_belly: int
-    partner_status: StatusCondition
-
-
-@dataclass
 class MapData:
-    """Map data information."""
-    stairs_x: int
-    stairs_y: int
+    """Map and camera data."""
     camera_origin_x: int
     camera_origin_y: int
     weather_state: int
     turn_phase: int
+    stairs_x: int
+    stairs_y: int
+
+
+@dataclass
+class PlayerState:
+    """Player state data."""
+    player_tile_x: int
+    player_tile_y: int
+    partner_tile_x: int
+    partner_tile_y: int
+    floor_number: int
+    dungeon_id: int
+    turn_counter: int
+
+
+@dataclass
+class PartyStatus:
+    """Party status data."""
+    leader_hp: int
+    leader_hp_max: int
+    leader_belly: int
+    partner_hp: int
+    partner_hp_max: int
+    partner_belly: int
 
 
 @dataclass
 class RAMSnapshot:
     """Complete RAM snapshot."""
-    timestamp: float
-    frame: Optional[int]
-    player_state: PlayerState
-    party_status: PartyStatus
-    map_data: MapData
     entities: List[Entity]
     items: List[Item]
+    map_data: MapData
+    player_state: PlayerState
+    party_status: PartyStatus
+    timestamp: float
 
 
-class RAMDecoder:
-    """Decodes Pokemon MD RAM data."""
-    
-    SPECIES_NAMES = {
-        # Common Pokemon (placeholder - would need full list)
-        1: "Bulbasaur", 2: "Ivysaur", 3: "Venusaur",
-        4: "Charmander", 5: "Charmeleon", 6: "Charizard",
-        7: "Squirtle", 8: "Wartortle", 9: "Blastoise",
-        10: "Caterpie", 11: "Metapod", 12: "Butterfree",
-        # Add more as needed
-    }
-    
-    ITEM_NAMES = {
-        # Common items (placeholder)
-        1: "Stick", 2: "Iron Thorn", 3: "Silver Spike",
-        4: "Apple", 5: "Great Apple", 6: "Max Apple",
-        7: "Berry", 8: "Gummi", 9: "Seed",
-        # Add more as needed
-    }
-    
-    def __init__(self, controller: MGBAController, addresses_config: Path):
-        """Initialize RAM decoder.
-        
-        Args:
-            controller: mgba controller
-            addresses_config: Path to addresses config JSON
-        """
-        self.controller = controller
-        self.addresses_config = Path(addresses_config)
-        self._addresses = self._load_addresses()
-        
-        logger.info("RAMDecoder initialized with config: %s", addresses_config)
-    
-    def _load_addresses(self) -> Dict[str, Any]:
-        """Load addresses configuration.
-        
-        Returns:
-            Addresses configuration dictionary
-        """
-        try:
-            with open(self.addresses_config, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except (OSError, json.JSONDecodeError) as e:
-            logger.error("Failed to load addresses config: %s", e)
-            raise
-    
-    def _read_memory(self, domain: str, address: int, size: int) -> bytes:
-        """Read memory from domain.
-        
-        Args:
-            domain: Memory domain name
-            address: Memory address
-            size: Number of bytes to read
-            
-        Returns:
-            Raw byte data
-        """
-        return self.controller.memory_domain_read_range(domain, address, size) or b'\x00' * size
-    
-    def _read_u8(self, domain: str, address: int) -> int:
-        """Read unsigned 8-bit value.
-        
-        Args:
-            domain: Memory domain
-            address: Memory address
-            
-        Returns:
-            Unsigned 8-bit value
-        """
-        data = self._read_memory(domain, address, 1)
-        return data[0] if data else 0
-    
-    def _read_u16(self, domain: str, address: int) -> int:
-        """Read unsigned 16-bit value.
-        
-        Args:
-            domain: Memory domain
-            address: Memory address
-            
-        Returns:
-            Unsigned 16-bit value
-        """
-        data = self._read_memory(domain, address, 2)
-        return struct.unpack('<H', data)[0] if data and len(data) == 2 else 0
-    
-    def _read_u32(self, domain: str, address: int) -> int:
-        """Read unsigned 32-bit value.
-        
-        Args:
-            domain: Memory domain
-            address: Memory address
-            
-        Returns:
-            Unsigned 32-bit value
-        """
-        data = self._read_memory(domain, address, 4)
-        return struct.unpack('<I', data)[0] if data and len(data) == 4 else 0
-    
-    def _read_i32(self, domain: str, address: int) -> int:
-        """Read signed 32-bit value.
-        
-        Args:
-            domain: Memory domain
-            address: Memory address
-            
-        Returns:
-            Signed 32-bit value
-        """
-        data = self._read_memory(domain, address, 4)
-        return struct.unpack('<i', data)[0] if data and len(data) == 4 else 0
-    
-    def _read_ptr(self, domain: str, address: int) -> int:
-        """Read pointer value.
-        
-        Args:
-            domain: Memory domain
-            address: Memory address
-            
-        Returns:
-            Pointer value (memory address)
-        """
-        return self._read_u32(domain, address)
-    
-    def _decode_status(self, status_byte: int) -> StatusCondition:
-        """Decode status condition byte.
-        
-        Args:
-            status_byte: Status byte value
-            
-        Returns:
-            StatusCondition flags
-        """
-        return StatusCondition(status_byte)
-    
-    def _decode_affiliation(self, affiliation_byte: int) -> Affiliation:
-        """Decode affiliation byte.
-        
-        Args:
-            affiliation_byte: Affiliation byte value
-            
-        Returns:
-            Affiliation enum
-        """
-        return Affiliation(affiliation_byte)
-    
-    def get_player_state(self) -> Optional[PlayerState]:
-        """Get player state information.
-        
-        Returns:
-            PlayerState or None if failed
-        """
-        try:
-            addr = self._addresses["addresses"]["player_state"]
-            
-            return PlayerState(
-                floor_number=self._read_u8("WRAM", addr["floor_number"]["address"]),
-                dungeon_id=self._read_u16("WRAM", addr["dungeon_id"]["address"]),
-                turn_counter=self._read_u16("WRAM", addr["turn_counter"]["address"]),
-                player_tile_x=self._read_u8("WRAM", addr["player_tile_x"]["address"]),
-                player_tile_y=self._read_u8("WRAM", addr["player_tile_y"]["address"]),
-                partner_tile_x=self._read_u8("WRAM", addr["partner_tile_x"]["address"]),
-                partner_tile_y=self._read_u8("WRAM", addr["partner_tile_y"]["address"]),
-                room_flag=bool(self._read_u8("WRAM", addr["room_flag"]["address"])),
-            )
-            
-        except (KeyError, TypeError, ValueError) as e:
-            logger.error("Failed to decode player state: %s", e)
-            return None
-    
-    def get_party_status(self) -> Optional[PartyStatus]:
-        """Get party status information.
-        
-        Returns:
-            PartyStatus or None if failed
-        """
-        try:
-            addr = self._addresses["addresses"]["party_status"]
-            
-            return PartyStatus(
-                leader_hp=self._read_u16("WRAM", addr["leader_hp"]["address"]),
-                leader_hp_max=self._read_u16("WRAM", addr["leader_hp_max"]["address"]),
-                leader_belly=self._read_u16("WRAM", addr["leader_belly"]["address"]),
-                leader_status=self._decode_status(
-                    self._read_u32("WRAM", addr["leader_status"]["address"])
-                ),
-                partner_hp=self._read_u16("WRAM", addr["partner_hp"]["address"]),
-                partner_hp_max=self._read_u16("WRAM", addr["partner_hp_max"]["address"]),
-                partner_belly=self._read_u16("WRAM", addr["partner_belly"]["address"]),
-                partner_status=self._decode_status(
-                    self._read_u32("WRAM", addr["partner_status"]["address"])
-                ),
-            )
-            
-        except (KeyError, TypeError, ValueError) as e:
-            logger.error("Failed to decode party status: %s", e)
-            return None
-    
-    def get_map_data(self) -> Optional[MapData]:
-        """Get map data information.
-        
-        Returns:
-            MapData or None if failed
-        """
-        try:
-            addr = self._addresses["addresses"]["map_data"]
-            
-            return MapData(
-                stairs_x=self._read_u8("WRAM", addr["stairs_x"]["address"]),
-                stairs_y=self._read_u8("WRAM", addr["stairs_y"]["address"]),
-                camera_origin_x=self._read_u8("WRAM", addr["camera_origin_x"]["address"]),
-                camera_origin_y=self._read_u8("WRAM", addr["camera_origin_y"]["address"]),
-                weather_state=self._read_u8("WRAM", addr["weather_state"]["address"]),
-                turn_phase=self._read_u8("WRAM", addr["turn_phase"]["address"]),
-            )
-            
-        except (KeyError, TypeError, ValueError) as e:
-            logger.error("Failed to decode map data: %s", e)
-            return None
-    
-    def get_entities(self) -> List[Entity]:
-        """Get list of entities (Pokemon/NPCs).
-        
-        Returns:
-            List of Entity objects
-        """
-        try:
-            addr = self._addresses["addresses"]["entities"]
-            
-            # Get list pointer and count
-            list_ptr = self._read_ptr("WRAM", addr["monster_list_ptr"]["address"])
-            monster_count = self._read_u8("WRAM", addr["monster_count"]["address"])
-            
-            entities = []
-            
-            if list_ptr and monster_count > 0:
-                struct_size = addr["monster_struct_size"]["value"]
-                fields = addr["monster_fields"]
-                
-                for i in range(monster_count):
-                    entity_addr = list_ptr + (i * struct_size)
-                    
-                    # Read entity data
-                    entity = Entity(
-                        species_id=self._read_u16("WRAM", entity_addr + fields["species_id"]["offset"]),
-                        level=self._read_u8("WRAM", entity_addr + fields["level"]["offset"]),
-                        hp_current=self._read_u16("WRAM", entity_addr + fields["hp_current"]["offset"]),
-                        hp_max=self._read_u16("WRAM", entity_addr + fields["hp_max"]["offset"]),
-                        status=self._decode_status(
-                            self._read_u8("WRAM", entity_addr + fields["status"]["offset"])
-                        ),
-                        affiliation=self._decode_affiliation(
-                            self._read_u8("WRAM", entity_addr + fields["affiliation"]["offset"])
-                        ),
-                        tile_x=self._read_u8("WRAM", entity_addr + fields["tile_x"]["offset"]),
-                        tile_y=self._read_u8("WRAM", entity_addr + fields["tile_y"]["offset"]),
-                        direction=self._read_u8("WRAM", entity_addr + fields["direction"]["offset"]),
-                        visible=bool(self._read_u8("WRAM", entity_addr + fields["visible"]["offset"])),
-                    )
-                    
-                    entities.append(entity)
-            
-            return entities
-            
-        except (KeyError, TypeError, ValueError) as e:
-            logger.error("Failed to decode entities: %s", e)
-            return []
-    
-    def get_items(self) -> List[Item]:
-        """Get list of items.
-        
-        Returns:
-            List of Item objects
-        """
-        try:
-            addr = self._addresses["addresses"]["items"]
-            
-            # Get list pointer and count
-            list_ptr = self._read_ptr("WRAM", addr["item_list_ptr"]["address"])
-            item_count = self._read_u8("WRAM", addr["item_count"]["address"])
-            
-            items = []
-            
-            if list_ptr and item_count > 0:
-                struct_size = addr["item_struct_size"]["value"]
-                fields = addr["item_fields"]
-                
-                for i in range(item_count):
-                    item_addr = list_ptr + (i * struct_size)
-                    
-                    # Read item data
-                    item = Item(
-                        item_id=self._read_u16("WRAM", item_addr + fields["item_id"]["offset"]),
-                        tile_x=self._read_u8("WRAM", item_addr + fields["tile_x"]["offset"]),
-                        tile_y=self._read_u8("WRAM", item_addr + fields["tile_y"]["offset"]),
-                        quantity=self._read_u16("WRAM", item_addr + fields["quantity"]["offset"]),
-                    )
-                    
-                    items.append(item)
-            
-            return items
-            
-        except (KeyError, TypeError, ValueError) as e:
-            logger.error("Failed to decode items: %s", e)
-            return []
-    
-    def get_full_snapshot(self) -> Optional[RAMSnapshot]:
-        """Get complete RAM snapshot.
-        
-        Returns:
-            RAMSnapshot or None if failed
-        """
-        try:
-            player_state = self.get_player_state()
-            party_status = self.get_party_status()
-            map_data = self.get_map_data()
-            entities = self.get_entities()
-            items = self.get_items()
-            
-            # Verify we got essential data
-            if player_state and party_status and map_data:
-                return RAMSnapshot(
-                    timestamp=time.time(),
-                    frame=self.controller.current_frame(),
-                    player_state=player_state,
-                    party_status=party_status,
-                    map_data=map_data,
-                    entities=entities,
-                    items=items,
-                )
-            
-            return None
-            
-        except (KeyError, TypeError, ValueError) as e:
-            logger.error("Failed to decode full snapshot: %s", e)
-            return None
-    
-    def get_species_name(self, species_id: int) -> str:
-        """Get species name by ID.
-        
-        Args:
-            species_id: Species ID
-            
-        Returns:
-            Species name or "Unknown"
-        """
-        return self.SPECIES_NAMES.get(species_id, f"Species_{species_id}")
-    
-    def get_item_name(self, item_id: int) -> str:
-        """Get item name by ID.
+class PMDRedDecoder:
+    """Decoder for PMD Red Rescue Team RAM data."""
 
-        Args:
-            item_id: Item ID
+    ROM_SHA1 = "9f4cfc5b5f4859d17169a485462e977c7aac2b89"
 
-        Returns:
-            Item name or "Unknown"
-        """
-        return self.ITEM_NAMES.get(item_id, f"Item_{item_id}")
+    def __init__(self, addresses_config: Dict[str, Any]):
+        """Initialize decoder with address configuration."""
+        validate_rom_sha1(self.ROM_SHA1)
+        self.addresses = addresses_config
 
-    def set_text_speed(self, speed: int) -> bool:
-        """Set text speed via RAM write (when allow_memory_write enabled).
+    def decode_uint8(self, data: bytes, offset: int) -> int:
+        """Decode uint8 from data at offset."""
+        return struct.unpack('<B', data[offset:offset+1])[0]
 
-        Args:
-            speed: Text speed (0=fast, 1=normal, 2=slow)
+    def decode_uint16(self, data: bytes, offset: int) -> int:
+        """Decode uint16 from data at offset (little-endian)."""
+        return struct.unpack('<H', data[offset:offset+2])[0]
 
-        Returns:
-            True if write succeeded
-        """
-        try:
-            addr = self._addresses["addresses"]["town_hubs"]["text_speed"]
-            domain = addr["domain"]
-            address = addr["address"]
+    def decode_uint32(self, data: bytes, offset: int) -> int:
+        """Decode uint32 from data at offset (little-endian)."""
+        return struct.unpack('<I', data[offset:offset+4])[0]
 
-            # Guard RAM write behind feature flag (would be checked at caller level)
-            logger.info("Setting text speed to %d via RAM poke", speed)
-            return self.controller.memory_domain_write8(domain, address, speed)
+    def decode_bool(self, data: bytes, offset: int) -> bool:
+        """Decode boolean from data at offset."""
+        return self.decode_uint8(data, offset) != 0
 
-        except (KeyError, TypeError, ValueError) as e:
-            logger.error("Failed to set text speed: %s", e)
-            return False
-    
-    def save_snapshot(self, snapshot: RAMSnapshot, output_dir: Path) -> Path:
-        """Save RAM snapshot to file.
-        
-        Args:
-            snapshot: RAM snapshot
-            output_dir: Output directory
-            
-        Returns:
-            Path to saved file
-        """
-        output_dir = Path(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Create filename with timestamp
-        timestamp = int(snapshot.timestamp)
-        filename = f"ram_snapshot_{timestamp}.json"
-        output_path = output_dir / filename
-        
-        # Convert to dict for JSON serialization
-        data = {
-            "timestamp": snapshot.timestamp,
-            "frame": snapshot.frame,
-            "player_state": {
-                "floor_number": snapshot.player_state.floor_number,
-                "dungeon_id": snapshot.player_state.dungeon_id,
-                "turn_counter": snapshot.player_state.turn_counter,
-                "player_tile_x": snapshot.player_state.player_tile_x,
-                "player_tile_y": snapshot.player_state.player_tile_y,
-                "partner_tile_x": snapshot.player_state.partner_tile_x,
-                "partner_tile_y": snapshot.player_state.partner_tile_y,
-                "room_flag": snapshot.player_state.room_flag,
-            },
-            "party_status": {
-                "leader_hp": snapshot.party_status.leader_hp,
-                "leader_hp_max": snapshot.party_status.leader_hp_max,
-                "leader_belly": snapshot.party_status.leader_belly,
-                "leader_status": int(snapshot.party_status.leader_status),
-                "partner_hp": snapshot.party_status.partner_hp,
-                "partner_hp_max": snapshot.party_status.partner_hp_max,
-                "partner_belly": snapshot.party_status.partner_belly,
-                "partner_status": int(snapshot.party_status.partner_status),
-            },
-            "map_data": {
-                "stairs_x": snapshot.map_data.stairs_x,
-                "stairs_y": snapshot.map_data.stairs_y,
-                "camera_origin_x": snapshot.map_data.camera_origin_x,
-                "camera_origin_y": snapshot.map_data.camera_origin_y,
-                "weather_state": snapshot.map_data.weather_state,
-                "turn_phase": snapshot.map_data.turn_phase,
-            },
-            "entities": [
-                {
-                    "species_id": e.species_id,
-                    "species_name": self.get_species_name(e.species_id),
-                    "level": e.level,
-                    "hp_current": e.hp_current,
-                    "hp_max": e.hp_max,
-                    "status": int(e.status),
-                    "affiliation": int(e.affiliation),
-                    "tile_x": e.tile_x,
-                    "tile_y": e.tile_y,
-                    "direction": e.direction,
-                    "visible": e.visible,
-                }
-                for e in snapshot.entities
-            ],
-            "items": [
-                {
-                    "item_id": i.item_id,
-                    "item_name": self.get_item_name(i.item_id),
-                    "tile_x": i.tile_x,
-                    "tile_y": i.tile_y,
-                    "quantity": i.quantity,
-                }
-                for i in snapshot.items
-            ],
+    def decode_bitfield(self, data: bytes, offset: int, size: int) -> int:
+        """Decode bitfield from data at offset."""
+        if size == 1:
+            return self.decode_uint8(data, offset)
+        elif size == 2:
+            return self.decode_uint16(data, offset)
+        elif size == 4:
+            return self.decode_uint32(data, offset)
+        else:
+            raise ValueError(f"Unsupported bitfield size: {size}")
+
+    def decode_player_state(self, data: bytes) -> Dict[str, Any]:
+        """Decode player state from RAM data."""
+        base = self.addresses["player_state"]
+
+        return {
+            "floor_number": self.decode_uint8(data, base["floor_number"]["address"]),
+            "dungeon_id": self.decode_uint16(data, base["dungeon_id"]["address"]),
+            "turn_counter": self.decode_uint16(data, base["turn_counter"]["address"]),
+            "player_tile_x": self.decode_uint8(data, base["player_tile_x"]["address"]),
+            "player_tile_y": self.decode_uint8(data, base["player_tile_y"]["address"]),
+            "partner_tile_x": self.decode_uint8(data, base["partner_tile_x"]["address"]),
+            "partner_tile_y": self.decode_uint8(data, base["partner_tile_y"]["address"]),
+            "room_flag": self.decode_bool(data, base["room_flag"]["address"])
         }
-        
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2)
-        
-        logger.info("Saved RAM snapshot to %s", output_path)
-        return output_path
+
+    def decode_party_status(self, data: bytes) -> Dict[str, Any]:
+        """Decode party status from RAM data."""
+        base = self.addresses["party_status"]
+
+        return {
+            "leader": {
+                "hp": self.decode_uint16(data, base["leader_hp"]["address"]),
+                "hp_max": self.decode_uint16(data, base["leader_hp_max"]["address"]),
+                "belly": self.decode_uint16(data, base["leader_belly"]["address"]),
+                "status": self.decode_bitfield(data, base["leader_status"]["address"],
+                                             base["leader_status"]["size"])
+            },
+            "partner": {
+                "hp": self.decode_uint16(data, base["partner_hp"]["address"]),
+                "hp_max": self.decode_uint16(data, base["partner_hp_max"]["address"]),
+                "belly": self.decode_uint16(data, base["partner_belly"]["address"]),
+                "status": self.decode_bitfield(data, base["partner_status"]["address"],
+                                              base["partner_status"]["size"])
+            }
+        }
+
+    def decode_map_data(self, data: bytes) -> Dict[str, Any]:
+        """Decode map data from RAM data."""
+        base = self.addresses["map_data"]
+
+        return {
+            "camera_origin_x": self.decode_uint8(data, base["camera_origin_x"]["address"]),
+            "camera_origin_y": self.decode_uint8(data, base["camera_origin_y"]["address"]),
+            "weather_state": self.decode_uint8(data, base["weather_state"]["address"]),
+            "turn_phase": self.decode_uint8(data, base["turn_phase"]["address"]),
+            "stairs_x": self.decode_uint8(data, base["stairs_x"]["address"]),
+            "stairs_y": self.decode_uint8(data, base["stairs_y"]["address"])
+        }
+
+    def decode_monsters(self, data: bytes) -> List[Dict[str, Any]]:
+        """Decode monster list from RAM data."""
+        entities = self.addresses["entities"]
+        monster_struct_size = entities["monster_struct_size"]["value"]
+
+        count = self.decode_uint8(data, entities["monster_count"]["address"])
+        ptr = self.decode_uint32(data, entities["monster_list_ptr"]["address"])
+
+        monsters = []
+        for i in range(min(count, entities["monster_count"]["max"])):
+            offset = ptr + (i * monster_struct_size)
+            fields = entities["monster_fields"]
+
+            monster = {
+                "species_id": self.decode_uint16(data, offset + fields["species_id"]["offset"]),
+                "level": self.decode_uint8(data, offset + fields["level"]["offset"]),
+                "hp_current": self.decode_uint16(data, offset + fields["hp_current"]["offset"]),
+                "hp_max": self.decode_uint16(data, offset + fields["hp_max"]["offset"]),
+                "status": self.decode_uint8(data, offset + fields["status"]["offset"]),
+                "affiliation": self.decode_uint8(data, offset + fields["affiliation"]["offset"]),
+                "tile_x": self.decode_uint8(data, offset + fields["tile_x"]["offset"]),
+                "tile_y": self.decode_uint8(data, offset + fields["tile_y"]["offset"]),
+                "direction": self.decode_uint8(data, offset + fields["direction"]["offset"]),
+                "visible": self.decode_bool(data, offset + fields["visible"]["offset"])
+            }
+            monsters.append(monster)
+
+        return monsters
+
+    def decode_items(self, data: bytes) -> List[Dict[str, Any]]:
+        """Decode item list from RAM data."""
+        items_config = self.addresses["items"]
+        item_struct_size = items_config["item_struct_size"]["value"]
+
+        count = self.decode_uint8(data, items_config["item_count"]["address"])
+        ptr = self.decode_uint32(data, items_config["item_list_ptr"]["address"])
+
+        items = []
+        for i in range(min(count, items_config["item_count"]["max"])):
+            offset = ptr + (i * item_struct_size)
+            fields = items_config["item_fields"]
+
+            item = {
+                "item_id": self.decode_uint16(data, offset + fields["item_id"]["offset"]),
+                "tile_x": self.decode_uint8(data, offset + fields["tile_x"]["offset"]),
+                "tile_y": self.decode_uint8(data, offset + fields["tile_y"]["offset"]),
+                "quantity": self.decode_uint16(data, offset + fields["quantity"]["offset"])
+            }
+            items.append(item)
+
+        return items
+
+    def decode_all(self, data: bytes) -> Dict[str, Any]:
+        """Decode all game state from RAM data."""
+        return {
+            "player_state": self.decode_player_state(data),
+            "party_status": self.decode_party_status(data),
+            "map_data": self.decode_map_data(data),
+            "monsters": self.decode_monsters(data),
+            "items": self.decode_items(data)
+        }
 
 
-# Add time import
-import time
+def load_addresses_config() -> Dict[str, Any]:
+    """Load addresses configuration for PMD Red."""
+    config_path = Path(__file__).parent.parent.parent / "config" / "addresses" / "pmd_red_us_v1.json"
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)["addresses"]
+
+
+def create_decoder() -> PMDRedDecoder:
+    """Create a PMD Red decoder instance."""
+    config = load_addresses_config()
+    return PMDRedDecoder(config)

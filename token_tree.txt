@@ -1,0 +1,282 @@
+[2m
+📦 Repomix v1.4.2
+[22m
+[2mNo custom config found at repomix.config.json5, repomix.config.jsonc, repomix.config.json or global config at C:\Users\tyler\AppData\Local\Repomix\repomix.config.json5, C:\Users\tyler\AppData\Local\Repomix\repomix.config.jsonc, C:\Users\tyler\AppData\Local\Repomix\repomix.config.json.
+You can add a config file for additional settings. Please check https://github.com/yamadashy/repomix for more information.[22m
+[36m⠙[39m Searching for files...
+[2K[1A[2K[G[36m⠹[39m Collecting files...
+[2K[1A[2K[G[36m⠸[39m Collect file... (104/193) [2msrc/retrieval/circular_buffer.py[22m
+[2K[1A[2K[G[36m⠼[39m Running security check...
+[2K[1A[2K[G[36m⠴[39m Running security check... (184/184) [2mtests/test_wram_bounds.py[22m
+[2K[1A[2K[G[36m⠦[39m Processing files...
+[2K[1A[2K[G[36m⠧[39m Processing file... (184/184) [2mtoken_tree.txt[22m
+[2K[1A[2K[G[36m⠇[39m Generating output...
+[2K[1A[2K[G[36m⠏[39m Generating output...
+[2K[1A[2K[G[36m⠋[39m Generating output...
+[2K[1A[2K[G[36m⠙[39m Calculating metrics...
+[2K[1A[2K[G[36m⠹[39m Calculating metrics...
+[2K[1A[2K[G[36m⠸[39m Calculating metrics... (52/184) [2mskill-libraries/README.md[22m
+[2K[1A[2K[G[36m⠼[39m Calculating metrics... (75/184) [2msrc/environment/mgba_controller.py[22m
+[2K[1A[2K[G[36m⠴[39m Calculating metrics... (101/184) [2msrc/retrieval/keyframe_policy.py[22m
+[2K[1A[2K[G[36m⠦[39m Calculating metrics... (169/184) [2mtests/test_router_glue.py[22m
+[2K[1A[2K[G[36m⠧[39m Calculating metrics... (184/184) [2mtoken_tree.txt[22m
+[2K[1A[2K[G[36m⠇[39m Calculating metrics... (184/184) [2mtoken_tree.txt[22m
+[2K[1A[2K[G[32m✔[39m Packing completed successfully!
+
+[37m📈 Top 5 Files by Token Count:[39m
+[2m──────────────────────────────[22m
+[37m1. [39m [37msrc/environment/mgba_controller.py[39m [2m(13,563 tokens, 64,347 chars, 3.5%)[22m
+[37m2. [39m [37mrouter_telemetry.jsonl[39m [2m(12,641 tokens, 34,167 chars, 3.3%)[22m
+[37m3. [39m [37msrc/environment/mgba_controller.py.backup[39m [2m(11,768 tokens, 55,735 chars, 3.1%)[22m
+[37m4. [39m [37msrc/agent/qwen_controller.py[39m [2m(10,688 tokens, 48,881 chars, 2.8%)[22m
+[37m5. [39m [37msrc/vision/sprite_detector.py[39m [2m(8,836 tokens, 38,485 chars, 2.3%)[22m
+
+🔢 Token Count Tree:
+[2m────────────────────[22m
+├── .env.example [2m(75 tokens)[22m
+├── .gitignore [2m(222 tokens)[22m
+├── .temp_check_ram.py [2m(706 tokens)[22m
+├── agent_log.txt [2m(6,629 tokens)[22m
+├── AGENTS.md [2m(4,791 tokens)[22m
+├── checkpoint.md [2m(339 tokens)[22m
+├── demo_agent.py [2m(347 tokens)[22m
+├── LICENSE [2m(224 tokens)[22m
+├── MANIFEST.in [2m(85 tokens)[22m
+├── pyproject.toml [2m(950 tokens)[22m
+├── pytorch_cuda_research.md [2m(941 tokens)[22m
+├── requirements.txt [2m(441 tokens)[22m
+├── router_telemetry.jsonl [2m(12,641 tokens)[22m
+├── STANDUP_REPORT.md [2m(2,080 tokens)[22m
+├── test_budget.json [2m(21 tokens)[22m
+├── token_tree.txt [2m(249 tokens)[22m
+├── .roo/ [2m(1,469 tokens)[22m
+│   ├── findings/ [2m(1,163 tokens)[22m
+│   │   ├── environment_changelog.md [2m(353 tokens)[22m
+│   │   └── vision_changelog.md [2m(810 tokens)[22m
+│   ├── locks/ [2m(95 tokens)[22m
+│   │   ├── codex_prototyping_decoder.lock [2m(20 tokens)[22m
+│   │   ├── environment_agent.lock [2m(37 tokens)[22m
+│   │   └── vision_agent.lock [2m(38 tokens)[22m
+│   └── status/ [2m(211 tokens)[22m
+│       ├── environment_status.json [2m(67 tokens)[22m
+│       └── vision_status.json [2m(144 tokens)[22m
+├── config/ [2m(3,898 tokens)[22m
+│   ├── sprite_library.yaml [2m(765 tokens)[22m
+│   └── addresses/ [2m(3,133 tokens)[22m
+│       └── pmd_red_us_v1.json [2m(3,133 tokens)[22m
+├── demos/ [2m(5,809 tokens)[22m
+│   ├── embedding_visualization.py [2m(4,152 tokens)[22m
+│   └── rag_demo.py [2m(1,657 tokens)[22m
+├── docs/ [2m(7,762 tokens)[22m
+│   ├── agent-scaffold.md [2m(252 tokens)[22m
+│   ├── build_indexes.py [2m(1,903 tokens)[22m
+│   ├── optimization_roadmap.md [2m(2,161 tokens)[22m
+│   ├── rag-system-architecture.md [2m(505 tokens)[22m
+│   ├── ram-primitives.md [2m(1,423 tokens)[22m
+│   └── docs/ [2m(1,518 tokens)[22m
+│       ├── index.md [2m(197 tokens)[22m
+│       ├── dungeons/ [2m(538 tokens)[22m
+│       │   └── index.md [2m(538 tokens)[22m
+│       ├── items/ [2m(366 tokens)[22m
+│       │   └── index.md [2m(366 tokens)[22m
+│       └── species/ [2m(417 tokens)[22m
+│           └── index.md [2m(417 tokens)[22m
+├── examples/ [2m(2,253 tokens)[22m
+│   ├── navigate_to_stairs.py [2m(322 tokens)[22m
+│   └── quickstart.py [2m(1,931 tokens)[22m
+├── prototypes/ [2m(5,746 tokens)[22m
+│   └── wram_decoder_fix/ [2m(5,746 tokens)[22m
+│       ├── analyze_dumps.py [2m(1,906 tokens)[22m
+│       ├── capture_dumps.py [2m(576 tokens)[22m
+│       ├── decoder_v2.py [2m(2,028 tokens)[22m
+│       ├── findings.md [2m(557 tokens)[22m
+│       └── test_decoder.py [2m(679 tokens)[22m
+├── scripts/ [2m(1,420 tokens)[22m
+│   ├── bench_sweep.ps1 [2m(129 tokens)[22m
+│   ├── final_demo_runner.py [2m(347 tokens)[22m
+│   ├── quick_smoke_test.sh [2m(322 tokens)[22m
+│   ├── sync_profiling.ps1 [2m(124 tokens)[22m
+│   ├── test_ci.ps1 [2m(17 tokens)[22m
+│   ├── test_fast.ps1 [2m(151 tokens)[22m
+│   ├── test_fast.sh [2m(67 tokens)[22m
+│   ├── test_full.ps1 [2m(92 tokens)[22m
+│   └── validate_integration.sh [2m(171 tokens)[22m
+├── skill-libraries/ [2m(969 tokens)[22m
+│   ├── README.md [2m(639 tokens)[22m
+│   └── basic/ [2m(330 tokens)[22m
+│       ├── heal_when_low_hp.yaml [2m(113 tokens)[22m
+│       ├── take_stairs_when_visible.yaml [2m(98 tokens)[22m
+│       └── use_food_when_hungry.yaml [2m(119 tokens)[22m
+├── src/ [2m(211,321 tokens)[22m
+│   ├── __main__.py [2m(26 tokens)[22m
+│   ├── main.py [2m(1,979 tokens)[22m
+│   ├── agent/ [2m(32,999 tokens)[22m
+│   │   ├── __init__.py [2m(131 tokens)[22m
+│   │   ├── agent_core.py [2m(4,038 tokens)[22m
+│   │   ├── context_cap.py [2m(761 tokens)[22m
+│   │   ├── inference_queue.py [2m(3,892 tokens)[22m
+│   │   ├── memory_manager.py [2m(3,773 tokens)[22m
+│   │   ├── model_router.py [2m(4,974 tokens)[22m
+│   │   ├── pipeline_engine.py [2m(2,358 tokens)[22m
+│   │   ├── prompt_cache.py [2m(1,943 tokens)[22m
+│   │   ├── qwen_controller.py [2m(10,688 tokens)[22m
+│   │   └── timebudgets.py [2m(441 tokens)[22m
+│   ├── dashboard/ [2m(12,544 tokens)[22m
+│   │   ├── api.py [2m(3,319 tokens)[22m
+│   │   ├── content_api.py [2m(4,326 tokens)[22m
+│   │   └── uploader.py [2m(4,899 tokens)[22m
+│   ├── embeddings/ [2m(17,823 tokens)[22m
+│   │   ├── __init__.py [2m(97 tokens)[22m
+│   │   ├── extractor.py [2m(4,852 tokens)[22m
+│   │   ├── temporal_silo.py [2m(8,125 tokens)[22m
+│   │   └── vector_store.py [2m(4,749 tokens)[22m
+│   ├── environment/ [2m(39,265 tokens)[22m
+│   │   ├── __init__.py [2m(67 tokens)[22m
+│   │   ├── action_executor.py [2m(2,489 tokens)[22m
+│   │   ├── config.py [2m(894 tokens)[22m
+│   │   ├── fps_adjuster.py [2m(2,047 tokens)[22m
+│   │   ├── mgba_controller.py [2m(13,563 tokens)[22m
+│   │   ├── mgba_controller.py.backup [2m(11,768 tokens)[22m
+│   │   ├── ram_decoders.py [2m(2,089 tokens)[22m
+│   │   ├── ram_watch.py [2m(1,065 tokens)[22m
+│   │   ├── rom_gating.py [2m(341 tokens)[22m
+│   │   ├── save_manager.py [2m(2,449 tokens)[22m
+│   │   └── state_map.py [2m(2,493 tokens)[22m
+│   ├── mgba-harness/ [2m(10,978 tokens)[22m
+│   │   ├── __init__.py [2m(11 tokens)[22m
+│   │   ├── cli.py [2m(3,149 tokens)[22m
+│   │   ├── mgba-http/ [2m(7,316 tokens)[22m
+│   │   │   ├── ImplementedApis.md [2m(1,474 tokens)[22m
+│   │   │   └── mGBASocketServer.lua [2m(5,842 tokens)[22m
+│   │   └── profiles/ [2m(502 tokens)[22m
+│   │       └── set_text_speed_slow.json [2m(502 tokens)[22m
+│   ├── models/ [2m(3,130 tokens)[22m
+│   │   └── world_model.py [2m(3,130 tokens)[22m
+│   ├── orchestrator/ [2m(7,550 tokens)[22m
+│   │   ├── message_packager.py [2m(2,709 tokens)[22m
+│   │   ├── router_glue.py [2m(4,216 tokens)[22m
+│   │   └── telemetry.py [2m(625 tokens)[22m
+│   ├── rag/ [2m(3,406 tokens)[22m
+│   │   ├── retrieval.py [2m(2,375 tokens)[22m
+│   │   └── schema.py [2m(1,031 tokens)[22m
+│   ├── retrieval/ [2m(38,108 tokens)[22m
+│   │   ├── __init__.py [2m(154 tokens)[22m
+│   │   ├── auto_retrieve.py [2m(8,403 tokens)[22m
+│   │   ├── circular_buffer.py [2m(3,419 tokens)[22m
+│   │   ├── cross_silo_search.py [2m(2,828 tokens)[22m
+│   │   ├── deduplicator.py [2m(1,638 tokens)[22m
+│   │   ├── embedding_generator.py [2m(1,356 tokens)[22m
+│   │   ├── gatekeeper.py [2m(2,948 tokens)[22m
+│   │   ├── keyframe_policy.py [2m(3,333 tokens)[22m
+│   │   ├── local_ann_index.py [2m(1,583 tokens)[22m
+│   │   ├── meta_view_writer.py [2m(2,775 tokens)[22m
+│   │   ├── on_device_buffer.py [2m(2,253 tokens)[22m
+│   │   ├── questions_bucket.py [2m(1,826 tokens)[22m
+│   │   ├── stuckness_detector.py [2m(3,443 tokens)[22m
+│   │   └── trajectory_logger.py [2m(2,149 tokens)[22m
+│   ├── router/ [2m(2,461 tokens)[22m
+│   │   └── policy_v2.py [2m(2,461 tokens)[22m
+│   ├── skills/ [2m(7,818 tokens)[22m
+│   │   ├── __init__.py [2m(330 tokens)[22m
+│   │   ├── dsl.py [2m(1,035 tokens)[22m
+│   │   ├── prompting.py [2m(669 tokens)[22m
+│   │   ├── python_runtime.py [2m(1,601 tokens)[22m
+│   │   ├── runtime.py [2m(1,507 tokens)[22m
+│   │   ├── spec.py [2m(1,542 tokens)[22m
+│   │   └── examples/ [2m(1,134 tokens)[22m
+│   │       ├── eat_apple.py [2m(362 tokens)[22m
+│   │       ├── fight_wild_monster.py [2m(450 tokens)[22m
+│   │       └── navigate_to_stairs.py [2m(322 tokens)[22m
+│   ├── telemetry/ [2m(530 tokens)[22m
+│   │   └── events.py [2m(530 tokens)[22m
+│   └── vision/ [2m(32,704 tokens)[22m
+│       ├── __init__.py [2m(62 tokens)[22m
+│       ├── .vision_agent_lock [2m(58 tokens)[22m
+│       ├── .vision_agent_status [2m(86 tokens)[22m
+│       ├── ascii_renderer.py [2m(3,544 tokens)[22m
+│       ├── fps_adjuster.py [2m(1,670 tokens)[22m
+│       ├── grid_parser.py [2m(6,106 tokens)[22m
+│       ├── packaging.py [2m(3,587 tokens)[22m
+│       ├── quad_capture.py [2m(5,476 tokens)[22m
+│       ├── sprite_detector.py [2m(8,836 tokens)[22m
+│       └── sprite_library.py [2m(3,279 tokens)[22m
+└── tests/ [2m(106,116 tokens)[22m
+    ├── __init__.py [2m(3 tokens)[22m
+    ├── conftest.py [2m(2,270 tokens)[22m
+    ├── test_ascii_renderer.py [2m(1,887 tokens)[22m
+    ├── test_async_implementation.py [2m(2,178 tokens)[22m
+    ├── test_async_screenshot_capture.py [2m(1,676 tokens)[22m
+    ├── test_auto_retrieve.py [2m(4,049 tokens)[22m
+    ├── test_bench_cli.py [2m(1,710 tokens)[22m
+    ├── test_bench_smoke.py [2m(1,125 tokens)[22m
+    ├── test_best_of_n.py [2m(1,723 tokens)[22m
+    ├── test_circular_buffer.py [2m(4,076 tokens)[22m
+    ├── test_content_api_batch.py [2m(2,537 tokens)[22m
+    ├── test_content_api.py [2m(3,198 tokens)[22m
+    ├── test_context_cap.py [2m(606 tokens)[22m
+    ├── test_embeddings.py [2m(1,582 tokens)[22m
+    ├── test_grid_parser.py [2m(4,497 tokens)[22m
+    ├── test_inference_queue_stages.py [2m(1,488 tokens)[22m
+    ├── test_inference_queue.py [2m(1,045 tokens)[22m
+    ├── test_keyframe_policy.py [2m(1,472 tokens)[22m
+    ├── test_local_ann_index.py [2m(1,380 tokens)[22m
+    ├── test_memory_manager_model_cache.py [2m(989 tokens)[22m
+    ├── test_message_packager.py [2m(3,184 tokens)[22m
+    ├── test_mgba_connection.py [2m(1,174 tokens)[22m
+    ├── test_mgba_socket.py [2m(4,922 tokens)[22m
+    ├── test_model_router_batching.py [2m(2,784 tokens)[22m
+    ├── test_model_router_deadline.py [2m(1,106 tokens)[22m
+    ├── test_on_device_buffer.py [2m(2,106 tokens)[22m
+    ├── test_packaging.py [2m(2,167 tokens)[22m
+    ├── test_parallel_rrf_retrieval.py [2m(1,440 tokens)[22m
+    ├── test_pipeline_engine.py [2m(2,862 tokens)[22m
+    ├── test_prompt_cache.py [2m(2,631 tokens)[22m
+    ├── test_qwen_controller_prompt_cache.py [2m(1,876 tokens)[22m
+    ├── test_qwen_controller.py [2m(878 tokens)[22m
+    ├── test_ram_decoders.py [2m(1,434 tokens)[22m
+    ├── test_ram_watch.py [2m(1,227 tokens)[22m
+    ├── test_retrieval.py [2m(2,020 tokens)[22m
+    ├── test_router_glue.py [2m(2,030 tokens)[22m
+    ├── test_router.py [2m(5,104 tokens)[22m
+    ├── test_screenshot_locking.py [2m(1,369 tokens)[22m
+    ├── test_skill_dsl.py [2m(1,975 tokens)[22m
+    ├── test_skill_triggers.py [2m(1,372 tokens)[22m
+    ├── test_skills.py [2m(1,246 tokens)[22m
+    ├── test_socket_cleanup.py [2m(2,150 tokens)[22m
+    ├── test_sprite_detection.py [2m(3,946 tokens)[22m
+    ├── test_sprite_detector.py [2m(2,093 tokens)[22m
+    ├── test_state_map.py [2m(2,681 tokens)[22m
+    ├── test_telemetry.py [2m(673 tokens)[22m
+    ├── test_temporal_silo_episodes.py [2m(1,510 tokens)[22m
+    ├── test_text_speed_guarantee.py [2m(328 tokens)[22m
+    ├── test_uploader_rate_limit.py [2m(1,872 tokens)[22m
+    ├── test_wram_bounds.py [2m(2,504 tokens)[22m
+    └── regressions/ [2m(3,961 tokens)[22m
+        ├── test_bug_0001_model_name_mismatch.py [2m(2,160 tokens)[22m
+        └── test_bug_0002_ram_address_mismatch.py [2m(1,801 tokens)[22m
+
+[37m🔎 Security Check:[39m
+[2m──────────────────[22m
+[32m✔[39m [37mNo suspicious files detected.[39m
+
+[37m📄 Binary Files Detected:[39m
+[2m─────────────────────────[22m
+[33m2 files detected as binary by content inspection:[39m
+[37m1.[39m [37mconfig/save_files/game_start_save.ss0[39m
+[37m2.[39m [37mtest_saves/ann_index.db[39m
+[33m
+These files have been excluded from the output.[39m
+[33mPlease review these files if you expected them to contain text content.[39m
+
+[37m📊 Pack Summary:[39m
+[2m────────────────[22m
+[37m  Total Files:[39m [37m184[39m files
+[37m Total Tokens:[39m [37m383,008[39m tokens
+[37m  Total Chars:[39m [37m1,716,864[39m chars
+[37m       Output:[39m [37mrepomix-output.xml[39m
+[37m     Security:[39m [37m[37m✔ No suspicious files detected[37m[39m
+
+[32m🎉 All Done![39m
+[37mYour repository has been successfully packed.[39m
+
+💡 Repomix is now available in your browser! Try it at [4mhttps://repomix.com[24m

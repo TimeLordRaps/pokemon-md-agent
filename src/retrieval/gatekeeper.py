@@ -121,6 +121,16 @@ class RetrievalGatekeeper:
             token = self._create_token(query_hash)
             return GatekeeperStatus.ALLOW, token, {**metadata, "forced": True}
 
+        # Check shallow hits threshold (>= 3 hits required)
+        shallow_hits = context.get("shallow_hits", 0) if context else 0
+        if shallow_hits < 3:
+            return GatekeeperStatus.DENY, None, {
+                **metadata,
+                "reason": "insufficient_shallow_hits",
+                "shallow_hits": shallow_hits,
+                "required": 3
+            }
+
         # Check confidence threshold
         if shallow_result.confidence < self.min_confidence_threshold:
             return GatekeeperStatus.DENY, None, {
@@ -281,32 +291,45 @@ class RetrievalGatekeeper:
         logger.info("Used gate token: %s", token.token_id)
         return True
 
-    async def perform_gate_burst(self, query: str) -> Dict[str, Any]:
+    async def perform_gate_burst(self, query: str, shallow_hits: int = 0) -> Dict[str, Any]:
         """Perform a gate burst with content API calls.
+
+        Args:
+            query: The search query
+            shallow_hits: Number of shallow hits that triggered this burst (>=3 required)
 
         Returns results from bulk defaults first, then focused page if still needed.
         """
         if not self.content_api:
             return {"error": "No content API configured"}
 
+        # Enforce shallow hits requirement
+        if shallow_hits < 3:
+            return {
+                "error": f"Insufficient shallow hits: {shallow_hits} < 3 required",
+                "shallow_hits": shallow_hits,
+                "required": 3
+            }
+
         results = {
             "bulk_results": [],
             "focused_results": [],
             "total_calls": 0,
-            "budget_remaining": self.content_api.get_budget_status()["remaining"]
+            "budget_remaining": self.content_api.get_budget_status()["remaining"],
+            "shallow_hits": shallow_hits
         }
 
         try:
             # First call: bulk defaults
-            logger.info("Performing gate burst: bulk defaults for query '%s'", query)
-            bulk_pages = await self.content_api.fetch_guide()
+            logger.info("Performing gate burst: bulk defaults for query '%s' (shallow_hits=%d)", query, shallow_hits)
+            bulk_pages = await self.content_api.fetch_guide(shallow_hits=shallow_hits)
             results["bulk_results"] = [p.__dict__ if hasattr(p, '__dict__') else p for p in bulk_pages]
             results["total_calls"] += 1
 
             # Check if we should do focused call
             if self.content_api.check_gate_token(f"burst_{hash(query)}"):
                 logger.info("Performing gate burst: focused page for query '%s'", query)
-                focused_pages = await self.content_api.search_old_memories(query)
+                focused_pages = await self.content_api.search_old_memories(query, shallow_hits=shallow_hits)
                 results["focused_results"] = [p.__dict__ if hasattr(p, '__dict__') else p for p in focused_pages]
                 results["total_calls"] += 1
             else:

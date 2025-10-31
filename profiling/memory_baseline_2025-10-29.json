@@ -1,0 +1,213 @@
+{
+  "timestamp": "2025-10-29T23:27:04.237855",
+  "steps": 1000,
+  "tracemalloc_stats": {
+    "top_10_allocators": [
+      {
+        "size_mb": 4.464591979980469,
+        "count": 10938,
+        "traceback": [
+          "C:\\Homework\\agent_hackathon\\pokemon-md-agent\\profiling\\memory_profiling.py:249"
+        ]
+      },
+      {
+        "size_mb": 0.6360321044921875,
+        "count": 5582,
+        "traceback": [
+          "C:\\Homework\\agent_hackathon\\pokemon-md-agent\\profiling\\memory_profiling.py:208"
+        ]
+      },
+      {
+        "size_mb": 0.35616302490234375,
+        "count": 5469,
+        "traceback": [
+          "C:\\Homework\\agent_hackathon\\pokemon-md-agent\\profiling\\memory_profiling.py:250"
+        ]
+      },
+      {
+        "size_mb": 0.33380126953125,
+        "count": 5469,
+        "traceback": [
+          "C:\\Homework\\agent_hackathon\\pokemon-md-agent\\profiling\\memory_profiling.py:247"
+        ]
+      },
+      {
+        "size_mb": 0.04534912109375,
+        "count": 1,
+        "traceback": [
+          "C:\\Homework\\agent_hackathon\\pokemon-md-agent\\profiling\\memory_profiling.py:258"
+        ]
+      },
+      {
+        "size_mb": 0.01171875,
+        "count": 384,
+        "traceback": [
+          "C:\\Homework\\agent_hackathon\\pokemon-md-agent\\profiling\\memory_profiling.py:67"
+        ]
+      },
+      {
+        "size_mb": 0.00411224365234375,
+        "count": 77,
+        "traceback": [
+          "C:\\Homework\\agent_hackathon\\pokemon-md-agent\\profiling\\memory_profiling.py:205"
+        ]
+      },
+      {
+        "size_mb": 0.00183868408203125,
+        "count": 20,
+        "traceback": [
+          "C:\\Homework\\agent_hackathon\\pokemon-md-agent\\profiling\\memory_profiling.py:85"
+        ]
+      },
+      {
+        "size_mb": 0.0012054443359375,
+        "count": 11,
+        "traceback": [
+          "C:\\Homework\\agent_hackathon\\pokemon-md-agent\\profiling\\memory_profiling.py:134"
+        ]
+      },
+      {
+        "size_mb": 0.00103759765625,
+        "count": 13,
+        "traceback": [
+          "C:\\Homework\\agent_hackathon\\pokemon-md-agent\\profiling\\memory_profiling.py:78"
+        ]
+      }
+    ]
+  },
+  "vram_usage": {
+    "step_0": {
+      "allocated_mb": 0.0,
+      "reserved_mb": 0.0,
+      "max_allocated_mb": 0.0
+    },
+    "step_100": {
+      "allocated_mb": 0.0,
+      "reserved_mb": 0.0,
+      "max_allocated_mb": 0.0
+    },
+    "step_200": {
+      "allocated_mb": 0.0,
+      "reserved_mb": 0.0,
+      "max_allocated_mb": 0.0
+    },
+    "step_300": {
+      "allocated_mb": 0.0,
+      "reserved_mb": 0.0,
+      "max_allocated_mb": 0.0
+    },
+    "step_400": {
+      "allocated_mb": 0.0,
+      "reserved_mb": 0.0,
+      "max_allocated_mb": 0.0
+    },
+    "step_500": {
+      "allocated_mb": 0.0,
+      "reserved_mb": 0.0,
+      "max_allocated_mb": 0.0
+    },
+    "step_600": {
+      "allocated_mb": 0.0,
+      "reserved_mb": 0.0,
+      "max_allocated_mb": 0.0
+    },
+    "step_700": {
+      "allocated_mb": 0.0,
+      "reserved_mb": 0.0,
+      "max_allocated_mb": 0.0
+    },
+    "step_800": {
+      "allocated_mb": 0.0,
+      "reserved_mb": 0.0,
+      "max_allocated_mb": 0.0
+    },
+    "step_900": {
+      "allocated_mb": 0.0,
+      "reserved_mb": 0.0,
+      "max_allocated_mb": 0.0
+    }
+  },
+  "memory_growth": {
+    "step_0": {
+      "current_mb": 0.00148773193359375,
+      "peak_mb": 0.6059589385986328,
+      "growth_mb": 0.00087738037109375
+    },
+    "step_100": {
+      "current_mb": 0.05776691436767578,
+      "peak_mb": 0.6757345199584961,
+      "growth_mb": 0.05715656280517578
+    },
+    "step_200": {
+      "current_mb": 0.16472434997558594,
+      "peak_mb": 0.9415435791015625,
+      "growth_mb": 0.16411399841308594
+    },
+    "step_300": {
+      "current_mb": 0.6480550765991211,
+      "peak_mb": 1.2607431411743164,
+      "growth_mb": 0.6474447250366211
+    },
+    "step_400": {
+      "current_mb": 0.6738815307617188,
+      "peak_mb": 1.9567737579345703,
+      "growth_mb": 0.6732711791992188
+    },
+    "step_500": {
+      "current_mb": 1.584733009338379,
+      "peak_mb": 2.1931943893432617,
+      "growth_mb": 1.584122657775879
+    },
+    "step_600": {
+      "current_mb": 1.3564624786376953,
+      "peak_mb": 3.3163509368896484,
+      "growth_mb": 1.3558521270751953
+    },
+    "step_700": {
+      "current_mb": 2.6939611434936523,
+      "peak_mb": 3.3163509368896484,
+      "growth_mb": 2.6933507919311523
+    },
+    "step_800": {
+      "current_mb": 2.1247024536132812,
+      "peak_mb": 4.847160339355469,
+      "growth_mb": 2.1240921020507812
+    },
+    "step_900": {
+      "current_mb": 3.887242317199707,
+      "peak_mb": 4.847160339355469,
+      "growth_mb": 3.886631965637207
+    },
+    "summary": {
+      "initial_mb": 0.0006103515625,
+      "final_mb": 5.860664367675781,
+      "total_growth_mb": 5.860054016113281,
+      "growth_rate_kb_per_step": 6.0006953125
+    }
+  },
+  "gc_stats": {
+    "collections": [
+      110,
+      9,
+      5
+    ],
+    "stats": [
+      {
+        "collections": 471,
+        "collected": 6490,
+        "uncollectable": 0
+      },
+      {
+        "collections": 38,
+        "collected": 372,
+        "uncollectable": 0
+      },
+      {
+        "collections": 12,
+        "collected": 49,
+        "uncollectable": 0
+      }
+    ]
+  },
+  "error": null
+}

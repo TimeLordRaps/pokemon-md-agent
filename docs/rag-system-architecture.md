@@ -34,6 +34,12 @@ Frame multiplier: 4x→8x→12x→16x (zoom in)
 **Auto**: 3 trajectories every inference
 **Manual**: Dashboard tool (rare, stuck_counter > 5)
 
+## Episode-Aware Temporal Memory
+
+- `TemporalSiloManager` now tracks `episode_id` boundaries using floor change events and savestate loads, ensuring contiguous dungeon runs stay isolated.
+- Each episode maintains its own FAISS index for similarity search; cross-episode queries combine the top-k hits per episode before global re-ranking.
+- Recency-aware retrieval applies a configurable decay factor (`DEFAULT_DECAY_FACTOR_PER_HOUR`, default `0.001`) so newer memories surface ~20% more often than stale ones.
+
 ## Scratchpad
 
 Guaranteed carryforward memory:

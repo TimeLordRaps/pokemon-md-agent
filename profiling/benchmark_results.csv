@@ -1,0 +1,2 @@
+model,context_length,vision,prefill_tokens_per_sec,decode_tokens_per_sec,total_time,response_length
+unsloth/Qwen3-VL-2B-Instruct-unsloth-bnb-4bit,512,False,75205.17065312555,14299.779245685062,0.009045839309692383,14

@@ -1,0 +1,20 @@
+14: class Button(Enum):
+15:     """Available controller buttons."""
+16:     A = "a"
+17:     B = "b"
+18:     START = "start"
+19:     SELECT = "select"
+20:     UP = "up"
+21:     DOWN = "down"
+22:     LEFT = "left"
+23:     RIGHT = "right"
+24: 
+25: 
+26: @dataclass
+27: class Action:
+28:     """Represents a single action (button press)."""
+29:     button: Button
+30:     duration_ms: int = 100
+31:     timestamp: float = 0.0
+32:     metadata: Optional[Dict[str, Any]] = None
+33: 

@@ -28,12 +28,17 @@ dependencies = [
     "uvicorn>=0.24.0",
     "pydantic>=2.5.0",
     "faiss-cpu>=1.7.0",
-    "sentence-transformers>=2.2.0",
-    "torch>=2.1.0",
     "transformers>=4.35.0",
     "accelerate>=0.25.0",
+    "unsloth",
+    "unsloth-zoo",
+    "bitsandbytes>=0.41.0",
+    "qwen-vl-utils>=0.0.3",
+    "sentence-transformers>=2.2.0",
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
+    "imagehash",
+    "scikit-image>=0.21.0",
 ]
 
 [project.optional-dependencies]
@@ -53,10 +58,9 @@ pmd-agent = "src.main:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*"]
 
 [tool.setuptools.package-dir]
-"" = "src"
+"pokemon_md_agent" = "src"
 
 [tool.ruff]
 line-length = 100
@@ -84,3 +88,9 @@ strict_equality = true
 [[tool.mypy.overrides]]
 module = ["PIL.*", "faiss.*", "sentence_transformers.*", "transformers.*", "torch.*"]
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -rfEsx --maxfail=1 --timeout=30 --timeout-method=thread -m 'not slow and not network and not bench and not longctx'"
+filterwarnings = ["ignore::DeprecationWarning"]
+markers = ["slow","network","bench","longctx"]

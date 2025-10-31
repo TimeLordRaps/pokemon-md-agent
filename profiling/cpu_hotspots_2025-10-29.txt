@@ -1,0 +1,72 @@
+CPU Profiling Hotspots Report - Generated 2025-10-29T23:09:37.772123
+======================================================================
+
+PROFILE SUMMARY:
+Wed Oct 29 23:04:37 2025    profiling/cpu_baseline_2025-10-29.prof
+
+         804 function calls in 1.095 seconds
+
+   Random listing order was used
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      100    0.001    0.000    0.150    0.001 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:49(_simulate_vision_step)
+      100    0.000    0.000    0.536    0.005 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:59(_simulate_model_inference)
+      100    0.001    0.000    0.160    0.002 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:66(_simulate_retrieval_step)
+      100    0.001    0.000    0.247    0.002 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:73(_simulate_environment_step)
+        1    0.001    0.001    1.095    1.095 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:18(run_agent_episode)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+      400    1.091    0.003    1.091    0.003 {built-in method time.sleep}
+        2    0.000    0.000    0.000    0.000 {built-in method builtins.print}
+
+
+
+
+TOP 10 FUNCTIONS BY CUMULATIVE TIME:
+--------------------------------------------------
+Wed Oct 29 23:04:37 2025    profiling/cpu_baseline_2025-10-29.prof
+
+         804 function calls in 1.095 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.001    0.001    1.095    1.095 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:18(run_agent_episode)
+      400    1.091    0.003    1.091    0.003 {built-in method time.sleep}
+      100    0.000    0.000    0.536    0.005 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:59(_simulate_model_inference)
+      100    0.001    0.000    0.247    0.002 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:73(_simulate_environment_step)
+      100    0.001    0.000    0.160    0.002 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:66(_simulate_retrieval_step)
+      100    0.001    0.000    0.150    0.001 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:49(_simulate_vision_step)
+        2    0.000    0.000    0.000    0.000 {built-in method builtins.print}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
+
+
+TOP 10 FUNCTIONS BY TOTAL TIME:
+--------------------------------------------------
+Wed Oct 29 23:04:37 2025    profiling/cpu_baseline_2025-10-29.prof
+
+         804 function calls in 1.095 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      400    1.091    0.003    1.091    0.003 {built-in method time.sleep}
+        1    0.001    0.001    1.095    1.095 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:18(run_agent_episode)
+      100    0.001    0.000    0.160    0.002 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:66(_simulate_retrieval_step)
+      100    0.001    0.000    0.247    0.002 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:73(_simulate_environment_step)
+      100    0.001    0.000    0.150    0.001 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:49(_simulate_vision_step)
+      100    0.000    0.000    0.536    0.005 C:\Homework\agent_hackathon\pokemon-md-agent\profiling\cpu_profiling.py:59(_simulate_model_inference)
+        2    0.000    0.000    0.000    0.000 {built-in method builtins.print}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
+
+
+PROFILING METADATA:
+- Profile file: profiling/cpu_baseline_2025-10-29.prof
+- Generated on: 2025-10-29T23:09:37.772123
+- Agent steps: 100
+- Profiling method: cProfile (deterministic)
+- py-spy flamegraph: Not available (tool not installed)
+- Profiling overhead: <5% (statistical sampling not used)

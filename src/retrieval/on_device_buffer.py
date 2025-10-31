@@ -1,424 +1,301 @@
-"""On-device buffer manager orchestrating all components."""
+"""Simple on-device buffer with TTL-based eviction and stuckness detection.
 
-from typing import List, Dict, Any, Optional, Tuple, AsyncGenerator
-import asyncio
+OnDeviceBuffer provides a minimal interface for on-device retrieval with circular buffer storage,
+cosine similarity search, TTL/capacity-based pruning, and micro stuckness detection.
+The buffer maintains a ~60-minute window with automatic eviction and tracks recent queries
+to detect when the agent may be stuck in repetitive behavior patterns.
+"""
+
+from typing import List, Dict, Any, Optional, Tuple
 import logging
 import time
+import threading
 import numpy as np
 from dataclasses import dataclass
-from concurrent.futures import ThreadPoolExecutor
-
-from .circular_buffer import CircularBuffer, BufferEntry
-from .keyframe_policy import KeyframePolicy, KeyframeCandidate, KeyframeResult
-from .local_ann_index import LocalANNIndex, SearchResult
-from .meta_view_writer import MetaViewWriter, ViewTile, MetaViewResult
-from .embedding_generator import EmbeddingGenerator
-from .deduplicator import Deduplicator
-from ..retrieval.stuckness_detector import StucknessDetector, StucknessAnalysis
-from ..retrieval.auto_retrieve import AutoRetriever, RetrievalQuery, RetrievedTrajectory
+from collections import deque
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
-class OnDeviceBufferConfig:
-    """Configuration for on-device buffer system."""
-    circular_buffer_mb: float = 50.0
-    ann_index_max_elements: int = 10000
-    keyframe_min_count: int = 5
-    keyframe_max_count: int = 100
-    enable_persistence: bool = False
-    enable_async: bool = True
-    search_timeout_ms: int = 100
+class SearchResult:
+    """Result of a similarity search operation."""
+    score: float
+    metadata: Dict[str, Any]
+    embedding: Optional[np.ndarray] = None
+    entry_id: Optional[str] = None
 
 
 @dataclass
-class BufferOperationResult:
-    """Result of buffer operations."""
-    success: bool
-    operation_time: float
-    data_size: int
+class BufferEntry:
+    """Entry stored in the on-device buffer."""
+    embedding: np.ndarray
     metadata: Dict[str, Any]
+    timestamp: float
+    id: Optional[str] = None
 
 
-class OnDeviceBufferManager:
-    """Orchestrates on-device circular buffer, ANN search, and keyframe management."""
+class OnDeviceBuffer:
+    """Simple on-device buffer with TTL, search, and stuckness detection.
 
-    def __init__(self, config: OnDeviceBufferConfig):
-        """Initialize on-device buffer manager.
+    Provides a minimal interface coordinating ring buffer slots with ~60-min TTL window,
+    cosine similarity search, capacity/TTL-based pruning, and micro stuckness detection
+    based on recent query patterns.
+    """
+
+    def __init__(
+        self,
+        max_entries: int = 1000,
+        ttl_minutes: int = 60,
+        stuckness_threshold: float = 0.8,
+        stuckness_window: int = 3,
+    ):
+        """Initialize on-device buffer.
 
         Args:
-            config: Buffer configuration
+            max_entries: Maximum number of entries to store
+            ttl_minutes: TTL in minutes for entries
+            stuckness_threshold: Similarity threshold for stuckness detection
+            stuckness_window: Number of recent queries to consider for stuckness
         """
-        self.config = config
+        self.max_entries = max_entries
+        self.ttl_seconds = ttl_minutes * 60
+        self.stuckness_threshold = stuckness_threshold
+        self.stuckness_window = stuckness_window
 
-        # Initialize components
-        self.circular_buffer = CircularBuffer(
-            max_size_mb=config.circular_buffer_mb,
-            enable_async=config.enable_async,
-        )
+        # Thread-safe storage
+        self._buffer: deque[BufferEntry] = deque(maxlen=max_entries)
+        self._lock = threading.RLock()
 
-        self.ann_index = LocalANNIndex(
-            max_elements=config.ann_index_max_elements,
-        )
-
-        self.keyframe_policy = KeyframePolicy(
-            min_keyframes=config.keyframe_min_count,
-            max_keyframes=config.keyframe_max_count,
-        )
-
-        self.meta_view_writer = MetaViewWriter(
-            grid_size=(2, 2),
-            enable_async=config.enable_async,
-        )
-
-        # New components for enhanced functionality
-        self.embedding_generator = EmbeddingGenerator()
-        self.deduplicator = Deduplicator()
-
-        # State tracking
-        self._operation_times: List[float] = []
-        self._search_times: List[float] = []
-        self._stuckness_detector: Optional[StucknessDetector] = None
-
-        # Thread pool for CPU-bound operations
-        self._executor = ThreadPoolExecutor(max_workers=4) if config.enable_async else None
+        # Stuckness tracking
+        self._recent_queries: deque[np.ndarray] = deque(maxlen=stuckness_window * 2)
+        self._stuckness_score = 0.0
 
         logger.info(
-            "Initialized OnDeviceBufferManager: buffer=%.1fMB, ANN=%d elements",
-            config.circular_buffer_mb, config.ann_index_max_elements
+            "Initialized OnDeviceBuffer: max_entries=%d, ttl=%dmin, stuckness_threshold=%.2f",
+            max_entries, ttl_minutes, stuckness_threshold
         )
 
-    def set_stuckness_detector(self, detector: StucknessDetector) -> None:
-        """Set stuckness detector for keyframe policy feedback."""
-        self._stuckness_detector = detector
-        logger.info("Stuckness detector connected to buffer manager")
-
-    async def store_embedding(
-        self,
-        embedding: np.ndarray,
-        metadata: Dict[str, Any],
-        embedding_id: Optional[str] = None,
-    ) -> BufferOperationResult:
-        """Store embedding in on-device buffer system.
+    def store(self, embedding: np.ndarray, metadata: Dict[str, Any]) -> bool:
+        """Store embedding with metadata in buffer.
 
         Args:
-            embedding: Embedding vector
-            metadata: Associated metadata
-            embedding_id: Optional unique ID
+            embedding: Embedding vector to store
+            metadata: Associated metadata dictionary
 
         Returns:
-            Operation result
+            True if stored successfully, False otherwise
+
+        Raises:
+            ValueError: If embedding or metadata is invalid
         """
-        start_time = time.time()
+        if not self._validate_embedding(embedding):
+            raise ValueError("Invalid embedding: must be numpy array with finite float32 values")
 
+        if not isinstance(metadata, dict):
+            raise ValueError("Invalid metadata: must be dictionary")
+
+        # Ensure metadata is serializable
         try:
-            # Generate ID if not provided
-            if embedding_id is None:
-                embedding_id = f"emb_{int(time.time() * 1000)}_{hash(embedding.tobytes()) % 10000}"
+            # Basic serialization check - try to JSON serialize
+            import json
+            json.dumps(metadata)
+        except (TypeError, ValueError):
+            raise ValueError("Invalid metadata: must contain serializable values")
 
-            # Create buffer entry
-            entry = BufferEntry(
-                id=embedding_id,
-                data=embedding,
-                metadata=metadata,
-                timestamp=time.time(),
-                priority=metadata.get('priority', 1.0),
-            )
+        entry = BufferEntry(
+            embedding=embedding.astype(np.float32),
+            metadata=metadata.copy(),
+            timestamp=metadata.get("timestamp", time.time()),
+        )
 
-            # Store in circular buffer
-            buffer_success = await self.circular_buffer.add_entry_async(entry)
+        with self._lock:
+            self._buffer.append(entry)
+            logger.debug("Stored entry with metadata keys: %s", list(metadata.keys()))
 
-            # Index in ANN (if buffer storage succeeded)
-            ann_success = False
-            if buffer_success:
-                ann_success = self.ann_index.add_vector(
-                    vector_id=embedding_id,
-                    vector=embedding,
-                    metadata=metadata,
-                )
+        return True
 
-            operation_time = time.time() - start_time
-            self._operation_times.append(operation_time)
-
-            result = BufferOperationResult(
-                success=buffer_success and ann_success,
-                operation_time=operation_time,
-                data_size=embedding.nbytes,
-                metadata={
-                    "buffer_success": buffer_success,
-                    "ann_success": ann_success,
-                    "embedding_id": embedding_id,
-                }
-            )
-
-            logger.debug(
-                "Stored embedding %s: buffer=%s, ANN=%s, time=%.3fs",
-                embedding_id, buffer_success, ann_success, operation_time
-            )
-
-            return result
-
-        except Exception as e:
-            logger.error("Failed to store embedding: %s", e)
-            return BufferOperationResult(
-                success=False,
-                operation_time=time.time() - start_time,
-                data_size=embedding.nbytes if 'embedding' in locals() else 0,
-                metadata={"error": str(e)}
-            )
-
-    async def search_similar(
-        self,
-        query_embedding: np.ndarray,
-        top_k: int = 10,
-        search_timeout_ms: Optional[int] = None,
-    ) -> List[SearchResult]:
-        """Search for similar embeddings using on-device ANN.
+    def search(self, query_embedding: np.ndarray, top_k: int) -> List[SearchResult]:
+        """Search for similar embeddings using cosine similarity.
 
         Args:
-            query_embedding: Query embedding
-            top_k: Number of results
-            search_timeout_ms: Search timeout
+            query_embedding: Query embedding vector
+            top_k: Maximum number of results to return
 
         Returns:
-            Search results
+            List of search results ordered by similarity (descending)
         """
-        timeout = search_timeout_ms or self.config.search_timeout_ms
-        start_time = time.time()
-
-        try:
-            # Perform ANN search with timeout
-            if self.config.enable_async and self._executor:
-                try:
-                    results = await asyncio.wait_for(
-                        asyncio.get_event_loop().run_in_executor(
-                            self._executor, self.ann_index.search, query_embedding, top_k
-                        ),
-                        timeout=timeout / 1000.0
-                    )
-                except asyncio.TimeoutError:
-                    logger.warning("ANN search timed out after %dms", timeout)
-                    return []
-            else:
-                results = self.ann_index.search(query_embedding, top_k)
-
-            search_time = (time.time() - start_time) * 1000  # Convert to ms
-            self._search_times.append(search_time)
-
-            # Filter results by buffer availability (ensure data is still in buffer)
-            filtered_results = []
-            for result in results:
-                # Check if entry still exists in circular buffer
-                entries = await self.circular_buffer.get_entries_async(
-                    limit=1,
-                    time_window=None  # No time filter for existence check
-                )
-                entry_ids = [e.id for e in entries]
-                if result.entry_id in entry_ids:
-                    filtered_results.append(result)
-
-            logger.debug(
-                "ANN search completed: %d results in %.1fms",
-                len(filtered_results), search_time
-            )
-
-            return filtered_results[:top_k]
-
-        except Exception as e:
-            logger.error("ANN search failed: %s", e)
+        if not self._validate_embedding(query_embedding):
+            logger.warning("Invalid query embedding, returning empty results")
             return []
 
-    async def process_keyframes(
-        self,
-        current_stuckness: Optional[float] = None,
-    ) -> Optional[KeyframeResult]:
-        """Process and select keyframes from buffer contents.
+        # Track query for stuckness detection
+        with self._lock:
+            self._recent_queries.append(query_embedding.copy())
+            self._update_stuckness_score()
+
+        # Perform search
+        results = []
+        with self._lock:
+            for entry in self._buffer:
+                # Skip expired entries
+                if time.time() - entry.timestamp > self.ttl_seconds:
+                    continue
+
+                # Calculate cosine similarity
+                similarity = self._cosine_similarity(query_embedding, entry.embedding)
+                if similarity > 0:  # Only include positive similarities
+                    results.append(SearchResult(
+                        score=float(similarity),
+                        metadata=entry.metadata.copy(),
+                        embedding=entry.embedding.copy(),
+                        entry_id=getattr(entry, 'id', None),
+                    ))
+
+        # Sort by similarity descending and return top-k
+        results.sort(key=lambda r: r.score, reverse=True)
+        final_results = results[:top_k]
+
+        # Log cross-silo delegation stub
+        logger.debug("Cross-silo delegation stub logged for potential ANN search")
+        logger.debug("Search completed: %d results from %d total entries", len(final_results), len(self._buffer))
+
+        return final_results
+
+    def prune(self, by_time: bool = True, by_capacity: bool = False, max_entries: Optional[int] = None) -> int:
+        """Prune entries based on TTL and/or capacity constraints.
 
         Args:
-            current_stuckness: Current stuckness score (0.0-1.0)
+            by_time: If True, remove entries older than TTL
+            by_capacity: If True, reduce to capacity limit (removes oldest)
+            max_entries: Override max_entries for this prune operation
 
         Returns:
-            Keyframe selection result or None if no candidates
+            Number of entries removed
         """
-        try:
-            # Get recent buffer entries as candidates
-            buffer_entries = await self.circular_buffer.get_entries_async(
-                limit=50,  # Consider last 50 entries
-                time_window=300.0,  # Last 5 minutes
-            )
+        removed_count = 0
+        current_time = time.time()
+        capacity_limit = max_entries if max_entries is not None else self.max_entries
+        # Auto-enable capacity pruning if max_entries is specified
+        enable_capacity_prune = by_capacity or (max_entries is not None)
 
-            if len(buffer_entries) < 4:  # Need minimum candidates
-                return None
-
-            # Convert to keyframe candidates
-            candidates = []
-            for entry in buffer_entries:
-                candidate = KeyframeCandidate(
-                    timestamp=entry.timestamp,
-                    embedding=entry.data,
-                    metadata=entry.metadata,
-                    importance_score=entry.priority,
+        with self._lock:
+            if by_time:
+                # Remove expired entries
+                original_len = len(self._buffer)
+                self._buffer = deque(
+                    [entry for entry in self._buffer if current_time - entry.timestamp <= self.ttl_seconds],
+                    maxlen=self.max_entries
                 )
-                candidates.append(candidate)
+                removed_count += original_len - len(self._buffer)
 
-            # Select keyframes
-            result = self.keyframe_policy.select_keyframes(
-                candidates=candidates,
-                current_stuckness_score=current_stuckness,
-                force_adaptive=bool(current_stuckness and current_stuckness > 0.7),
-            )
+            if enable_capacity_prune and len(self._buffer) > capacity_limit:
+                # Remove oldest entries to fit capacity
+                excess = len(self._buffer) - capacity_limit
+                for _ in range(excess):
+                    self._buffer.popleft()
+                removed_count += excess
+                # Reconstruct deque with proper maxlen after manual removal
+                self._buffer = deque(self._buffer, maxlen=self.max_entries)
 
-            logger.debug(
-                "Processed keyframes: selected %d from %d candidates",
-                len(result.selected_keyframes), len(candidates)
-            )
+        logger.debug("Pruned %d entries (time=%s, capacity=%s)", removed_count, by_time, enable_capacity_prune)
+        return removed_count
 
-            return result
-
-        except Exception as e:
-            logger.error("Keyframe processing failed: %s", e)
-            return None
-
-    async def generate_meta_view(
-        self,
-        title: Optional[str] = None,
-    ) -> Optional[MetaViewResult]:
-        """Generate meta view from current keyframes.
-
-        Args:
-            title: Optional view title
+    def stats(self) -> Dict[str, Any]:
+        """Get comprehensive buffer statistics including stuckness flag.
 
         Returns:
-            Meta view result or None
+            Dictionary with buffer metrics and stuckness information
         """
-        try:
-            # Get keyframes from policy
-            keyframes = self.keyframe_policy.selected_keyframes
+        current_time = time.time()
 
-            if len(keyframes) < 2:
-                logger.debug("Insufficient keyframes for meta view")
-                return None
+        with self._lock:
+            # Basic metrics
+            total_entries = len(self._buffer)
+            total_size_bytes = sum(entry.embedding.nbytes + len(str(entry.metadata).encode('utf-8')) for entry in self._buffer)
 
-            # Convert keyframes to view tiles
-            tiles = []
-            for kf in keyframes[-4:]:  # Use last 4 keyframes (for 2x2 grid)
-                # Create simple visualization from embedding
-                image = self.meta_view_writer._create_embedding_visualization(kf.embedding)
+            # Age statistics
+            if total_entries > 0:
+                ages = [current_time - entry.timestamp for entry in self._buffer]
+                avg_entry_age_seconds = sum(ages) / len(ages)
+            else:
+                avg_entry_age_seconds = 0.0
 
-                tile = ViewTile(
-                    image=image,
-                    metadata={
-                        **kf.metadata,
-                        "timestamp": kf.timestamp,
-                        "importance_score": kf.importance_score,
-                    },
-                    position=(0, 0),  # Will be set by writer
-                    importance_score=kf.importance_score,
-                )
-                tiles.append(tile)
+            # Capacity utilization
+            capacity_utilization = total_entries / self.max_entries if self.max_entries > 0 else 0.0
 
-            # Generate meta view
-            result = await self.meta_view_writer.generate_meta_view_async(
-                tiles=tiles,
-                layout_strategy="importance",
-                title=title or f"Keyframe View ({len(tiles)} frames)",
-            )
+            # Stuckness metrics
+            is_stuck = self._stuckness_score >= self.stuckness_threshold
 
-            logger.debug("Generated meta view with %d tiles", len(tiles))
-            return result
+        return {
+            "total_entries": total_entries,
+            "total_size_bytes": total_size_bytes,
+            "avg_entry_age_seconds": avg_entry_age_seconds,
+            "capacity_utilization": capacity_utilization,
+            "stuckness_score": self._stuckness_score,
+            "is_stuck": is_stuck,
+            "max_entries": self.max_entries,
+            "ttl_minutes": self.ttl_seconds / 60,
+            "stuckness_threshold": self.stuckness_threshold,
+            "stuckness_window": self.stuckness_window,
+        }
 
-        except Exception as e:
-            logger.error("Meta view generation failed: %s", e)
-            return None
-
-    async def get_buffer_status(self) -> Dict[str, Any]:
-        """Get comprehensive buffer system status."""
-        try:
-            buffer_stats = self.circular_buffer.get_memory_stats()
-            ann_stats = self.ann_index.get_stats()
-            keyframe_stats = self.keyframe_policy.get_policy_stats()
-
-            # Calculate performance metrics
-            avg_operation_time = np.mean(self._operation_times[-100:]) if self._operation_times else 0.0
-            avg_search_time = np.mean(self._search_times[-100:]) if self._search_times else 0.0
-
-            # Stuckness integration status
-            stuckness_status = "connected" if self._stuckness_detector else "disconnected"
-
-            return {
-                "buffer": buffer_stats,
-                "ann_index": ann_stats,
-                "keyframe_policy": keyframe_stats,
-                "performance": {
-                    "avg_operation_time": avg_operation_time,
-                    "avg_search_time_ms": avg_search_time,
-                    "total_operations": len(self._operation_times),
-                    "total_searches": len(self._search_times),
-                },
-                "integrations": {
-                    "stuckness_detector": stuckness_status,
-                },
-                "config": {
-                    "circular_buffer_mb": self.config.circular_buffer_mb,
-                    "ann_max_elements": self.config.ann_index_max_elements,
-                    "keyframe_range": f"{self.config.keyframe_min_count}-{self.config.keyframe_max_count}",
-                    "persistence_enabled": self.config.enable_persistence,
-                    "async_enabled": self.config.enable_async,
-                }
-            }
-
-        except Exception as e:
-            logger.error("Failed to get buffer status: %s", e)
-            return {"error": str(e)}
-
-    async def cleanup_old_data(self, max_age_seconds: float = 3600.0) -> int:
-        """Clean up old data from buffer system.
-
-        Args:
-            max_age_seconds: Maximum age of data to keep
+    def is_stuck(self) -> bool:
+        """Check if buffer detects stuckness based on recent query patterns.
 
         Returns:
-            Number of entries cleaned
+            True if stuckness score exceeds threshold
         """
+        return self._stuckness_score >= self.stuckness_threshold
+
+    def _update_stuckness_score(self) -> None:
+        """Update stuckness score based on recent query similarity patterns."""
+        if len(self._recent_queries) < self.stuckness_window:
+            self._stuckness_score = 0.0
+            return
+
+        # Calculate average similarity between recent queries
+        similarities = []
+        recent_queries = list(self._recent_queries)[-self.stuckness_window:]
+
+        for i in range(len(recent_queries)):
+            for j in range(i + 1, len(recent_queries)):
+                sim = self._cosine_similarity(recent_queries[i], recent_queries[j])
+                similarities.append(sim)
+
+        if similarities:
+            self._stuckness_score = sum(similarities) / len(similarities)
+        else:
+            self._stuckness_score = 0.0
+
+        logger.debug("Updated stuckness score: %.3f (threshold: %.3f)", self._stuckness_score, self.stuckness_threshold)
+
+    def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
+        """Calculate cosine similarity between two vectors."""
         try:
-            # Note: Circular buffer automatically manages size
-            # This is mainly for ANN index cleanup
-            current_time = time.time()
-            cutoff_time = current_time - max_age_seconds
+            dot_product = np.dot(a, b)
+            norm_a = np.linalg.norm(a)
+            norm_b = np.linalg.norm(b)
 
-            # Get all entries older than cutoff
-            old_entries = await self.circular_buffer.get_entries_async(
-                time_window=max_age_seconds
-            )
+            if norm_a == 0 or norm_b == 0:
+                return 0.0
 
-            # Remove from ANN index (circular buffer handles itself)
-            removed_count = 0
-            for entry in old_entries:
-                # ANN index doesn't have explicit removal, but we could mark as stale
-                # For now, just count
-                removed_count += 1
+            return float(dot_product / (norm_a * norm_b))
+        except Exception:
+            return 0.0
 
-            logger.info("Cleaned up %d old entries (older than %.1fs)", removed_count, max_age_seconds)
-            return removed_count
+    def _validate_embedding(self, embedding: Any) -> bool:
+        """Validate embedding array."""
+        if not isinstance(embedding, np.ndarray):
+            return False
 
-        except Exception as e:
-            logger.error("Cleanup failed: %s", e)
-            return 0
+        if embedding.dtype != np.float32:
+            return False
 
-    def shutdown(self) -> None:
-        """Shutdown buffer manager and cleanup resources."""
-        if self._executor:
-            self._executor.shutdown(wait=True)
+        if not np.all(np.isfinite(embedding)):
+            return False
 
-        # Optional persistence save
-        if self.config.enable_persistence:
-            self._save_persistent_state()
+        if embedding.ndim != 1:
+            return False
 
-        logger.info("OnDeviceBufferManager shutdown complete")
-
-    def _save_persistent_state(self) -> None:
-        """Save persistent state (if enabled)."""
-        # Implementation for persistence would go here
-        # Could save buffer contents, ANN index state, etc.
-        pass
+        return True

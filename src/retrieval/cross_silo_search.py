@@ -6,6 +6,7 @@ import logging
 import numpy as np
 
 from ..embeddings.temporal_silo import TemporalSiloManager, SiloEntry
+from .deduplicator import Deduplicator
 
 logger = logging.getLogger(__name__)
 
@@ -35,17 +36,20 @@ class CrossSiloRetriever:
     def __init__(
         self,
         silo_manager: TemporalSiloManager,
+        deduplicator: Optional[Deduplicator] = None,
         default_config: Optional[SearchConfig] = None,
     ):
         """Initialize cross-silo retriever.
-        
+
         Args:
             silo_manager: Temporal silo manager
+            deduplicator: Deduplicator instance for content deduplication
             default_config: Default search configuration
         """
         self.silo_manager = silo_manager
+        self.deduplicator = deduplicator or Deduplicator()
         self.default_config = default_config or SearchConfig()
-        
+
         # Default silo weights (favor more recent, higher resolution)
         self.default_silo_weights = {
             "temporal_1frame": 1.0,
@@ -56,7 +60,7 @@ class CrossSiloRetriever:
             "temporal_32frame": 0.5,
             "temporal_64frame": 0.4,
         }
-        
+
         logger.info("Initialized CrossSiloRetriever")
     
     def search(

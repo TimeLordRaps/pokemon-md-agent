@@ -84,6 +84,22 @@ class LocalANNIndex:
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_timestamp ON vectors(timestamp)")
         self.conn.commit()
 
+    def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
+        """Compute cosine similarity between two vectors.
+
+        Args:
+            a: First vector
+            b: Second vector
+
+        Returns:
+            Cosine similarity score
+        """
+        norm_a = np.linalg.norm(a)
+        norm_b = np.linalg.norm(b)
+        if norm_a == 0.0 or norm_b == 0.0:
+            return 0.0
+        return np.dot(a, b) / (norm_a * norm_b)
+
     def add_vector(
         self,
         vector_id: str,

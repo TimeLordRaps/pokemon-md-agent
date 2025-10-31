@@ -4,7 +4,7 @@
     "game_code": "BPRG",
     "region": "USA/Australia",
     "version": "1.0",
-    "sha1": "TBD"
+    "sha1": "9f4cfc5b5f4859d17169a485462e977c7aac2b89"
   },
   "memory_domains": {
     "WRAM": {
@@ -37,7 +37,7 @@
     "player_state": {
       "floor_number": {
         "domain": "WRAM",
-        "address": 123456,
+        "address": 33544,
         "size": 1,
         "description": "Current floor number in dungeon",
         "type": "uint8",
@@ -46,14 +46,14 @@
       },
       "dungeon_id": {
         "domain": "WRAM",
-        "address": 123457,
+        "address": 33546,
         "size": 2,
         "description": "Current dungeon ID",
         "type": "uint16"
       },
       "turn_counter": {
         "domain": "WRAM",
-        "address": 123458,
+        "address": 33548,
         "size": 2,
         "description": "Turn counter for current floor",
         "type": "uint16",
@@ -62,7 +62,7 @@
       },
       "player_tile_x": {
         "domain": "WRAM",
-        "address": 123460,
+        "address": 33550,
         "size": 1,
         "description": "Player X position (tile coordinates)",
         "type": "uint8",
@@ -71,7 +71,7 @@
       },
       "player_tile_y": {
         "domain": "WRAM",
-        "address": 123461,
+        "address": 33551,
         "size": 1,
         "description": "Player Y position (tile coordinates)",
         "type": "uint8",
@@ -80,7 +80,7 @@
       },
       "partner_tile_x": {
         "domain": "WRAM",
-        "address": 123462,
+        "address": 33552,
         "size": 1,
         "description": "Partner X position (tile coordinates)",
         "type": "uint8",
@@ -89,7 +89,7 @@
       },
       "partner_tile_y": {
         "domain": "WRAM",
-        "address": 123463,
+        "address": 33553,
         "size": 1,
         "description": "Partner Y position (tile coordinates)",
         "type": "uint8",
@@ -98,7 +98,7 @@
       },
       "room_flag": {
         "domain": "WRAM",
-        "address": 123464,
+        "address": 33554,
         "size": 1,
         "description": "Room (1) or corridor (0) flag",
         "type": "bool"
@@ -107,14 +107,14 @@
     "entities": {
       "monster_list_ptr": {
         "domain": "WRAM",
-        "address": 124000,
+        "address": 33562,
         "size": 4,
         "description": "Pointer to monster list structure",
         "type": "pointer"
       },
       "monster_count": {
         "domain": "WRAM",
-        "address": 124004,
+        "address": 33566,
         "size": 1,
         "description": "Number of active entities",
         "type": "uint8",
@@ -193,14 +193,14 @@
     "items": {
       "item_list_ptr": {
         "domain": "WRAM",
-        "address": 125000,
+        "address": 33567,
         "size": 4,
         "description": "Pointer to item list structure",
         "type": "pointer"
       },
       "item_count": {
         "domain": "WRAM",
-        "address": 125004,
+        "address": 33571,
         "size": 1,
         "description": "Number of active items",
         "type": "uint8",
@@ -241,21 +241,21 @@
     "party_status": {
       "leader_hp": {
         "domain": "WRAM",
-        "address": 126000,
+        "address": 33572,
         "size": 2,
         "description": "Leader current HP",
         "type": "uint16"
       },
       "leader_hp_max": {
         "domain": "WRAM",
-        "address": 126002,
+        "address": 33574,
         "size": 2,
         "description": "Leader max HP",
         "type": "uint16"
       },
       "leader_belly": {
         "domain": "WRAM",
-        "address": 126004,
+        "address": 33576,
         "size": 2,
         "description": "Leader belly (food meter)",
         "type": "uint16",
@@ -264,28 +264,28 @@
       },
       "leader_status": {
         "domain": "WRAM",
-        "address": 126006,
+        "address": 33578,
         "size": 4,
         "type": "bitfield",
         "description": "Leader status conditions"
       },
       "partner_hp": {
         "domain": "WRAM",
-        "address": 126010,
+        "address": 33582,
         "size": 2,
         "description": "Partner current HP",
         "type": "uint16"
       },
       "partner_hp_max": {
         "domain": "WRAM",
-        "address": 126012,
+        "address": 33584,
         "size": 2,
         "description": "Partner max HP",
         "type": "uint16"
       },
       "partner_belly": {
         "domain": "WRAM",
-        "address": 126014,
+        "address": 33586,
         "size": 2,
         "description": "Partner belly",
         "type": "uint16",
@@ -294,7 +294,7 @@
       },
       "partner_status": {
         "domain": "WRAM",
-        "address": 126016,
+        "address": 33588,
         "size": 4,
         "type": "bitfield",
         "description": "Partner status conditions"
@@ -338,31 +338,45 @@
       },
       "camera_origin_x": {
         "domain": "WRAM",
-        "address": 127014,
+        "address": 33556,
         "size": 1,
         "type": "uint8",
         "description": "Camera origin X (tile coordinates)"
       },
       "camera_origin_y": {
         "domain": "WRAM",
-        "address": 127015,
+        "address": 33557,
         "size": 1,
         "type": "uint8",
         "description": "Camera origin Y (tile coordinates)"
       },
       "weather_state": {
         "domain": "WRAM",
-        "address": 127016,
+        "address": 33558,
         "size": 1,
         "type": "uint8",
         "description": "Weather state (clear, rain, etc.)"
       },
       "turn_phase": {
         "domain": "WRAM",
-        "address": 127017,
+        "address": 33559,
         "size": 1,
         "type": "uint8",
         "description": "Current turn phase (0=player, 1=enemy, 2=ally)"
+      },
+      "stairs_x": {
+        "domain": "WRAM",
+        "address": 33560,
+        "size": 1,
+        "type": "uint8",
+        "description": "Stairs X position"
+      },
+      "stairs_y": {
+        "domain": "WRAM",
+        "address": 33561,
+        "size": 1,
+        "type": "uint8",
+        "description": "Stairs Y position"
       }
     },
     "town_hubs": {

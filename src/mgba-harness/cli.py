@@ -10,8 +10,33 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from src.environment.mgba_controller import MGBAController
-from src.environment.save_manager import SaveManager
+from ..environment.mgba_controller import MGBAController
+from ..environment.save_manager import SaveManager
+
+
+def encode_cmd(cmd: str, *args) -> str:
+    """Encode command and arguments in colon-delimited format.
+
+    Prefers colon-format for commands with arguments (e.g., "screenshot:480:320:2").
+    This format is compatible with both the original comma-delimited parser
+    and the new dual-format parser in mGBASocketServer.lua.
+
+    Args:
+        cmd: Command name (e.g., "screenshot")
+        args: Command arguments
+
+    Returns:
+        Formatted command string
+
+    Example:
+        >>> encode_cmd("screenshot", 480, 320, 2)
+        'screenshot:480:320:2'
+        >>> encode_cmd("ping")
+        'ping'
+    """
+    if not args:
+        return cmd
+    return f"{cmd}:{':'.join(map(str, args))}"
 
 
 class MGBACLI:

@@ -1,0 +1,113 @@
+sprites:
+  # Common items
+  - label: "apple"
+    phash: "a1b2c3d4e5f67890"
+    category: "items"
+    metadata:
+      type: "food"
+      healing: 10
+      description: "Restores 10 HP"
+    confidence_threshold: 0.85
+
+  - label: "oran_berry"
+    phash: "f9e8d7c6b5a49382"
+    category: "items"
+    metadata:
+      type: "healing"
+      healing: 100
+      description: "Restores 100 HP"
+    confidence_threshold: 0.85
+
+  - label: "stick"
+    phash: "1a2b3c4d5e6f7890"
+    category: "items"
+    metadata:
+      type: "tool"
+      description: "Basic throwing item"
+    confidence_threshold: 0.85
+
+  # Common enemies
+  - label: "caterpie"
+    phash: "abcd1234efgh5678"
+    category: "enemies"
+    metadata:
+      type: "pokemon"
+      level: 3
+      hp: 20
+      description: "Bug type enemy"
+    confidence_threshold: 0.85
+
+  - label: "pidgey"
+    phash: "9876fedc3210abcd"
+    category: "enemies"
+    metadata:
+      type: "pokemon"
+      level: 4
+      hp: 25
+      description: "Flying type enemy"
+    confidence_threshold: 0.85
+
+  - label: "rattata"
+    phash: "1111222233334444"
+    category: "enemies"
+    metadata:
+      type: "pokemon"
+      level: 2
+      hp: 15
+      description: "Normal type enemy"
+    confidence_threshold: 0.85
+
+  # Stairs
+  - label: "up_stairs"
+    phash: "aaaa5555bbbb6666"
+    category: "stairs"
+    metadata:
+      type: "stairs"
+      direction: "up"
+      description: "Exit stairs"
+    confidence_threshold: 0.85
+
+  - label: "down_stairs"
+    phash: "cccc7777dddd8888"
+    category: "stairs"
+    metadata:
+      type: "stairs"
+      direction: "down"
+      description: "Entry stairs"
+    confidence_threshold: 0.85
+
+  # Traps
+  - label: "trip_trap"
+    phash: "eeee9999ffff0000"
+    category: "traps"
+    metadata:
+      type: "trap"
+      damage: 5
+      description: "Causes tripping damage"
+    confidence_threshold: 0.85
+
+  # Special tiles
+  - label: "chest"
+    phash: "2222333344445555"
+    category: "special_tiles"
+    metadata:
+      type: "special"
+      description: "Treasure chest"
+    confidence_threshold: 0.85
+
+  # HUD elements
+  - label: "hp_bar"
+    phash: "3333444455556666"
+    category: "hud_elements"
+    metadata:
+      type: "hud"
+      description: "Current HP status bar"
+    confidence_threshold: 0.85
+
+  - label: "belly_bar"
+    phash: "4444555566667777"
+    category: "hud_elements"
+    metadata:
+      type: "hud"
+      description: "Belly hunger meter"
+    confidence_threshold: 0.85

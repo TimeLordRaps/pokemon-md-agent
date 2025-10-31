@@ -1,0 +1,20 @@
+name: use_food_when_hungry
+description: Use food item when belly is low to prevent fainting
+cooldown: 30.0
+triggers:
+  - type: ram_condition
+    condition: is_hungry
+preconditions:
+  - has_food_item
+  - not_in_battle
+actions:
+  - type: use_item
+    params:
+      item_type: food
+      predicate: best_food_available
+fallback:
+  - type: wait
+    params:
+      frames: 60
+priority: 20
+max_executions: 10

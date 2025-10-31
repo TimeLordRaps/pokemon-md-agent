@@ -6,6 +6,8 @@ import time
 import numpy as np
 from dataclasses import dataclass
 from enum import Enum
+from PIL import Image
+from skimage.metrics import structural_similarity as ssim
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +29,7 @@ class KeyframeCandidate:
     importance_score: float = 0.0
     temporal_density: float = 0.0
     ssim_score: Optional[float] = None
+    frame_image: Optional[Image.Image] = None  # Image for SSIM calculation
     floor_changed: bool = False
     room_changed: bool = False
     combat_active: bool = False
@@ -54,6 +57,7 @@ class KeyframePolicy:
         min_keyframes: int = 5,
         max_keyframes: int = 100,
         temporal_window_seconds: float = 60.0,
+        ssim_threshold: float = 0.85,  # SSIM threshold for dropping similar frames
     ):
         """Initialize keyframe policy.
 
@@ -63,17 +67,20 @@ class KeyframePolicy:
             min_keyframes: Minimum keyframes to maintain
             max_keyframes: Maximum keyframes to store
             temporal_window_seconds: Window for temporal analysis
+            ssim_threshold: SSIM threshold for dropping similar frames (0.0-1.0)
         """
         self.base_sampling_rate = base_sampling_rate
         self.adaptive_threshold = adaptive_threshold
         self.min_keyframes = min_keyframes
         self.max_keyframes = max_keyframes
         self.temporal_window_seconds = temporal_window_seconds
+        self.ssim_threshold = ssim_threshold
 
         # State tracking
         self.recent_candidates: List[KeyframeCandidate] = []
         self.selected_keyframes: List[KeyframeCandidate] = []
         self.strategy_history: List[SamplingStrategy] = []
+        self.last_keyframe_image: Optional[Image.Image] = None  # Store previous keyframe image for SSIM
 
         logger.info(
             "Initialized KeyframePolicy: rate=%.2f, min=%d, max=%d",
@@ -108,8 +115,11 @@ class KeyframePolicy:
         # Determine sampling strategy
         strategy = self._determine_strategy(current_stuckness_score, force_adaptive)
 
+        # Calculate SSIM scores for candidates against previous keyframe
+        candidates_with_ssim = self._calculate_ssim_scores(candidates)
+
         # Score candidates based on strategy
-        scored_candidates = self._score_candidates(candidates, strategy)
+        scored_candidates = self._score_candidates(candidates_with_ssim, strategy)
 
         # Apply specific triggers for keyframe promotion
         promoted_candidates = self._apply_keyframe_triggers(scored_candidates)
@@ -117,8 +127,10 @@ class KeyframePolicy:
         # Select keyframes
         selected = self._select_from_scored(promoted_candidates, strategy)
 
-        # Update state
+        # Update state - store the last selected keyframe image for future SSIM comparisons
         self.selected_keyframes.extend(selected)
+        if selected and selected[-1].frame_image is not None:
+            self.last_keyframe_image = selected[-1].frame_image
         self._maintain_keyframe_limits()
         self.strategy_history.append(strategy)
 
@@ -327,7 +339,7 @@ class KeyframePolicy:
         """Apply specific keyframe promotion triggers."""
         for candidate in candidates:
             # SSIM drop (significant visual change)
-            if candidate.ssim_score is not None and candidate.ssim_score < 0.8:
+            if candidate.ssim_score is not None and candidate.ssim_score < self.ssim_threshold:
                 candidate.importance_score = max(candidate.importance_score, 2.0)
 
             # Floor/room change
@@ -376,9 +388,37 @@ class KeyframePolicy:
             "temporal_window_seconds": self.temporal_window_seconds,
         }
 
+    def _calculate_ssim_scores(self, candidates: List[KeyframeCandidate]) -> List[KeyframeCandidate]:
+        """Calculate SSIM scores between candidates and the last keyframe image."""
+        if not self.last_keyframe_image:
+            # No previous keyframe, all candidates get None SSIM score
+            return candidates
+
+        updated_candidates = []
+        for candidate in candidates:
+            if candidate.frame_image is not None:
+                try:
+                    # Convert PIL images to numpy arrays for SSIM calculation
+                    prev_array = np.array(self.last_keyframe_image.convert('L'))  # Convert to grayscale
+                    curr_array = np.array(candidate.frame_image.convert('L'))
+
+                    # Calculate SSIM
+                    ssim_score = ssim(prev_array, curr_array, data_range=curr_array.max() - curr_array.min())
+                    candidate.ssim_score = ssim_score
+                    logger.debug(f"SSIM score calculated: {ssim_score:.3f}")
+                except Exception as e:
+                    logger.warning(f"Failed to calculate SSIM for candidate: {e}")
+                    candidate.ssim_score = None
+            else:
+                candidate.ssim_score = None
+            updated_candidates.append(candidate)
+
+        return updated_candidates
+
     def clear_history(self) -> None:
         """Clear keyframe selection history."""
         self.recent_candidates.clear()
         self.selected_keyframes.clear()
         self.strategy_history.clear()
+        self.last_keyframe_image = None
         logger.info("Cleared keyframe policy history")

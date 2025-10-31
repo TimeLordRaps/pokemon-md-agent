@@ -13,10 +13,16 @@
 -- 4 = Error
 -- 5 = None
 local logLevel = 2
-local truncateLogs = true
+local truncateLogs = false
+local diagnosticsEnabled = true
+local DIAGNOSTIC_HEX_PREVIEW = 256
 local TERMINATION_MARKER <const> = "<|END|>"
 local DEFAULT_RETURN <const> = "<|SUCCESS|>";
 local ERROR_RETURN <const> = "<|ERROR|>";
+
+-- Throughput tuning constants - can be overridden via environment
+local MAX_QPS = os.getenv("MGBA_MAX_QPS") or 100  -- Max queries per second per connection
+local MAX_INFLIGHT = os.getenv("MGBA_MAX_INFLIGHT") or 10  -- Max concurrent requests per connection
 
 -- ***********************
 -- Sockets
@@ -26,6 +32,9 @@ local server = nil
 local socketList = {}
 local nextID = 1
 local port = 8888
+
+-- Per-connection rate limiting and queuing
+local connectionStats = {}  -- Track QPS and inflight per connection
 
 function beginSocket()
 	while not server do
@@ -60,9 +69,56 @@ function socketAccept()
 	local id = nextID
 	nextID = id + 1
 	socketList[id] = sock
+
+	-- Initialize connection stats for rate limiting
+	connectionStats[id] = {
+		inflight = 0,
+		last_request_time = 0,
+		request_count = 0,
+		window_start = os.time()
+	}
+
 	sock:add("received", function() socketReceived(id) end)
 	sock:add("error", function() socketError(id) end)
-	logDebug(formatSocketMessage(id, "Connected"))
+	logDebug(formatSocketMessage(id, "Connected with throughput limits: QPS=" .. MAX_QPS .. ", Inflight=" .. MAX_INFLIGHT))
+end
+
+function checkRateLimit(id)
+    local stats = connectionStats[id]
+    if not stats then return false end
+
+    local now = os.time()
+
+    -- Reset window if needed (1 second windows for QPS)
+    if now - stats.window_start >= 1 then
+        stats.request_count = 0
+        stats.window_start = now
+    end
+
+    -- Check QPS limit
+    if stats.request_count >= MAX_QPS then
+        return false, "QPS limit exceeded"
+    end
+
+    -- Check inflight limit
+    if stats.inflight >= MAX_INFLIGHT then
+        return false, "Inflight limit exceeded"
+    end
+
+    return true
+end
+
+function updateRateLimitStats(id, processing)
+    local stats = connectionStats[id]
+    if not stats then return end
+
+    if processing then
+        stats.inflight = stats.inflight + 1
+        stats.request_count = stats.request_count + 1
+        stats.last_request_time = os.time()
+    else
+        stats.inflight = math.max(0, stats.inflight - 1)
+    end
 end
 
 function socketReceived(id)
@@ -79,16 +135,29 @@ function socketReceived(id)
                 local message = sock._buffer:sub(1, marker_start - 1)
                 sock._buffer = sock._buffer:sub(marker_end + 1)
                 logDebug(formatSocketMessage(id, message:match("^(.-)%s*$")))
-                
-                local success, returnValue = pcall(function()
-                    return messageRouter(message:match("^(.-)%s*$"))
-                end)
-                
-                if not success then
-                    logError("Error executing command: " .. tostring(returnValue))
+
+                -- Check rate limits before processing
+                local allowed, reason = checkRateLimit(id)
+                if not allowed then
+                    logWarning(formatSocketMessage(id, "Rate limited: " .. reason))
                     sock:send(ERROR_RETURN .. TERMINATION_MARKER)
                 else
-                    sock:send(returnValue .. TERMINATION_MARKER)
+                    -- Update stats for processing
+                    updateRateLimitStats(id, true)
+
+                    local success, returnValue = pcall(function()
+                        return messageRouter(message:match("^(.-)%s*$"))
+                    end)
+
+                    -- Update stats after processing
+                    updateRateLimitStats(id, false)
+
+                    if not success then
+                        logError("Error executing command: " .. tostring(returnValue))
+                        sock:send(ERROR_RETURN .. TERMINATION_MARKER)
+                    else
+                        sock:send(returnValue .. TERMINATION_MARKER)
+                    end
                 end
             end
         elseif error then
@@ -112,6 +181,7 @@ end
 function socketStop(id)
 	local sock = socketList[id]
 	socketList[id] = nil
+	connectionStats[id] = nil  -- Clean up rate limiting stats
 	sock:close()
 end
 
@@ -149,11 +219,31 @@ local keyValues = {
 
 function messageRouter(rawMessage)
     local messageType, rest = rawMessage:match("^([^,]+),(.*)$")
-    
+
     local messageValue1, messageValue2, messageValue3
-    
-	-- Changes behaviour if the second arugment is an array
-    if rest and rest:sub(1,1) == "[" then
+
+    -- Dual-parsing: handle colon or space-delimited commands if no comma present
+    if not messageType or messageType == "" then
+        -- No comma found, try colon-delimited format
+        if rawMessage:find(":") then
+            local parsedInput = splitStringToTable(rawMessage, ":")
+            messageType = parsedInput[1]
+            messageValue1 = parsedInput[2]
+            messageValue2 = parsedInput[3]
+            messageValue3 = parsedInput[4]
+        -- Otherwise try space-delimited format
+        elseif rawMessage:find("%s") then
+            local parsedInput = splitStringToTable(rawMessage, "%s")
+            messageType = parsedInput[1]
+            messageValue1 = parsedInput[2]
+            messageValue2 = parsedInput[3]
+            messageValue3 = parsedInput[4]
+        else
+            -- Single command with no arguments
+            messageType = rawMessage
+        end
+    -- Changes behaviour if the second arugment is an array
+    elseif rest and rest:sub(1,1) == "[" then
         -- Find matching closing bracket
         local bracketCount = 1
         local endBracket
@@ -168,7 +258,7 @@ function messageRouter(rawMessage)
                 end
             end
         end
-        
+
         if endBracket then
             messageValue1 = rest:sub(1, endBracket)
             -- Parse remaining values after the bracketed content
@@ -235,6 +325,7 @@ function messageRouter(rawMessage)
 	elseif messageType == "core.saveStateFile" then returnValue = emu:saveStateFile(messageValue1, tonumber(messageValue2))
 	elseif messageType == "core.saveStateSlot" then returnValue = emu:saveStateSlot(tonumber(messageValue1), tonumber(messageValue2))
 	elseif messageType == "core.screenshot" then emu:screenshot(messageValue1)
+	elseif messageType == "screenshot" then emu:screenshot(messageValue1)  -- Dual-format support: screenshot PATH [WIDTH] [HEIGHT] [SCALE]
 	elseif messageType == "core.setKeys" then emu:setKeys(tonumber(messageValue1))
 	elseif messageType == "core.step" then emu:step()
 	elseif messageType == "core.write16" then returnValue = emu:write16(tonumber(messageValue1), tonumber(messageValue2))
@@ -257,7 +348,13 @@ function messageRouter(rawMessage)
 	elseif messageType == "memoryDomain.write16" then returnValue = emu.memory[messageValue1]:write16(tonumber(messageValue2), tonumber(messageValue3))
 	elseif messageType == "memoryDomain.write32" then returnValue = emu.memory[messageValue1]:write32(tonumber(messageValue2), tonumber(messageValue3))
 	elseif messageType == "memoryDomain.write8" then returnValue = emu.memory[messageValue1]:write8(tonumber(messageValue2), tonumber(messageValue3))
-	elseif (rawMessage ~= nil or rawMessage ~= '') then logInformation("Unable to route raw message: " .. rawMessage)
+	elseif rawMessage ~= nil and rawMessage ~= '' then
+		local truncated = rawMessage
+		if #truncated > 120 then
+			truncated = truncated:sub(1, 117) .. "..."
+		end
+		logWarning("Unable to route raw message: " .. truncated)
+		returnValue = ERROR_RETURN
 	else logInformation(messageType)	
 	end
 	
@@ -453,6 +550,87 @@ function formatMemoryDomains(domains)
         table.insert(names, name)
     end
     return table.concat(names, ",")
+end
+
+-- ***********************
+-- Diagnostics helpers
+-- ***********************
+
+local function escapeControlCharacters(str)
+    if not str then
+        return "<nil>"
+    end
+
+    local buffer = {}
+    for i = 1, #str do
+        local byte = str:byte(i)
+        local char = str:sub(i, i)
+        if char == "\n" then
+            table.insert(buffer, "\\n")
+        elseif char == "\r" then
+            table.insert(buffer, "\\r")
+        elseif char == "\t" then
+            table.insert(buffer, "\\t")
+        elseif byte < 32 or byte > 126 then
+            table.insert(buffer, string.format("\\x%02X", byte))
+        else
+            table.insert(buffer, char)
+        end
+    end
+    return table.concat(buffer)
+end
+
+local function hexPreview(str, maxBytes)
+    if not str then
+        return "<nil>", 0
+    end
+
+    local limit = maxBytes or #str
+    local bytes = {}
+    for i = 1, math.min(#str, limit) do
+        table.insert(bytes, string.format("%02X", str:byte(i)))
+    end
+    if maxBytes and #str > maxBytes then
+        table.insert(bytes, "…")
+    end
+    return table.concat(bytes, " "), #str
+end
+
+local function describeArgument(arg)
+    if arg == nil then
+        return "<nil>"
+    end
+    if type(arg) ~= "string" then
+        return tostring(arg)
+    end
+
+    local numeric = tonumber(arg)
+    if numeric then
+        return string.format("%s (dec=%d hex=0x%X)", arg, numeric, numeric)
+    end
+    return arg
+end
+
+local function formatDiagnostics(rawMessage, messageType, value1, value2, value3)
+    if not diagnosticsEnabled then
+        return nil
+    end
+
+    local hex, length = hexPreview(rawMessage, DIAGNOSTIC_HEX_PREVIEW)
+    local escaped = escapeControlCharacters(rawMessage)
+    local details = {
+        "message diagnostics:",
+        string.format("  length: %d bytes", length),
+        "  ascii:  " .. escaped,
+        "  hex:    " .. hex,
+    }
+    if messageType ~= nil then
+        table.insert(details, string.format("  parsed type: %s", tostring(messageType)))
+        table.insert(details, string.format("  arg1: %s", describeArgument(value1)))
+        table.insert(details, string.format("  arg2: %s", describeArgument(value2)))
+        table.insert(details, string.format("  arg3: %s", describeArgument(value3)))
+    end
+    return table.concat(details, "\n")
 end
 
 -- ***********************

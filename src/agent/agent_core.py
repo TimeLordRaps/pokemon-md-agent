@@ -4,407 +4,458 @@ Main agent loop that coordinates all components for autonomous gameplay.
 """
 
 import asyncio
-import time
 import logging
+import random
+import time
+import numpy as np
+from typing import Dict, Any, List, Optional
 from pathlib import Path
-from typing import Optional, Dict, Any, List
-from dataclasses import dataclass
 
-from ..environment.mgba_controller import MGBAController
-from ..environment.save_manager import SaveManager
-from ..environment.ram_decoders import RAMDecoder
-from ..environment.ram_watch import RAMWatcher
-from ..retrieval.trajectory_logger import TrajectoryLogger, CombatEvent, MovementTrajectory, DecisionLog
-from ..models.world_model import WorldModel, FloorModel, Entity, Position, EntityType
-from ..vision.quad_capture import QuadCapture
-from .model_router import ModelRouter
-from .memory_manager import MemoryManager
-from ..retrieval.stuckness_detector import StucknessDetector
+from src.environment.mgba_controller import MGBAController
+from src.vision.grid_parser import GridParser
+from src.vision.ascii_renderer import ASCIIRenderer
+from src.agent.qwen_controller import QwenController
+from src.skills.runtime import SkillRuntime
+from src.retrieval.stuckness_detector import StucknessDetector, StucknessAnalysis, StucknessStatus
+from src.retrieval.auto_retrieve import AutoRetriever, RetrievalQuery, RetrievedTrajectory
+from src.environment.ram_decoders import RAMSnapshot, PlayerState, MapData, PartyStatus
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class AgentConfig:
-    """Configuration for the agent."""
-    screenshot_interval: float = 1.0  # seconds
-    memory_poll_interval: float = 0.1  # seconds
-    decision_interval: float = 0.5  # seconds
-    max_runtime_hours: float = 24.0
-    enable_4up_capture: bool = True
-    enable_trajectory_logging: bool = True
-    enable_stuck_detection: bool = True
-    auto_save_interval: int = 300  # frames
-    capture_scale: int = 2  # Capture scale factor (1=240×160, 2=320×480)
+class AgentCore:
+    """Main agent loop: perceive → reason → act."""
 
-    # Dashboard configuration
-    dashboard_enabled: bool = True
-    dashboard_branch: str = "pages"
-    dashboard_site_root: str = "docs"
-    dashboard_flush_seconds: float = 30.0
-    dashboard_max_batch_bytes: int = 8 * 1024 * 1024  # 8 MB
-    dashboard_max_files_per_minute: int = 30
+    def __init__(self, objective: str = "Navigate to stairs", test_mode: bool = False, enable_retrieval: bool = False):
+        # Initialize all components
+        self.test_mode = test_mode
+        self.mgba = MGBAController()
+        self.grid_parser = GridParser()
+        self.ascii_renderer = ASCIIRenderer()
+        self.qwen = QwenController(use_pipeline=not test_mode)
+        self.skills = SkillRuntime(self.mgba)
+        self.stuckness = StucknessDetector()
+        self.retriever = None
 
+        # Set objective
+        self.objective = objective
 
-class PokemonMDAgent:
-    """Main Pokemon Mystery Dungeon autonomous agent."""
-    
-    def __init__(self, rom_path: Path, save_dir: Path, config: Optional[AgentConfig] = None):
-        """Initialize the agent.
-        
-        Args:
-            rom_path: Path to the Pokemon MD ROM
-            save_dir: Directory for saves and logs
-            config: Agent configuration
-        """
-        self.rom_path = Path(rom_path)
-        self.save_dir = Path(save_dir)
-        self.save_dir.mkdir(parents=True, exist_ok=True)
-        self.config = config or AgentConfig()
-        
-        # Core components
-        self.controller = MGBAController()
-        self.save_manager = SaveManager(self.controller, self.save_dir / "saves")
-        addresses_config = Path("config/addresses/pmd_red_us_v1.json")
-        self.ram_decoder = RAMDecoder(self.controller, addresses_config)
-        self.ram_watcher = RAMWatcher(self.controller, self.ram_decoder, 
-                                    self.save_dir / "ram_logs")
-        
-        # Agent components
-        self.model_router = ModelRouter()
-        self.memory_manager = MemoryManager(total_context_budget=256000)
-        self.stuck_detector = StucknessDetector()
-        
-        # World modeling
-        self.world_model = WorldModel(self.save_dir / "world_model")
-        
-        # Logging and capture
-        self.trajectory_logger = TrajectoryLogger(self.save_dir / "trajectories")
-        self.quad_capture = QuadCapture(self.controller, self.save_dir / "captures")
-        
-        # State tracking
-        self.running = False
-        self.start_time = 0.0
-        self.frame_count = 0
-        self.last_screenshot = 0.0
-        self.last_memory_poll = 0.0
-        self.last_decision = 0.0
-        self.last_auto_save = 0.0
-        
-        logger.info("Pokemon MD Agent initialized")
-    
-    async def run(self) -> None:
-        """Run the main agent loop."""
-        try:
-            # Initialize
-            await self._initialize()
-            
-            # Main loop
-            while self.running and self._should_continue():
-                current_time = time.time()
-                
-                # Update frame count
-                self.frame_count += 1
-                
-                # Periodic tasks
-                await self._handle_screenshots(current_time)
-                await self._handle_memory_polling(current_time)
-                await self._handle_decisions(current_time)
-                await self._handle_auto_save(current_time)
-                
-                # Small delay to prevent busy waiting
-                await asyncio.sleep(0.01)
-            
-            logger.info("Agent loop completed")
-            
-        except Exception as e:
-            logger.error("Agent loop failed: %s", e)
-            raise
-        finally:
-            await self._cleanup()
-    
-    async def _initialize(self) -> None:
-        """Initialize the agent."""
-        logger.info("Initializing agent...")
-        
-        # Connect to emulator
-        if not self.controller.connect():
-            raise RuntimeError("Failed to connect to mGBA emulator")
-        
-        # Load ROM - mGBA should already have it loaded, just ensure connection
-        
-        # Ensure clean start state
-        self.save_manager.ensure_startable_state()
-        
-        # Start RAM watching
-        await self.ram_watcher.start_watching()
-        
-        # Initialize components (no async init methods)
-        
-        self.start_time = time.time()
-        self.running = True
-        
-        logger.info("Agent initialization complete")
-    
-    async def _handle_screenshots(self, current_time: float) -> None:
-        """Handle periodic screenshots and captures."""
-        if current_time - self.last_screenshot >= self.config.screenshot_interval:
-            try:
-                # Basic screenshot
-                screenshot_path = self.save_dir / "screenshots" / "04d"
-                screenshot_path.parent.mkdir(parents=True, exist_ok=True)
-                self.controller.screenshot(str(screenshot_path))
-                
-                # 4-up capture if enabled
-                if self.config.enable_4up_capture:
-                    # Get current state for metadata
-                    player_state = self.ram_decoder.get_player_state()
-                    entities = self.ram_decoder.get_entities()
-                    items = self.ram_decoder.get_items()
-                    
-                    floor = player_state.floor_number if player_state else 0
-                    dungeon_id = player_state.dungeon_id if player_state else 0
-                    
-                    self.quad_capture.capture_quad_view(
-                        frame=self.frame_count,
-                        floor=floor,
-                        dungeon_id=dungeon_id,
-                        room_kind="unknown",  # TODO: detect room type
-                        player_pos=(player_state.player_tile_x, player_state.player_tile_y) if player_state else (0, 0),
-                        entities_count=len(entities) if entities else 0,
-                        items_count=len(items) if items else 0
-                    )
-                
-                self.last_screenshot = current_time
-                
-            except Exception as e:
-                logger.warning("Screenshot capture failed: %s", e)
-    
-    async def _handle_memory_polling(self, current_time: float) -> None:
-        """Handle periodic memory polling and world model updates."""
-        if current_time - self.last_memory_poll >= self.config.memory_poll_interval:
-            try:
-                # Get current state
-                player_state = self.ram_decoder.get_player_state()
-                entities = self.ram_decoder.get_entities()
-                items = self.ram_decoder.get_items()
-                map_data = self.ram_decoder.get_map_data()
-                
-                if player_state and entities is not None and items is not None:
-                    # Update world model
-                    await self._update_world_model(player_state, entities, items, map_data)
-                    
-                    # Basic stuckness check (simplified)
-                    if self.config.enable_stuck_detection:
-                        # Simple check: if player hasn't moved in last few polls
-                        current_pos = (player_state.player_tile_x, player_state.player_tile_y)
-                        # TODO: implement proper stuckness detection
-                        pass
-                
-                self.last_memory_poll = current_time
-                
-            except Exception as e:
-                logger.warning("Memory polling failed: %s", e)
-    
-    async def _handle_decisions(self, current_time: float) -> None:
-        """Handle periodic decision making."""
-        if current_time - self.last_decision >= self.config.decision_interval:
-            try:
-                # Get current context
-                context = await self._gather_decision_context()
-                
-                # For now, just log context - TODO: implement actual decision making
-                logger.debug("Decision context: floor=%s, entities=%d", 
-                           context.get('floor', 'unknown'), 
-                           context.get('entities_count', 0))
-                
-                # TODO: implement model routing and decision execution
-                
-                self.last_decision = current_time
-                
-            except Exception as e:
-                logger.warning("Decision making failed: %s", e)
-    
-    async def _handle_auto_save(self, current_time: float) -> None:
-        """Handle periodic auto-saving."""
-        if self.frame_count - self.last_auto_save >= self.config.auto_save_interval:
-            try:
-                self.save_manager.save_slot(self.frame_count % 10)  # Rotate through slots 0-9
-                self.world_model.save_state()
-                self.last_auto_save = self.frame_count
-                
-                logger.debug("Auto-saved at frame %d", self.frame_count)
-                
-            except Exception as e:
-                logger.warning("Auto-save failed: %s", e)
-    
-    async def _update_world_model(self, player_state: Dict[str, Any], 
-                                entities: List[Dict[str, Any]], 
-                                items: List[Dict[str, Any]],
-                                map_data: Optional[Dict[str, Any]]) -> None:
-        """Update the world model with current state."""
-        try:
-            floor = player_state.get('floor', 0)
-            dungeon_id = player_state.get('dungeon_id', 0)
-            
-            # Create/update floor model
-            floor_model = FloorModel(
-                floor_number=floor,
-                dungeon_id=dungeon_id,
-                width=map_data.get('width', 32) if map_data else 32,
-                height=map_data.get('height', 32) if map_data else 32,
-                last_updated=time.time()
-            )
-            
-            # Add entities
-            for entity_data in entities:
-                entity = Entity(
-                    id=entity_data.get('id', 0),
-                    type=EntityType(entity_data.get('type', 0)),
-                    position=Position(
-                        x=entity_data.get('x', 0),
-                        y=entity_data.get('y', 0),
-                        floor=floor
-                    ),
-                    species_id=entity_data.get('species_id'),
-                    level=entity_data.get('level'),
-                    hp=entity_data.get('hp'),
-                    max_hp=entity_data.get('max_hp'),
-                    is_hostile=entity_data.get('is_hostile', False)
-                )
-                floor_model.entities[entity.id] = entity
-                self.world_model.update_entity(entity)
-            
-            # Add items
-            for item_data in items:
-                item_entity = Entity(
-                    id=item_data.get('id', 0),
-                    type=EntityType.ITEM,
-                    position=Position(
-                        x=item_data.get('x', 0),
-                        y=item_data.get('y', 0),
-                        floor=floor
-                    ),
-                    item_id=item_data.get('item_id')
-                )
-                floor_model.entities[item_entity.id] = item_entity
-                self.world_model.update_entity(item_entity)
-            
-            self.world_model.update_floor(floor_model)
-            
-        except Exception as e:
-            logger.warning("World model update failed: %s", e)
-    
-    async def _gather_decision_context(self) -> Dict[str, Any]:
-        """Gather context for decision making."""
-        context = {
-            'frame': self.frame_count,
-            'timestamp': time.time(),
-        }
-        
-        try:
-            # Get current state
-            player_state = self.ram_decoder.get_player_state()
-            if player_state:
-                context['floor'] = player_state.floor_number
-                context['dungeon_id'] = player_state.dungeon_id
-                context['player_x'] = player_state.player_tile_x
-                context['player_y'] = player_state.player_tile_y
-            
-            # Get recent screenshots/captures
-            recent_captures = self.quad_capture.get_recent_captures(3)
-            if recent_captures:
-                context['recent_captures'] = recent_captures
-            
-            # Get world model state
-            world_stats = self.world_model.get_stats()
-            context['world_model'] = world_stats
-            
-        except Exception as e:
-            logger.warning("Failed to gather decision context: %s", e)
-        
-        return context
-    
-    async def _execute_decision(self, decision: Dict[str, Any]) -> None:
-        """Execute a decision."""
-        action = decision.get('action', 'wait')
-        
-        try:
-            if action == 'move':
-                direction = decision.get('direction', 'up')
-                self.controller.button_tap(direction)
-                
-            elif action == 'interact':
-                self.controller.button_tap('a')
-                
-            elif action == 'run_away':
-                self.controller.button_hold('b', 500)  # Hold B for 500ms
-                
-            elif action == 'wait':
-                pass  # Do nothing
-                
+        # State tracking for stuckness detection
+        self.step_count = 0
+        self.last_state = None
+        self.embedding_history = []
+
+        # Logging setup
+        self.log_file = Path("agent_log.txt")
+        self._setup_logging()
+
+        # Optional retrieval system
+        if enable_retrieval and not test_mode:
+            # Would initialize AutoRetriever with proper dependencies
+            # self.retriever = AutoRetriever(silo_manager, vector_store, deduplicator)
+            logger.info("Retrieval system enabled (placeholder)")
+
+        # Connect to mGBA with retry (skip in test mode)
+        if not test_mode:
+            # Don't fail init if connection fails - try during first perceive
+            connected = self.mgba.connect_with_retry(max_retries=1)
+            if connected:
+                logger.info("Successfully connected to mGBA during initialization")
             else:
-                logger.warning("Unknown action: %s", action)
-                
-        except Exception as e:
-            logger.error("Failed to execute decision: %s", e)
-    
-    async def _handle_stuck_situation(self) -> None:
-        """Handle when the agent is detected as stuck."""
+                logger.warning("Failed to connect to mGBA during initialization - will retry during first perceive()")
+
+        logger.info(f"Agent initialized with objective: {objective} (test_mode: {test_mode})")
+
+    def _setup_logging(self) -> None:
+        """Setup file logging."""
+        file_handler = logging.FileHandler(self.log_file)
+        file_handler.setLevel(logging.INFO)
+        file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(file_formatter)
+        logger.addHandler(file_handler)
+        logger.info("File logging initialized")
+
+    def perceive(self) -> dict:
+        """Get current game state via full perception pipeline."""
+        if self.test_mode:
+            # Return mock data for testing
+            return {
+                "screenshot": None,
+                "grid": {"width": 32, "height": 32, "cells": []},
+                "ascii": "Test ASCII view\nPlayer at (10,10)\nStairs at (15,15)",
+                "ram": {"player_x": 10, "player_y": 10, "floor_number": 1}
+            }
+
         try:
-            # Try a few random actions to unstuck
-            for _ in range(3):
-                direction = ['up', 'down', 'left', 'right'][self.frame_count % 4]
-                self.controller.button_tap(direction)
-                await asyncio.sleep(0.1)
-            
-            logger.info("Attempted to unstuck agent")
-            
+            # Capture screenshot
+            screenshot = self.mgba.grab_frame()
+            logger.debug("Captured screenshot")
+
+            # Parse RAM snapshot for comprehensive state
+            ram_snapshot = self._read_ram_snapshot()
+            logger.debug(f"Read RAM snapshot: floor={ram_snapshot.player_state.floor_number}, pos=({ram_snapshot.player_state.player_tile_x},{ram_snapshot.player_state.player_tile_y})")
+
+            # Parse grid from RAM data
+            grid_frame = self.grid_parser.parse_ram_snapshot(ram_snapshot)
+            logger.debug(f"Parsed grid: {grid_frame.width}x{grid_frame.height}")
+
+            # Render ASCII representation
+            ascii_view = self.ascii_renderer.render_environment_with_entities(grid_frame, ram_snapshot)
+            logger.debug("Rendered ASCII view")
+
+            # Create embedding for stuckness detection
+            embedding = self._create_state_embedding(grid_frame, ram_snapshot)
+
+            return {
+                "screenshot": screenshot,
+                "grid": grid_frame,
+                "ascii": ascii_view,
+                "ram": {
+                    "player_x": ram_snapshot.player_state.player_tile_x,
+                    "player_y": ram_snapshot.player_state.player_tile_y,
+                    "floor_number": ram_snapshot.player_state.floor_number,
+                    "snapshot": ram_snapshot
+                },
+                "embedding": embedding,
+                "timestamp": time.time()
+            }
+
         except Exception as e:
-            logger.error("Failed to handle stuck situation: %s", e)
-    
-    def _should_continue(self) -> bool:
-        """Check if the agent should continue running."""
-        if not self.running:
-            return False
+            logger.error(f"Perception failed: {e}")
+            # Fallback to basic RAM reading
+            ram_state = self._read_ram_state()
+            return {
+                "screenshot": None,
+                "grid": {"width": 32, "height": 32, "cells": []},
+                "ascii": f"Fallback view\nPlayer at ({ram_state['player_x']},{ram_state['player_y']})\nFloor: {ram_state['floor_number']}",
+                "ram": ram_state,
+                "embedding": np.zeros(128),  # Placeholder embedding
+                "timestamp": time.time()
+            }
+
+    def _read_ram_snapshot(self) -> RAMSnapshot:
+        """Read comprehensive RAM snapshot."""
+        from src.environment.ram_decoders import create_decoder, PlayerState, MapData, PartyStatus
+
+        # Check connection and reconnect if needed
+        if not self.mgba.is_connected():
+            logger.warning("mGBA not connected, attempting reconnection...")
+            if not self.mgba.connect_with_retry(max_retries=2):
+                logger.error("Failed to reconnect to mGBA, returning default snapshot")
+                # Return minimal snapshot with defaults
+                return RAMSnapshot(
+                    player_state=PlayerState(
+                        player_tile_x=0, player_tile_y=0, floor_number=1,
+                        partner_tile_x=0, partner_tile_y=0, dungeon_id=1, turn_counter=0
+                    ),
+                    map_data=MapData(
+                        stairs_x=-1, stairs_y=-1, camera_origin_x=0, camera_origin_y=0,
+                        weather_state=0, turn_phase=0
+                    ),
+                    party_status=PartyStatus(
+                        leader_hp=50, leader_hp_max=50, leader_belly=50,
+                        partner_hp=50, partner_hp_max=50, partner_belly=50
+                    ),
+                    entities=[],
+                    items=[],
+                    timestamp=time.time()
+                )
+
+        decoder = create_decoder()
+        raw_data = self.mgba.memory_domain_read_range("WRAM", 0x02000000, 2048)
+        if not raw_data:
+            logger.warning("Failed to read RAM data from WRAM, returning default snapshot")
+            # Return minimal snapshot with defaults
+            return RAMSnapshot(
+                player_state=PlayerState(
+                    player_tile_x=0, player_tile_y=0, floor_number=1,
+                    partner_tile_x=0, partner_tile_y=0, dungeon_id=1, turn_counter=0
+                ),
+                map_data=MapData(
+                    stairs_x=-1, stairs_y=-1, camera_origin_x=0, camera_origin_y=0,
+                    weather_state=0, turn_phase=0
+                ),
+                party_status=PartyStatus(
+                    leader_hp=50, leader_hp_max=50, leader_belly=50,
+                    partner_hp=50, partner_hp_max=50, partner_belly=50
+                ),
+                entities=[],
+                items=[],
+                timestamp=time.time()
+            )
+
+        # Use decoder to get snapshot (assuming decode_player_state etc.)
+        player_state_dict = decoder.decode_player_state(raw_data)
+        player_state = PlayerState(
+            player_tile_x=player_state_dict.get("player_tile_x", 0),
+            player_tile_y=player_state_dict.get("player_tile_y", 0),
+            floor_number=player_state_dict.get("floor_number", 1),
+            dungeon_id=player_state_dict.get("dungeon_id", 1),
+            turn_counter=player_state_dict.get("turn_counter", 0),
+            partner_tile_x=player_state_dict.get("partner_tile_x", 0),
+            partner_tile_y=player_state_dict.get("partner_tile_y", 0)
+        )
         
-        # Check time limit
-        elapsed_hours = (time.time() - self.start_time) / 3600
-        if elapsed_hours >= self.config.max_runtime_hours:
-            logger.info("Reached maximum runtime of %.1f hours", self.config.max_runtime_hours)
-            return False
+        map_data_dict = decoder.decode_map_data(raw_data)
+        map_data = MapData(
+            camera_origin_x=map_data_dict.get("camera_origin_x", 0),
+            camera_origin_y=map_data_dict.get("camera_origin_y", 0),
+            weather_state=map_data_dict.get("weather_state", 0),
+            turn_phase=map_data_dict.get("turn_phase", 0),
+            stairs_x=map_data_dict.get("stairs_x", -1),
+            stairs_y=map_data_dict.get("stairs_y", -1)
+        )
         
-        return True
-    
-    async def _cleanup(self) -> None:
-        """Clean up resources."""
-        logger.info("Cleaning up agent resources...")
+        party_status_dict = decoder.decode_party_status(raw_data)
+        party_status = PartyStatus(
+            leader_hp=party_status_dict.get("leader", {}).get("hp", 50),
+            leader_hp_max=party_status_dict.get("leader", {}).get("hp_max", 50),
+            leader_belly=party_status_dict.get("leader", {}).get("belly", 50),
+            partner_hp=party_status_dict.get("partner", {}).get("hp", 50),
+            partner_hp_max=party_status_dict.get("partner", {}).get("hp_max", 50),
+            partner_belly=party_status_dict.get("partner", {}).get("belly", 50)
+        )
         
-        try:
-            # Stop watching
-            await self.ram_watcher.stop_watching()
-            
-            # Save final state
-            self.save_manager.save_slot(99)  # Use slot 99 for final save
-            self.world_model.save_state()
-            
-            # Disconnect
-            self.controller.disconnect()
-            
-        except Exception as e:
-            logger.error("Cleanup failed: %s", e)
-    
-    def stop(self) -> None:
-        """Stop the agent."""
-        logger.info("Stopping agent...")
-        self.running = False
-    
-    def get_stats(self) -> Dict[str, Any]:
-        """Get agent statistics."""
+        return RAMSnapshot(
+            player_state=player_state,
+            map_data=map_data,
+            party_status=party_status,
+            entities=[],  # Would need entity decoder
+            items=[],    # Would need item decoder
+            timestamp=time.time()
+        )
+
+    def _read_ram_state(self) -> dict:
+        """Read key RAM addresses (legacy fallback)."""
+        snapshot = self._read_ram_snapshot()
         return {
-            'running': self.running,
-            'frame_count': self.frame_count,
-            'runtime_seconds': time.time() - self.start_time if self.start_time else 0,
-            'trajectory_stats': self.trajectory_logger.get_stats(),
-            'world_stats': self.world_model.get_stats(),
+            "player_x": snapshot.player_state.player_tile_x,
+            "player_y": snapshot.player_state.player_tile_y,
+            "floor_number": snapshot.player_state.floor_number
         }
+
+    def _create_state_embedding(self, grid_frame, ram_snapshot: RAMSnapshot) -> np.ndarray:
+        """Create state embedding for stuckness detection."""
+        # Simple embedding: position + floor + entity count
+        embedding = np.array([
+            ram_snapshot.player_state.player_tile_x / 32.0,
+            ram_snapshot.player_state.player_tile_y / 32.0,
+            ram_snapshot.player_state.floor_number / 10.0,
+            len(ram_snapshot.entities) / 10.0,
+            len(ram_snapshot.items) / 5.0
+        ])
+        # Pad to 128 dimensions
+        embedding = np.pad(embedding, (0, 123), mode='constant')
+        return embedding
+
+    async def reason(self, state: dict) -> dict:
+        """Decide what to do with full reasoning pipeline."""
+        try:
+            # Build prompt from state
+            prompt = self._build_prompt(state)
+
+            # Check stuckness detection (every N steps)
+            stuck_analysis = None
+            if self.step_count % 5 == 0 and 'embedding' in state:  # Check every 5 steps
+                stuck_analysis = self.stuckness.analyze(
+                    current_embedding=state['embedding'],
+                    current_position=(state['ram']['player_x'], state['ram']['player_y']),
+                    current_action=None,  # Would track from previous action
+                    current_time=state.get('timestamp', time.time())
+                )
+                logger.debug(f"Stuckness analysis: {stuck_analysis.status.value} (conf: {stuck_analysis.confidence:.2f})")
+
+            # If stuck, try retrieval or fallback
+            if stuck_analysis and stuck_analysis.status in [StucknessStatus.STUCK, StucknessStatus.VERY_STUCK]:
+                logger.warning(f"Agent stuck: {stuck_analysis.reasons[0]}")
+
+                # Try retrieval if available
+                if self.retriever:
+                    query = RetrievalQuery(
+                        current_embedding=state['embedding'],
+                        current_position=(state['ram']['player_x'], state['ram']['player_y']),
+                        current_floor=state['ram']['floor_number'],
+                        time_window_seconds=120.0
+                    )
+                    trajectories = self.retriever.retrieve(query)
+                    if trajectories:
+                        logger.info(f"Retrieved {len(trajectories)} relevant trajectories")
+                        # Would integrate trajectories into prompt
+
+                # Fallback to random escape action
+                return {"action": "random", "rationale": f"Stuck detected: {stuck_analysis.reasons[0]}"}
+
+            # Query Qwen with async generation
+            decision_text, scores = await self.qwen.generate_async(prompt)
+            logger.debug(f"Qwen response: {decision_text[:100]}...")
+
+            # Parse decision
+            decision = self._parse_decision(decision_text)
+
+            # Try skill execution if action maps to skill
+            if decision['action'] in ['TAKE_STAIRS', 'USE_ITEM', 'ATTACK']:
+                skill_success = await self._try_skill_execution(decision['action'], state)
+                if skill_success:
+                    decision['rationale'] += " (executed via skill)"
+
+            return decision
+
+        except Exception as e:
+            logger.error(f"Reasoning failed: {e}")
+            # Fallback to random action
+            return {"action": "random", "rationale": f"Fallback due to error: {e}"}
+
+    def _is_stuck_simple(self, state: dict) -> bool:
+        """Simple stuck detection - check if position hasn't changed."""
+        # This is a placeholder - real implementation would track history
+        return False
+
+    def _build_prompt(self, state: dict) -> str:
+        """Construct prompt for Qwen."""
+        # Include objective, current state, ASCII view
+        prompt = f"""Objective: {self.objective}
+
+Current State:
+{state['ascii']}
+
+Player Position: ({state['ram']['player_x']}, {state['ram']['player_y']})
+Floor: {state['ram']['floor_number']}
+
+What action should the agent take? Choose from:
+- MOVE_UP, MOVE_DOWN, MOVE_LEFT, MOVE_RIGHT
+- USE_ITEM, ATTACK, TAKE_STAIRS
+- WAIT
+
+Respond with: ACTION | RATIONALE
+Example: MOVE_UP | Stairs likely to the north
+"""
+        return prompt
+
+    def _parse_decision(self, text: str) -> dict:
+        """Extract action and rationale from Qwen output."""
+        # Simple parsing: split on |
+        parts = text.split("|")
+        if len(parts) >= 2:
+            action = parts[0].strip()
+            rationale = parts[1].strip()
+        else:
+            action = "WAIT"
+            rationale = "Could not parse decision"
+
+        return {"action": action, "rationale": rationale}
+
+    def act(self, decision: dict):
+        """Execute action."""
+        if self.test_mode:
+            # Just log in test mode
+            logger.info(f"[TEST MODE] Action: {decision['action']} | Rationale: {decision['rationale']}")
+            return
+
+        action = decision["action"]
+
+        # Map action to button sequence
+        button_map = {
+            "MOVE_UP": ["UP"],
+            "MOVE_DOWN": ["DOWN"],
+            "MOVE_LEFT": ["LEFT"],
+            "MOVE_RIGHT": ["RIGHT"],
+            "USE_ITEM": ["A"],
+            "ATTACK": ["A"],
+            "TAKE_STAIRS": ["A"],
+            "WAIT": [],
+            "random": self._random_action()
+        }
+
+        buttons = button_map.get(action, [])
+
+        # Press buttons via mGBA
+        for button in buttons:
+            self.mgba.button_tap(button)
+            self.mgba.await_frames(1)  # Wait 1 frame between inputs
+
+        logger.info(f"Action: {action} | Rationale: {decision['rationale']}")
+
+    async def _try_skill_execution(self, action: str, state: dict) -> bool:
+        """Try to execute action via skill runtime."""
+        try:
+            # Create simple skill for basic actions
+            from src.skills.dsl import Skill, Tap
+            from src.skills.dsl import Button
+
+            button_map = {
+                "TAKE_STAIRS": Button.A,
+                "USE_ITEM": Button.A,
+                "ATTACK": Button.A
+            }
+
+            if action in button_map:
+                skill = Skill(name=f"simple_{action.lower()}", actions=[Tap(button=button_map[action])])
+                success = await self.skills.execute_skill(skill)
+                logger.info(f"Skill execution for {action}: {'success' if success else 'failed'}")
+                return success
+
+        except Exception as e:
+            logger.warning(f"Skill execution failed: {e}")
+
+        return False
+
+    def _random_action(self) -> list:
+        """Random action for escaping stuck states."""
+        directions = [["UP"], ["DOWN"], ["LEFT"], ["RIGHT"]]
+        return random.choice(directions)
+
+    async def run(self, max_steps: int = 100):
+        """Main agent loop with full autonomous operation."""
+        logger.info(f"Starting agent loop (max {max_steps} steps)")
+
+        # Initialize async components
+        if not self.test_mode:
+            await self.qwen.initialize_async()
+            logger.info("Async components initialized")
+
+        for step in range(max_steps):
+            try:
+                self.step_count = step + 1
+
+                # Perceive
+                state = self.perceive()
+
+                # Update stuckness history
+                if 'embedding' in state:
+                    from src.retrieval.stuckness_detector import TemporalSnapshot
+                    snapshot = TemporalSnapshot(
+                        timestamp=state['timestamp'],
+                        embedding=state['embedding'],
+                        position=(state['ram']['player_x'], state['ram']['player_y']),
+                        floor=state['ram']['floor_number']
+                    )
+                    self.stuckness.add_snapshot(snapshot)
+
+                # Reason
+                decision = await self.reason(state)
+
+                # Act
+                self.act(decision)
+
+                # Brief pause between steps for game processing
+                if not self.test_mode:
+                    await asyncio.sleep(0.1)
+
+                # Log progress
+                logger.info(f"Step {step+1}/{max_steps} complete - Action: {decision['action']}")
+
+            except KeyboardInterrupt:
+                logger.info("Agent interrupted by user")
+                break
+            except Exception as e:
+                logger.error(f"Error at step {step+1}: {e}")
+                # Try reconnection on connection errors
+                if "connection" in str(e).lower() and not self.test_mode:
+                    logger.info("Attempting reconnection...")
+                    if self.mgba.connect_with_retry(max_retries=2):
+                        logger.info("Reconnected successfully")
+                        continue
+                # Continue on other errors (don't crash the demo)
+
+        logger.info("Agent loop complete")
+

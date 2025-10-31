@@ -82,22 +82,26 @@ class StucknessDetector:
         )
     
     def add_snapshot(self, snapshot: TemporalSnapshot) -> None:
-        """Add a new temporal snapshot.
-        
+        """Add a new temporal snapshot with enhanced logging.
+
         Args:
             snapshot: Temporal snapshot to add
         """
         self.snapshots.append(snapshot)
-        
+
         # Keep only recent snapshots (last 10 minutes)
         cutoff_time = snapshot.timestamp - 600
         self.snapshots = [
             s for s in self.snapshots if s.timestamp >= cutoff_time
         ]
-        
-        logger.debug(
-            "Added snapshot at t=%.1f, total snapshots: %d",
+
+        logger.info(
+            "Stuckness state transition: added snapshot at t=%.1f, position=(%s,%s), action=%s, floor=%s, total_snapshots=%d",
             snapshot.timestamp,
+            snapshot.position[0] if snapshot.position else 'None',
+            snapshot.position[1] if snapshot.position else 'None',
+            snapshot.action or 'None',
+            snapshot.floor or 'None',
             len(self.snapshots)
         )
     
@@ -160,6 +164,8 @@ class StucknessDetector:
 
         # Need enough samples for analysis
         if len(self.snapshots) < self.min_samples:
+            logger.debug("Stuckness state: insufficient data (%d snapshots < %d required)",
+                        len(self.snapshots), self.min_samples)
             return StucknessAnalysis(
                 status=StucknessStatus.NOT_STUCK,
                 short_term_similarity=0.0,
@@ -216,12 +222,14 @@ class StucknessDetector:
             len(older_snapshots)
         )
         
-        logger.debug(
-            "Stuckness analysis: status=%s, divergence=%.3f, short=%.3f, long=%.3f",
+        logger.info(
+            "Stuckness state analysis: status=%s (confidence=%.2f), divergence=%.3f, short_term_sim=%.3f, long_term_sim=%.3f, reasons=%s",
             status.value,
+            confidence,
             divergence_score,
             short_term_similarity,
-            long_term_similarity
+            long_term_similarity,
+            "; ".join(reasons)
         )
         
         return StucknessAnalysis(

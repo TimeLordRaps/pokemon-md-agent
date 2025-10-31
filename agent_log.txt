@@ -1,0 +1,185 @@
+2025-10-30 18:24:52,886 - src.agent.agent_core - ERROR - Error at step 1: asyncio.run() cannot be called from a running event loop
+2025-10-30 18:24:52,888 - src.agent.agent_core - ERROR - Error at step 2: asyncio.run() cannot be called from a running event loop
+2025-10-30 18:24:52,888 - src.agent.agent_core - ERROR - Error at step 3: asyncio.run() cannot be called from a running event loop
+2025-10-30 18:28:12,089 - src.agent.agent_core - INFO - File logging initialized
+2025-10-30 18:28:12,178 - src.agent.agent_core - INFO - Agent initialized with objective: Navigate to stairs and progress through dungeon (test_mode: False)
+2025-10-30 18:28:12,178 - src.agent.agent_core - INFO - Starting agent loop (max 50 steps)
+2025-10-30 18:28:12,360 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:12,360 - src.agent.agent_core - ERROR - Error at step 1: No ROM files found in rom/ directory
+2025-10-30 18:28:12,482 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:12,482 - src.agent.agent_core - ERROR - Error at step 2: No ROM files found in rom/ directory
+2025-10-30 18:28:12,614 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:12,615 - src.agent.agent_core - ERROR - Error at step 3: No ROM files found in rom/ directory
+2025-10-30 18:28:13,283 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:13,284 - src.agent.agent_core - ERROR - Error at step 4: No ROM files found in rom/ directory
+2025-10-30 18:28:13,452 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:13,453 - src.agent.agent_core - ERROR - Error at step 5: No ROM files found in rom/ directory
+2025-10-30 18:28:13,582 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:13,582 - src.agent.agent_core - ERROR - Error at step 6: No ROM files found in rom/ directory
+2025-10-30 18:28:14,250 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:14,250 - src.agent.agent_core - ERROR - Error at step 7: No ROM files found in rom/ directory
+2025-10-30 18:28:14,452 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:14,453 - src.agent.agent_core - ERROR - Error at step 8: No ROM files found in rom/ directory
+2025-10-30 18:28:14,581 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:14,581 - src.agent.agent_core - ERROR - Error at step 9: No ROM files found in rom/ directory
+2025-10-30 18:28:14,681 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:14,681 - src.agent.agent_core - ERROR - Error at step 10: No ROM files found in rom/ directory
+2025-10-30 18:28:15,352 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:15,353 - src.agent.agent_core - ERROR - Error at step 11: No ROM files found in rom/ directory
+2025-10-30 18:28:15,548 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:15,549 - src.agent.agent_core - ERROR - Error at step 12: No ROM files found in rom/ directory
+2025-10-30 18:28:15,683 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:15,684 - src.agent.agent_core - ERROR - Error at step 13: No ROM files found in rom/ directory
+2025-10-30 18:28:16,342 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:16,342 - src.agent.agent_core - ERROR - Error at step 14: No ROM files found in rom/ directory
+2025-10-30 18:28:16,544 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:16,544 - src.agent.agent_core - ERROR - Error at step 15: No ROM files found in rom/ directory
+2025-10-30 18:28:16,677 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:16,678 - src.agent.agent_core - ERROR - Error at step 16: No ROM files found in rom/ directory
+2025-10-30 18:28:17,244 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:17,245 - src.agent.agent_core - ERROR - Error at step 17: No ROM files found in rom/ directory
+2025-10-30 18:28:17,474 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:17,475 - src.agent.agent_core - ERROR - Error at step 18: No ROM files found in rom/ directory
+2025-10-30 18:28:17,643 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:17,643 - src.agent.agent_core - ERROR - Error at step 19: No ROM files found in rom/ directory
+2025-10-30 18:28:17,775 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:17,775 - src.agent.agent_core - ERROR - Error at step 20: No ROM files found in rom/ directory
+2025-10-30 18:28:18,413 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:18,413 - src.agent.agent_core - ERROR - Error at step 21: No ROM files found in rom/ directory
+2025-10-30 18:28:18,618 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:18,619 - src.agent.agent_core - ERROR - Error at step 22: No ROM files found in rom/ directory
+2025-10-30 18:28:18,749 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:18,749 - src.agent.agent_core - ERROR - Error at step 23: No ROM files found in rom/ directory
+2025-10-30 18:28:19,421 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:19,422 - src.agent.agent_core - ERROR - Error at step 24: No ROM files found in rom/ directory
+2025-10-30 18:28:19,562 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:19,563 - src.agent.agent_core - ERROR - Error at step 25: No ROM files found in rom/ directory
+2025-10-30 18:28:19,727 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:19,728 - src.agent.agent_core - ERROR - Error at step 26: No ROM files found in rom/ directory
+2025-10-30 18:28:20,362 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:20,363 - src.agent.agent_core - ERROR - Error at step 27: No ROM files found in rom/ directory
+2025-10-30 18:28:20,562 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:20,562 - src.agent.agent_core - ERROR - Error at step 28: No ROM files found in rom/ directory
+2025-10-30 18:28:20,697 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:20,697 - src.agent.agent_core - ERROR - Error at step 29: No ROM files found in rom/ directory
+2025-10-30 18:28:20,833 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:20,834 - src.agent.agent_core - ERROR - Error at step 30: No ROM files found in rom/ directory
+2025-10-30 18:28:21,495 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:21,496 - src.agent.agent_core - ERROR - Error at step 31: No ROM files found in rom/ directory
+2025-10-30 18:28:21,663 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:21,663 - src.agent.agent_core - ERROR - Error at step 32: No ROM files found in rom/ directory
+2025-10-30 18:28:21,798 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:21,798 - src.agent.agent_core - ERROR - Error at step 33: No ROM files found in rom/ directory
+2025-10-30 18:28:22,436 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:22,436 - src.agent.agent_core - ERROR - Error at step 34: No ROM files found in rom/ directory
+2025-10-30 18:28:22,634 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:22,634 - src.agent.agent_core - ERROR - Error at step 35: No ROM files found in rom/ directory
+2025-10-30 18:28:22,765 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:22,765 - src.agent.agent_core - ERROR - Error at step 36: No ROM files found in rom/ directory
+2025-10-30 18:28:23,366 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:23,366 - src.agent.agent_core - ERROR - Error at step 37: No ROM files found in rom/ directory
+2025-10-30 18:28:23,565 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:23,565 - src.agent.agent_core - ERROR - Error at step 38: No ROM files found in rom/ directory
+2025-10-30 18:28:23,730 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:23,730 - src.agent.agent_core - ERROR - Error at step 39: No ROM files found in rom/ directory
+2025-10-30 18:28:23,865 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:23,866 - src.agent.agent_core - ERROR - Error at step 40: No ROM files found in rom/ directory
+2025-10-30 18:28:24,537 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:24,538 - src.agent.agent_core - ERROR - Error at step 41: No ROM files found in rom/ directory
+2025-10-30 18:28:24,704 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:24,704 - src.agent.agent_core - ERROR - Error at step 42: No ROM files found in rom/ directory
+2025-10-30 18:28:24,843 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:24,843 - src.agent.agent_core - ERROR - Error at step 43: No ROM files found in rom/ directory
+2025-10-30 18:28:25,471 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:25,471 - src.agent.agent_core - ERROR - Error at step 44: No ROM files found in rom/ directory
+2025-10-30 18:28:25,669 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:25,669 - src.agent.agent_core - ERROR - Error at step 45: No ROM files found in rom/ directory
+2025-10-30 18:28:25,801 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:25,802 - src.agent.agent_core - ERROR - Error at step 46: No ROM files found in rom/ directory
+2025-10-30 18:28:26,402 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:26,402 - src.agent.agent_core - ERROR - Error at step 47: No ROM files found in rom/ directory
+2025-10-30 18:28:26,602 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:26,602 - src.agent.agent_core - ERROR - Error at step 48: No ROM files found in rom/ directory
+2025-10-30 18:28:26,753 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:26,753 - src.agent.agent_core - ERROR - Error at step 49: No ROM files found in rom/ directory
+2025-10-30 18:28:26,932 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:28:26,933 - src.agent.agent_core - ERROR - Error at step 50: No ROM files found in rom/ directory
+2025-10-30 18:28:26,933 - src.agent.agent_core - INFO - Agent loop complete
+2025-10-30 18:29:14,944 - src.agent.agent_core - INFO - File logging initialized
+2025-10-30 18:29:15,040 - src.agent.agent_core - INFO - Agent initialized with objective: Navigate to stairs and progress through dungeon (test_mode: False)
+2025-10-30 18:29:15,040 - src.agent.agent_core - INFO - Starting agent loop (max 50 steps)
+2025-10-30 18:29:15,257 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:15,257 - src.agent.agent_core - ERROR - Error at step 1: No ROM files found in rom/ directory
+2025-10-30 18:29:15,382 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:15,382 - src.agent.agent_core - ERROR - Error at step 2: No ROM files found in rom/ directory
+2025-10-30 18:29:15,515 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:15,516 - src.agent.agent_core - ERROR - Error at step 3: No ROM files found in rom/ directory
+2025-10-30 18:29:16,150 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:16,150 - src.agent.agent_core - ERROR - Error at step 4: No ROM files found in rom/ directory
+2025-10-30 18:29:16,349 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:16,349 - src.agent.agent_core - ERROR - Error at step 5: No ROM files found in rom/ directory
+2025-10-30 18:29:16,480 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:16,481 - src.agent.agent_core - ERROR - Error at step 6: No ROM files found in rom/ directory
+2025-10-30 18:29:17,118 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:17,118 - src.agent.agent_core - ERROR - Error at step 7: No ROM files found in rom/ directory
+2025-10-30 18:29:17,348 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:17,349 - src.agent.agent_core - ERROR - Error at step 8: No ROM files found in rom/ directory
+2025-10-30 18:29:17,484 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:17,484 - src.agent.agent_core - ERROR - Error at step 9: No ROM files found in rom/ directory
+2025-10-30 18:29:17,617 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:17,617 - src.agent.agent_core - ERROR - Error at step 10: No ROM files found in rom/ directory
+2025-10-30 18:29:18,211 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:18,212 - src.agent.agent_core - ERROR - Error at step 11: No ROM files found in rom/ directory
+2025-10-30 18:29:18,446 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:18,447 - src.agent.agent_core - ERROR - Error at step 12: No ROM files found in rom/ directory
+2025-10-30 18:29:18,577 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:18,577 - src.agent.agent_core - ERROR - Error at step 13: No ROM files found in rom/ directory
+2025-10-30 18:29:19,218 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:19,219 - src.agent.agent_core - ERROR - Error at step 14: No ROM files found in rom/ directory
+2025-10-30 18:29:19,441 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:19,441 - src.agent.agent_core - ERROR - Error at step 15: No ROM files found in rom/ directory
+2025-10-30 18:29:19,543 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:19,543 - src.agent.agent_core - ERROR - Error at step 16: No ROM files found in rom/ directory
+2025-10-30 18:29:20,135 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:20,135 - src.agent.agent_core - ERROR - Error at step 17: No ROM files found in rom/ directory
+2025-10-30 18:29:20,460 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:20,460 - src.agent.agent_core - ERROR - Error at step 18: No ROM files found in rom/ directory
+2025-10-30 18:29:20,594 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:20,594 - src.agent.agent_core - ERROR - Error at step 19: No ROM files found in rom/ directory
+2025-10-30 18:29:20,727 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:20,728 - src.agent.agent_core - ERROR - Error at step 20: No ROM files found in rom/ directory
+2025-10-30 18:29:21,294 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:21,295 - src.agent.agent_core - ERROR - Error at step 21: No ROM files found in rom/ directory
+2025-10-30 18:29:21,610 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:21,611 - src.agent.agent_core - ERROR - Error at step 22: No ROM files found in rom/ directory
+2025-10-30 18:29:26,619 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:26,620 - src.agent.agent_core - ERROR - Error at step 23: No ROM files found in rom/ directory
+2025-10-30 18:29:31,634 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:31,635 - src.agent.agent_core - ERROR - Error at step 24: No ROM files found in rom/ directory
+2025-10-30 18:29:36,638 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:36,638 - src.agent.agent_core - ERROR - Error at step 25: No ROM files found in rom/ directory
+2025-10-30 18:29:41,641 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:41,642 - src.agent.agent_core - ERROR - Error at step 26: No ROM files found in rom/ directory
+2025-10-30 18:29:46,664 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:46,664 - src.agent.agent_core - ERROR - Error at step 27: No ROM files found in rom/ directory
+2025-10-30 18:29:51,694 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:51,695 - src.agent.agent_core - ERROR - Error at step 28: No ROM files found in rom/ directory
+2025-10-30 18:29:56,700 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:29:56,700 - src.agent.agent_core - ERROR - Error at step 29: No ROM files found in rom/ directory
+2025-10-30 18:30:01,714 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:30:01,715 - src.agent.agent_core - ERROR - Error at step 30: No ROM files found in rom/ directory
+2025-10-30 18:30:06,723 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:30:06,723 - src.agent.agent_core - ERROR - Error at step 31: No ROM files found in rom/ directory
+2025-10-30 18:30:11,730 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:30:11,730 - src.agent.agent_core - ERROR - Error at step 32: No ROM files found in rom/ directory
+2025-10-30 18:30:16,739 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:30:16,739 - src.agent.agent_core - ERROR - Error at step 33: No ROM files found in rom/ directory
+2025-10-30 18:30:21,753 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:30:21,753 - src.agent.agent_core - ERROR - Error at step 34: No ROM files found in rom/ directory
+2025-10-30 18:30:26,766 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:30:26,766 - src.agent.agent_core - ERROR - Error at step 35: No ROM files found in rom/ directory
+2025-10-30 18:30:31,779 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:30:31,780 - src.agent.agent_core - ERROR - Error at step 36: No ROM files found in rom/ directory
+2025-10-30 18:30:36,786 - src.agent.agent_core - ERROR - Perception failed: No ROM files found in rom/ directory
+2025-10-30 18:30:36,786 - src.agent.agent_core - ERROR - Error at step 37: No ROM files found in rom/ directory
+2025-10-30 18:33:31,901 - src.agent.agent_core - INFO - File logging initialized

@@ -1,26 +1,44 @@
-# Core dependencies
-torch>=2.0.0
-transformers>=4.40.0
-accelerate>=0.28.0
+# Core dependencies for PMD-Red Agent
+# torch>=2.5.0  # Installed with CUDA support above - REMOVED to prevent CPU install
+transformers>=4.40.0  # Install after PyTorch CUDA: pip install -e .[ml]
+accelerate>=0.28.0  # Install after PyTorch CUDA: pip install -e .[ml]
 pillow>=10.0.0
-flask>=3.0.0
-requests>=2.31.0
-websockets>=12.0
 numpy>=1.24.0
+websockets>=12.0
+requests>=2.31.0
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.5.0
 pytest>=7.0.0
+pytest-timeout>=2.1.0
+pytest-asyncio>=0.21.0
+
+# Unsloth ecosystem (simple installation) - Install after PyTorch CUDA: pip install -e .[ml]
+unsloth
+unsloth-zoo
+bitsandbytes>=0.41.0
+
+# Qwen-VL specific dependencies - Install after PyTorch CUDA: pip install -e .[ml]
+qwen-vl-utils>=0.0.3
+decord>=0.6.0  # Video decoding for Qwen-VL
+av>=10.0.0     # Audio/video processing
+
+# Additional ML dependencies
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.0
+scipy>=1.10.0
+nano-graphrag>=0.0.6
+scikit-image>=0.21.0
+
+# Optional: Async and networking
+asyncio-mqtt>=0.13.0
+httpx>=0.25.0  # Better async HTTP client
+
+# Development and testing
 python-dotenv>=1.0.0
 pyyaml>=6.0.0
 tqdm>=4.66.0
+imagehash>=4.3.1
 
-# Windows-specific optimizations (experimental on other platforms)
-flash-attn>=2.5.0; sys_platform == "win32"
-triton>=2.0.0; sys_platform == "win32"
-
-# Unsloth for quantized models
-unsloth>=2024.10.0; sys_platform == "win32"
-
-# Optional: chromadb for vector storage (may need separate install on Windows)
-# chromadb>=0.4.0
-
-# Optional: qwen-vl-utils (may be included with unsloth)
-# qwen-vl-utils>=0.0.3
+# Windows-specific optimizations (triton already installed)
+# triton>=3.0.0; sys_platform == "win32"

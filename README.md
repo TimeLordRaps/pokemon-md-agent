@@ -495,17 +495,73 @@ See [AGENTS.md](AGENTS.md) for detailed instructions on:
 
 #### Test Markers & Scripts
 
-- **Fast Lane** (`scripts/test_fast.ps1`): Runs in <2-3 minutes, excludes slow/network/bench/longctx tests
-- **Full Lane** (`scripts/test_full.ps1`): Runs complete suite with all markers
-- **CI Lane** (`scripts/test_ci.ps1`): Minimal CI validation with strict timeouts
-- **Markers**:
-  - `@pytest.mark.slow`: Long-running tests (model training, heavy parametrization)
-  - `@pytest.mark.network`: Tests requiring emulator/web connections
-  - `@pytest.mark.bench`: Performance benchmarking and plotting
-  - `@pytest.mark.longctx`: Tests with ≥64k context
-- **Environment Variables**:
-  - `FAST=1`: Reduces test parameters for faster execution
-  - `PYTEST_FDUMP_S=45`: Session timeout for deadlock detection (default 60s)
+**Fast Lane** (`scripts/test_fast.ps1`):
+- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; $env:FAST="1"; $env:PYTEST_FDUMP_S="45"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python -m pytest -q --maxfail=1 -m "not slow and not network and not bench and not longctx"`
+- **Expected Runtime**: <3 minutes
+- **Purpose**: Quick validation excluding slow/network/bench/longctx tests
+
+**Full Lane** (`scripts/test_full.ps1`):
+- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; Remove-Item Env:FAST -ErrorAction SilentlyContinue; $env:PYTEST_FDUMP_S="90"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python -m pytest -q`
+- **Expected Runtime**: 10-15 minutes
+- **Purpose**: Complete test suite with all markers
+
+**CI Lane** (`scripts/test_ci.ps1`):
+- **Command**: Calls `scripts/test_fast.ps1`
+- **Expected Runtime**: <3 minutes
+- **Purpose**: Minimal CI validation
+
+**Bench Sweep** (`scripts/bench_sweep.ps1`):
+- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python profiling/bench_qwen_vl.py --time-budget-s 30 --contexts 1024,2048,4096,8192,16384,32768 --batches 1,2,4,8 --best-of-n 1,2,4 --use-cache on,off --use-pipeline on,off`
+- **Expected Runtime**: 5-10 minutes per configuration
+- **Purpose**: Performance benchmarking with parameter sweeps
+
+**Sync Profiling** (`scripts/sync_profiling.ps1`):
+- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; Copy-Item "..\profiling\*" ".\profiling\" -Recurse -Force -Exclude "__pycache__"`
+- **Expected Runtime**: <1 minute
+- **Purpose**: Consolidate profiling data from root directory
+
+**Markers**:
+- `@pytest.mark.slow`: Long-running tests (model training, heavy parametrization)
+- `@pytest.mark.network`: Tests requiring emulator/web connections
+- `@pytest.mark.bench`: Performance benchmarking and plotting
+- `@pytest.mark.longctx`: Tests with ≥64k context
+
+**Environment Variables**:
+- `FAST=1`: Reduces test parameters for faster execution
+- `PYTEST_FDUMP_S=45`: Session timeout for deadlock detection (default 60s)
+
+**Flags**:
+- `--maxfail=1`: Stop after first failure
+- `--timeout=30 --timeout-method=thread`: 30s timeout per test with thread method
+- `-m "not slow and not network and not bench and not longctx"`: Exclude marked tests
+- `filterwarnings = ["ignore::DeprecationWarning"]`: Suppress deprecation warnings
+
+#### Troubleshooting
+
+**Test Failures**:
+- **Timeout errors**: Increase `PYTEST_FDUMP_S` environment variable or check for infinite loops
+- **Import errors**: Ensure `PYTHONPATH` includes `src/` directory
+- **mGBA connection failures**: Verify emulator is running with Lua script on port 8888
+- **CUDA out of memory**: Reduce batch sizes or use smaller models for testing
+
+**Benchmark Issues**:
+- **Long runtimes**: Use `--time-budget-s` to limit entire benchmark duration (default 180s)
+- **Time budget exceeded**: Benchmark suite ran longer than `--time-budget-s` limit - check summary.json
+- **OOM during bench**: Reduce `--batches` or `--contexts` parameters, or use smaller models
+- **No plots generated**: Ensure matplotlib is installed and CSV file exists
+- **Output directory errors**: Check write permissions for `profiling/results/<UTC_TIMESTAMP>/`
+- **Fast lane limitations**: Use `--full` flag to run comprehensive benchmarks
+
+**Common Runtime Issues**:
+- **SyntaxError in qwen_controller.py**: See `agent_mailbox/copilot2codex.md` for core team fix
+- **faulthandler timeout**: Tests hanging - check for blocking I/O operations
+- **Top slow tests**: Review session output for slowest tests to optimize
+
+**Expected Runtimes**:
+- Fast lane: 2-3 minutes
+- Full lane: 10-15 minutes  
+- Bench sweep: 5-10 minutes per config
+- CI lane: <3 minutes
 
 #### Profiling Consolidation
 
@@ -520,22 +576,36 @@ Run `.\scripts\sync_profiling.ps1` to consolidate profiling data from legacy roo
 Run performance benchmarks with `.\scripts\bench_sweep.ps1` (Windows) or equivalent bash script.
 
 **Bench Flags**:
-- `--time-budget-s`: Time budget per run (default: 30s)
-- `--contexts`: Context lengths to test (default: 1024,2048,4096,8192,16384,32768,65536)
-- `--batches`: Batch sizes to test (default: 1,2,4,8)
-- `--best-of-n`: Best-of-n values (default: 1,2,4)
-- `--use-cache`: Enable/disable prompt caching (default: on)
-- `--use-pipeline`: Enable/disable request pipelining (default: on)
-- `--image-text-ratios`: Image:text ratios to test (default: 0,1,2)
-- `--full`: Run full benchmark suite (no context caps)
+- `--time-budget-s`: Time budget for entire benchmark suite (seconds, default: 180)
+- `--full`: Run full benchmark suite (longer, more comprehensive)
+- `--contexts`: Exact context lengths to test (comma-separated, overrides --min-ctx/--ctx-mult)
+- `--image-text-ratios`: Image-to-text content ratios to test (comma-separated floats, default: '0.5')
+- `--models`: Models to benchmark ('all' or comma-separated list)
+- `--min-ctx`: Minimum context length (default: 1024)
+- `--ctx-mult`: Context length multiplier (default: 1.5)
+- `--max-wall`: Maximum wall clock time per benchmark (seconds, default: 60)
+- `--batches`: Batch sizes to test (comma-separated, default: '1,2,4,8')
+- `--best-of`: Best-of values to test (comma-separated, default: '1,2,4,8')
+- `--csv`: Output CSV path (required for benchmarking)
+- `--plot`: CSV file to plot from (generates plots in profiling/plots/)
+- `--dry-run`: Use synthetic timings instead of real inference
 
-**Example**:
+**Example Commands**:
 ```bash
-mamba info --envs && python --version && mamba activate agent-hackathon && pwd && ls -la && \
-python profiling/bench_qwen_vl.py --time-budget-s 30 --contexts 1024,2048,4096 --batches 1,2,4 --best-of-n 1,2 --use-cache on --use-pipeline on
+# Fast lane benchmark (default)
+python profiling/bench_qwen_vl.py --csv results.csv --dry-run
+
+# Full benchmark with time budget
+python profiling/bench_qwen_vl.py --full --time-budget-s 300 --csv results.csv
+
+# Custom contexts and image-text ratios
+python profiling/bench_qwen_vl.py --contexts 1024,2048,4096,8192 --image-text-ratios 0.3,0.5,0.7 --csv results.csv
+
+# Plot existing results
+python profiling/bench_qwen_vl.py --plot results.csv
 ```
 
-Results saved to `profiling/output/` with CSV metrics and interactive Plotly plots.
+Results saved to `profiling/results/<UTC_TIMESTAMP>/` with CSV metrics, JSON summary, and interactive plots.
 
 ---
 

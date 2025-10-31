@@ -1,179 +1,330 @@
-"""Tests for content API batching and budget management."""
+"""Tests for Dashboard Content API endpoints."""
 
-import asyncio
 import pytest
-from unittest.mock import AsyncMock, patch
+from fastapi.testclient import TestClient
 from pathlib import Path
 import tempfile
+import json
+import time
+from io import BytesIO
 
-from src.dashboard.content_api import ContentAPI, BudgetTracker, Page
-
-
-class TestBudgetTracker:
-    """Test budget tracker functionality."""
-
-    def test_initial_budget(self):
-        """Test initial budget state."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            cache_file = Path(tmpdir) / 'budget.json'
-            tracker = BudgetTracker(monthly_limit=1000, cache_file=cache_file)
-            assert tracker.monthly_limit == 1000
-            assert tracker.used_this_month == 0
-            assert tracker.can_consume(1) is True
-            assert tracker.remaining() == 1000
-
-    def test_consume_budget(self):
-        """Test budget consumption."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            cache_file = Path(tmpdir) / 'budget.json'
-            tracker = BudgetTracker(monthly_limit=1000, cache_file=cache_file)
-
-            # Can consume initially
-            assert tracker.consume(100) is True
-            assert tracker.used_this_month == 100
-            assert tracker.remaining() == 900
-
-            # Can consume more
-            assert tracker.consume(200) is True
-            assert tracker.used_this_month == 300
-
-            # Cannot consume beyond limit
-            assert tracker.consume(800) is False
-            assert tracker.used_this_month == 300  # Unchanged
-
-    def test_budget_persistence(self):
-        """Test budget persistence across instances."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            cache_file = Path(tmpdir) / 'budget.json'
-
-            # First tracker
-            tracker1 = BudgetTracker(monthly_limit=1000, cache_file=cache_file)
-            tracker1.consume(50)
-
-            # Second tracker should load the same state
-            tracker2 = BudgetTracker(monthly_limit=1000, cache_file=cache_file)
-            assert tracker2.used_this_month == 50
+from src.dashboard.api import create_app, ContentStore, UploadedContent
 
 
-class TestContentAPI:
-    """Test ContentAPI functionality."""
+class TestContentStore:
+    """Test ContentStore functionality."""
 
     @pytest.fixture
-    def api(self):
-        """Create test API instance."""
-        # Use a custom budget tracker for testing
-        import tempfile
-        tmpdir = tempfile.mkdtemp()
-        cache_file = Path(tmpdir) / 'budget.json'
-        budget = BudgetTracker(monthly_limit=1000, cache_file=cache_file)
-        api = ContentAPI(budget_tracker=budget)
-        yield api
-        # Cleanup
-        import shutil
-        shutil.rmtree(tmpdir, ignore_errors=True)
+    def temp_dir(self):
+        """Create temporary directory for testing."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
 
-    def test_initial_state(self, api):
-        """Test initial API state."""
-        stats = api.get_stats()
-        assert stats['calls_made'] == 0
-        assert stats['pages_fetched'] == 0
-        assert stats['errors'] == 0
+    def test_initialization(self, temp_dir):
+        """Test ContentStore initialization."""
+        store = ContentStore(storage_dir=temp_dir)
+        assert store.storage_dir == temp_dir
+        assert len(store.contents) == 0
 
-        budget = api.get_budget_status()
-        assert budget['monthly_limit'] == 1000
-        assert budget['used_this_month'] == 0
+    def test_add_content(self, temp_dir):
+        """Test adding content to store."""
+        store = ContentStore(storage_dir=temp_dir)
 
-    @pytest.mark.asyncio
-    async def test_batch_fetch(self, api):
-        """Test multi-URL batch fetch."""
-        urls = ["http://example.com/page1", "http://example.com/page2"]
+        content = UploadedContent(
+            id="test-1",
+            filename="test.txt",
+            content_type="text/plain",
+            size_bytes=100,
+            uploaded_at=time.time(),
+            metadata={"tags": ["test"]}
+        )
 
-        # Mock the internal fetch method
-        with patch.object(api, '_batch_fetch', new_callable=AsyncMock) as mock_batch:
-            mock_batch.return_value = [
-                Page(urls[0], "Title 1", "Content 1", "markdown"),
-                Page(urls[1], "Title 2", "Content 2", "markdown")
-            ]
+        file_data = b"Hello, World!"
+        success = store.add_content(content, file_data)
+        assert success is True
+        assert len(store.contents) == 1
+        assert store.contents["test-1"] == content
 
-            results = await api.fetch(urls)
+    def test_get_content(self, temp_dir):
+        """Test retrieving content from store."""
+        store = ContentStore(storage_dir=temp_dir)
 
-            # Should call batch fetch once
-            mock_batch.assert_called_once_with(urls, "markdown")
+        content = UploadedContent(
+            id="test-1",
+            filename="test.txt",
+            content_type="text/plain",
+            size_bytes=100,
+            uploaded_at=time.time(),
+            metadata={"tags": ["test"]}
+        )
 
-            # Should consume 1 budget call
-            assert api.get_budget_status()['used_this_month'] == 1
+        file_data = b"Hello, World!"
+        store.add_content(content, file_data)
 
-            # Should return results
-            assert len(results) == 2
-            assert all(r.is_success() for r in results)
+        # Get existing content
+        retrieved = store.get_content("test-1")
+        assert retrieved == content
 
-    @pytest.mark.asyncio
-    async def test_budget_exceeded(self, api):
-        """Test behavior when budget is exceeded."""
-        # Exhaust budget
-        api.budget.used_this_month = 1000
+        # Get non-existing content
+        assert store.get_content("nonexistent") is None
 
-        urls = ["http://example.com/page1"]
-        results = await api.fetch(urls)
+    def test_delete_content(self, temp_dir):
+        """Test deleting content from store."""
+        store = ContentStore(storage_dir=temp_dir)
 
-        # Should return error pages
-        assert len(results) == 1
-        assert not results[0].is_success()
-        assert "Budget exceeded" in results[0].error
+        content = UploadedContent(
+            id="test-1",
+            filename="test.txt",
+            content_type="text/plain",
+            size_bytes=100,
+            uploaded_at=time.time(),
+            metadata={"tags": ["test"]}
+        )
 
-        # Stats should reflect budget exceeded
-        assert api.get_stats()['budget_exceeded'] == 1
+        file_data = b"Hello, World!"
+        store.add_content(content, file_data)
+        assert len(store.contents) == 1
 
-    def test_gate_token_logic(self, api):
-        """Test gate token cool-down logic."""
-        gate_token = "test_gate"
+        # Delete existing content (simulate what the API does)
+        if "test-1" in store.contents:
+            del store.contents["test-1"]
+            store._save_index()
+        assert len(store.contents) == 0
 
-        # Initially should allow
-        assert api.check_gate_token(gate_token) is True
-        assert api.consume_gate_token(gate_token) is True
+    def test_persistence(self, temp_dir):
+        """Test content persistence across store instances."""
+        # First store instance
+        store1 = ContentStore(storage_dir=temp_dir)
+        content = UploadedContent(
+            id="test-1",
+            filename="test.txt",
+            content_type="text/plain",
+            size_bytes=100,
+            uploaded_at=time.time(),
+            metadata={"tags": ["test"]}
+        )
+        file_data = b"Hello, World!"
+        store1.add_content(content, file_data)
 
-        # Should allow one more
-        assert api.check_gate_token(gate_token) is True
-        assert api.consume_gate_token(gate_token) is True
+        # Second store instance should load persisted data
+        store2 = ContentStore(storage_dir=temp_dir)
+        assert len(store2.contents) == 1
+        assert store2.contents["test-1"].id == "test-1"
 
-        # Should deny third call
-        assert api.check_gate_token(gate_token) is False
-        assert api.consume_gate_token(gate_token) is False
 
-    def test_gate_token_reset(self, api):
-        """Test gate token reset for testing."""
-        api.reset_gate_tokens()
-        gate_token = "test_gate"
+class TestDashboardAPI:
+    """Test Dashboard API endpoints."""
 
-        # Should allow two calls after reset
-        assert api.consume_gate_token(gate_token) is True
-        assert api.consume_gate_token(gate_token) is True
-        assert api.consume_gate_token(gate_token) is False
+    @pytest.fixture
+    def client(self):
+        """Create test client for API."""
+        # Clear the global content store before each test
+        from src.dashboard.api import content_store
+        content_store.contents.clear()
+        content_store._save_index()
+        
+        app = create_app()
+        return TestClient(app)
 
-    @pytest.mark.asyncio
-    async def test_fetch_guide(self, api):
-        """Test fetch_guide method."""
-        with patch.object(api, 'fetch', new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.return_value = [Page("http://example.com/guide", "Guide", "Content", "markdown")]
+    @pytest.fixture
+    def sample_file(self):
+        """Create sample file for upload testing."""
+        return BytesIO(b"Hello, World!")
 
-            results = await api.fetch_guide()
+    def test_batch_upload_single_file(self, client, sample_file):
+        """Test batch upload with single file."""
+        files = {"files": ("test.txt", sample_file, "text/plain")}
+        data = {"metadata": json.dumps({"tags": ["test"]})}
 
-            mock_fetch.assert_called_once()
-            assert len(results) == 1
+        response = client.post("/batch-upload", files=files, data=data)
 
-    @pytest.mark.asyncio
-    async def test_search_old_memories(self, api):
-        """Test search_old_memories method."""
-        query = "test query"
+        assert response.status_code == 200
+        result = response.json()
+        assert "uploaded_ids" in result
+        assert len(result["uploaded_ids"]) == 1
+        assert result["total_uploaded"] == 1
+        assert result["total_failed"] == 0
 
-        with patch.object(api, '_search_site_indexes', new_callable=AsyncMock) as mock_search:
-            with patch.object(api, 'fetch', new_callable=AsyncMock) as mock_fetch:
-                # Site search returns empty (fallback)
-                mock_search.return_value = []
-                mock_fetch.return_value = [Page("http://example.com/search", "Results", "Content", "markdown")]
+    def test_batch_upload_multiple_files(self, client):
+        """Test batch upload with multiple files."""
+        files = [
+            ("files", ("test1.txt", BytesIO(b"Content 1"), "text/plain")),
+            ("files", ("test2.txt", BytesIO(b"Content 2"), "text/plain"))
+        ]
+        data = {"metadata": json.dumps({"tags": ["batch"]})}
 
-                results = await api.search_old_memories(query)
+        response = client.post("/batch-upload", files=files, data=data)
 
-                mock_search.assert_called_once_with(query)
-                mock_fetch.assert_called_once()
-                assert len(results) == 1
+        assert response.status_code == 200
+        result = response.json()
+        assert len(result["uploaded_ids"]) == 2
+        assert result["total_uploaded"] == 2
+        assert result["total_failed"] == 0
+
+    def test_batch_upload_no_files(self, client):
+        """Test batch upload with no files."""
+        response = client.post("/batch-upload")
+
+        assert response.status_code == 422  # FastAPI validation error
+        result = response.json()
+        assert "detail" in result
+
+    def test_batch_upload_invalid_metadata(self, client, sample_file):
+        """Test batch upload with invalid JSON metadata."""
+        files = {"files": ("test.txt", sample_file, "text/plain")}
+        data = {"metadata": "invalid json"}
+
+        response = client.post("/batch-upload", files=files, data=data)
+
+        assert response.status_code == 400
+        result = response.json()
+        assert "detail" in result
+
+    def test_fetch_many_empty(self, client):
+        """Test fetch_many with no content."""
+        response = client.get("/fetch-many")
+
+        assert response.status_code == 200
+        result = response.json()
+        assert result["total_count"] == 0
+        assert result["items"] == []
+        assert result["limit"] == 50
+        assert result["offset"] == 0
+
+    def test_fetch_many_with_content(self, client, sample_file):
+        """Test fetch_many with existing content."""
+        # First upload some content
+        files = {"files": ("test.txt", sample_file, "text/plain")}
+        data = {"metadata": json.dumps({"tags": ["test"]})}
+        client.post("/batch-upload", files=files, data=data)
+
+        # Then fetch it
+        response = client.get("/fetch-many")
+
+        assert response.status_code == 200
+        result = response.json()
+        assert result["total_count"] == 1
+        assert len(result["items"]) == 1
+        assert result["items"][0]["filename"] == "test.txt"
+
+    def test_fetch_many_pagination(self, client):
+        """Test fetch_many pagination."""
+        # Upload multiple files
+        for i in range(5):
+            files = {"files": (f"test{i}.txt", BytesIO(f"Content {i}".encode()), "text/plain")}
+            client.post("/batch-upload", files=files)
+
+        # Fetch with pagination
+        response = client.get("/fetch-many?limit=2&offset=0")
+
+        assert response.status_code == 200
+        result = response.json()
+        assert result["total_count"] == 5
+        assert len(result["items"]) == 2
+        assert result["limit"] == 2
+        assert result["offset"] == 0
+
+    def test_fetch_many_filtering(self, client):
+        """Test fetch_many with tag filtering."""
+        # Upload files with different tags
+        files1 = {"files": ("doc1.txt", BytesIO(b"Document 1"), "text/plain")}
+        data1 = {"tags": json.dumps(["important", "doc"])}
+        client.post("/batch-upload", files=files1, data=data1)
+
+        files2 = {"files": ("img1.jpg", BytesIO(b"Fake image"), "image/jpeg")}
+        data2 = {"tags": json.dumps(["image", "media"])}
+        client.post("/batch-upload", files=files2, data=data2)
+
+        # Filter by tag
+        response = client.get("/fetch-many?tag=important")
+
+        assert response.status_code == 200
+        result = response.json()
+        assert result["total_count"] == 1
+        assert result["items"][0]["filename"] == "doc1.txt"
+
+    def test_fetch_many_content_type_filter(self, client):
+        """Test fetch_many with content type filtering."""
+        # Upload files with different content types
+        files1 = {"files": ("doc1.txt", BytesIO(b"Document 1"), "text/plain")}
+        client.post("/batch-upload", files=files1)
+
+        files2 = {"files": ("img1.jpg", BytesIO(b"Fake image"), "image/jpeg")}
+        client.post("/batch-upload", files=files2)
+
+        # Filter by content type
+        response = client.get("/fetch-many?content_type=image/jpeg")
+
+        assert response.status_code == 200
+        result = response.json()
+        assert result["total_count"] == 1
+        assert result["items"][0]["filename"] == "img1.jpg"
+
+    def test_get_content(self, client, sample_file):
+        """Test individual content retrieval."""
+        # Upload content first
+        files = {"files": ("test.txt", sample_file, "text/plain")}
+        data = {"metadata": json.dumps({"tags": ["test"]})}
+        upload_response = client.post("/batch-upload", files=files, data=data)
+        content_id = upload_response.json()["uploaded_ids"][0]
+
+        # Retrieve content
+        response = client.get(f"/content/{content_id}")
+
+        assert response.status_code == 200
+        result = response.json()
+        assert "content" in result
+        assert "file_data" in result
+        assert result["content"]["id"] == content_id
+        assert result["content"]["filename"] == "test.txt"
+        assert result["content"]["content_type"] == "text/plain"
+
+    def test_get_content_not_found(self, client):
+        """Test retrieving non-existent content."""
+        response = client.get("/content/nonexistent-id")
+
+        assert response.status_code == 404
+        result = response.json()
+        assert "detail" in result
+        assert "not found" in result["detail"].lower()
+
+    def test_delete_content(self, client, sample_file):
+        """Test content deletion."""
+        # Upload content first
+        files = {"files": ("test.txt", sample_file, "text/plain")}
+        upload_response = client.post("/batch-upload", files=files)
+        content_id = upload_response.json()["uploaded_ids"][0]
+
+        # Delete content
+        response = client.delete(f"/content/{content_id}")
+
+        assert response.status_code == 200
+        result = response.json()
+        assert "message" in result
+
+        # Verify content is gone
+        get_response = client.get(f"/content/{content_id}")
+        assert get_response.status_code == 404
+
+    def test_delete_content_not_found(self, client):
+        """Test deleting non-existent content."""
+        response = client.delete("/content/nonexistent-id")
+
+        assert response.status_code == 404
+        result = response.json()
+        assert "detail" in result
+
+    def test_get_stats(self, client, sample_file):
+        """Test statistics endpoint."""
+        # Upload some content
+        files = {"files": ("test.txt", sample_file, "text/plain")}
+        client.post("/batch-upload", files=files)
+
+        response = client.get("/stats")
+
+        assert response.status_code == 200
+        result = response.json()
+        assert "total_contents" in result
+        assert "total_size_bytes" in result
+        assert "content_types" in result
+        assert result["total_contents"] >= 1

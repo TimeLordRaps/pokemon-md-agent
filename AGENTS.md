@@ -224,6 +224,91 @@ if stuckness["status"] == "stuck":
 
 ## 🧪 Testing Patterns
 
+### Test Markers & Scripts
+
+**Fast Lane**: `scripts/test_fast.ps1` (Windows) or `bash scripts/test_fast.sh` (Linux/Mac)
+- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; $env:FAST="1"; $env:PYTEST_FDUMP_S="45"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python -m pytest -q --maxfail=1 -m "not slow and not network and not bench and not longctx"`
+- **Expected Runtime**: <3 minutes
+- **Purpose**: Quick validation excluding slow/network/bench/longctx tests
+
+**Full Lane**: `scripts/test_full.ps1` (Windows) or `bash scripts/test_full.sh` (Linux/Mac)
+- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; Remove-Item Env:FAST -ErrorAction SilentlyContinue; $env:PYTEST_FDUMP_S="90"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python -m pytest -q`
+- **Expected Runtime**: 10-15 minutes
+- **Purpose**: Complete test suite with all markers
+
+**Markers**:
+- `@pytest.mark.slow`: Long-running tests (model training, heavy parametrization)
+- `@pytest.mark.network`: Tests requiring emulator/web connections
+- `@pytest.mark.bench`: Performance benchmarking and plotting
+- `@pytest.mark.longctx`: Tests with ≥64k context
+
+**Environment Variables**:
+- `FAST=1`: Reduces test parameters for faster execution
+- `PYTEST_FDUMP_S=45`: Session timeout for deadlock detection (default 60s)
+
+**Flags**:
+- `--maxfail=1`: Stop after first failure
+- `--timeout=30 --timeout-method=thread`: 30s timeout per test with thread method
+- `-m "not slow and not network and not bench and not longctx"`: Exclude marked tests
+- `filterwarnings = ["ignore::DeprecationWarning"]`: Suppress deprecation warnings
+
+### Troubleshooting Guide
+
+**Test Execution Issues**:
+- **Command prefix failures**: Ensure mamba/conda environment is properly configured
+- **Import errors**: Verify `PYTHONPATH` includes project `src/` directory
+- **Timeout exceeded**: Check `PYTEST_FDUMP_S` value (default 60s) or investigate hanging tests
+- **faulthandler dumps**: Review traceback files for deadlock locations
+
+**Benchmark Problems**:
+- **Long execution times**: Use `--time-budget-s` parameter to limit run duration (default: 180s)
+- **Memory errors**: Reduce batch sizes (`--batches 1,2`) or context lengths (`--contexts 1024,2048`)
+- **Output path issues**: Ensure `profiling/results/` directory is writable
+- **Model loading failures**: Check CUDA availability and VRAM capacity
+- **Time budget exceeded**: Benchmark ran longer than `--time-budget-s` limit
+
+**Bench Flags**:
+- `--time-budget-s`: Time budget for entire benchmark suite (seconds, default: 180)
+- `--full`: Run full benchmark suite (longer, more comprehensive)
+- `--contexts`: Exact context lengths to test (comma-separated, overrides --min-ctx/--ctx-mult)
+- `--image-text-ratios`: Image-to-text content ratios to test (comma-separated floats, default: '0.5')
+- `--models`: Models to benchmark ('all' or comma-separated list)
+- `--min-ctx`: Minimum context length (default: 1024)
+- `--ctx-mult`: Context length multiplier (default: 1.5)
+- `--max-wall`: Maximum wall clock time per benchmark (seconds, default: 60)
+- `--batches`: Batch sizes to test (comma-separated, default: '1,2,4,8')
+- `--best-of`: Best-of values to test (comma-separated, default: '1,2,4,8')
+- `--csv`: Output CSV path (required for benchmarking)
+- `--plot`: CSV file to plot from (generates plots in profiling/plots/)
+- `--dry-run`: Use synthetic timings instead of real inference
+
+**Example Commands**:
+```bash
+# Fast lane benchmark (default)
+python profiling/bench_qwen_vl.py --csv results.csv --dry-run
+
+# Full benchmark with time budget
+python profiling/bench_qwen_vl.py --full --time-budget-s 300 --csv results.csv
+
+# Custom contexts and image-text ratios
+python profiling/bench_qwen_vl.py --contexts 1024,2048,4096,8192 --image-text-ratios 0.3,0.5,0.7 --csv results.csv
+
+# Plot existing results
+python profiling/bench_qwen_vl.py --plot results.csv
+```
+
+**Expected Runtimes**:
+- Fast lane: 2-3 minutes
+- Full lane: 10-15 minutes
+- Bench sweep: 5-10 minutes per configuration
+- CI validation: <3 minutes
+
+**Common Blockers**:
+- mGBA emulator not running (network tests will skip)
+- CUDA out of memory (reduce model size or batch size)
+- Syntax errors in core files (see `agent_mailbox/copilot2codex.md`)
+- Missing dependencies (run `pip install -e .`)
+
 ### Unit Test Template
 
 ```python

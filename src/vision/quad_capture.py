@@ -7,12 +7,15 @@ with ASCII variants for LLM consumption.
 import json
 import time
 import logging
+import threading
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
 from PIL import Image, ImageDraw, ImageFont
 
 from ..environment.mgba_controller import MGBAController
+from ..environment.ram_decoders import RAMSnapshot
+from .grid_parser import GridParser
 
 logger = logging.getLogger(__name__)
 
@@ -31,19 +34,33 @@ class CaptureMetadata:
     ascii_available: bool = False
 
 
+@dataclass
+class FrameData:
+    """Frame data with synchronization info."""
+    frame: int
+    timestamp: float
+    image: Optional[Image.Image] = None
+    game_state: Optional[Dict[str, Any]] = None
+
+
 class QuadCapture:
     """4-up capture system."""
-    
-    def __init__(self, controller: MGBAController, output_dir: Path):
+
+    def __init__(self, controller: MGBAController, output_dir: Path, video_config=None):
         """Initialize quad capture.
-        
+
         Args:
             controller: MGBA controller instance
             output_dir: Directory to save captures
+            video_config: Video configuration for dynamic resolution
         """
         self.controller = controller
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.video_config = video_config or controller.video_config
+
+        # Initialize grid parser for overlay generation
+        self.grid_parser = GridParser(video_config=self.video_config)
         
         # Capture subdirectories
         self.screens_dir = self.output_dir / "screens"
@@ -61,12 +78,216 @@ class QuadCapture:
                 self.font = ImageFont.load_default()
         
         logger.info("QuadCapture initialized with output dir: %s", output_dir)
+
+
+class AsyncScreenshotCapture:
+    """Async screenshot capture with background buffering for <5ms latency.
+
+    Maintains a 2-frame circular buffer with background capture thread.
+    Agent reads instantly from buffer, never blocking on capture operations.
+    """
+
+    def __init__(self, controller: MGBAController, output_dir: Path, buffer_size: int = 2):
+        """Initialize async screenshot capture.
+
+        Args:
+            controller: MGBA controller for screenshot operations
+            output_dir: Directory to save captures
+            buffer_size: Size of circular buffer (default: 2)
+        """
+        self.controller = controller
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.video_config = controller.video_config
+        self.buffer_size = buffer_size
+        self.frame_buffer: List[Optional[FrameData]] = [None] * buffer_size
+        self.buffer_lock = threading.Lock()
+        self.capture_thread: Optional[threading.Thread] = None
+        self.running = False
+        self.restart_count = 0
+        self.max_restarts = 3
+        self.last_frame_counter = 0
+
+        # Initialize directories for quad capture functionality
+        self.screens_dir = self.output_dir / "screens"
+        self.ascii_dir = self.output_dir / "ascii"
+        self.screens_dir.mkdir(exist_ok=True)
+        self.ascii_dir.mkdir(exist_ok=True)
+
+        # Font for ASCII rendering
+        try:
+            self.font = ImageFont.truetype("DejaVuSansMono.ttf", 12)
+        except (OSError, IOError):
+            try:
+                self.font = ImageFont.truetype("Courier New", 12)
+            except (OSError, IOError):
+                self.font = ImageFont.load_default()
+
+        logger.info("AsyncScreenshotCapture initialized with buffer size: %d, output dir: %s", buffer_size, output_dir)
+
+    def start(self) -> None:
+        """Start background capture thread."""
+        if self.running:
+            logger.warning("Capture thread already running")
+            return
+
+        self.running = True
+        self.capture_thread = threading.Thread(
+            target=self._capture_loop,
+            name="async-screenshot-capture",
+            daemon=True
+        )
+        self.capture_thread.start()
+        logger.info("Async screenshot capture thread started")
+
+    def stop(self) -> None:
+        """Stop background capture thread gracefully."""
+        if not self.running:
+            return
+
+        self.running = False
+        if self.capture_thread and self.capture_thread.is_alive():
+            self.capture_thread.join(timeout=1.0)
+            if self.capture_thread.is_alive():
+                logger.warning("Capture thread did not stop gracefully")
+
+        self.capture_thread = None
+        logger.info("Async screenshot capture thread stopped")
+
+    def _capture_loop(self) -> None:
+        """Background capture loop with error handling and restart logic."""
+        consecutive_failures = 0
+        max_consecutive_failures = 5
+
+        while self.running:
+            try:
+                # Capture screenshot
+                frame_counter = self.last_frame_counter + 1
+                timestamp = time.time()
+
+                # Capture screenshot (this is the blocking operation)
+                temp_path = f"temp_async_capture_{frame_counter}.png"
+                image = self.controller.grab_frame()
+
+                # Create frame data
+                frame_data = FrameData(
+                    frame=frame_counter,
+                    timestamp=timestamp,
+                    image=image,
+                    game_state={"frame_counter": frame_counter}
+                )
+
+                # Write to buffer
+                self._write_frame_to_buffer(frame_data)
+                self.last_frame_counter = frame_counter
+
+                # Reset failure counter on success
+                consecutive_failures = 0
+
+                # Rate limit to ~30 FPS
+                time.sleep(1/30)
+
+            except Exception as e:
+                consecutive_failures += 1
+                logger.error("Screenshot capture failed (attempt %d/%d): %s",
+                           consecutive_failures, max_consecutive_failures, e)
+
+                if consecutive_failures >= max_consecutive_failures:
+                    logger.error("Too many consecutive failures, restarting thread")
+                    self._restart_thread()
+                    consecutive_failures = 0
+
+                # Brief pause before retry
+                time.sleep(0.1)
+
+    def _restart_thread(self) -> None:
+        """Restart capture thread on failures."""
+        if self.restart_count >= self.max_restarts:
+            logger.error("Max restart attempts (%d) exceeded, stopping async capture", self.max_restarts)
+            self.running = False
+            return
+
+        self.restart_count += 1
+        logger.warning("Restarting capture thread (attempt %d/%d)", self.restart_count, self.max_restarts)
+
+        # Don't try to join the current thread - just mark it as stopping
+        # The thread will exit naturally when self.running becomes False
+        self.running = False
+
+        # Start new thread
+        self.running = True
+        self.capture_thread = threading.Thread(
+            target=self._capture_loop,
+            name=f"async-screenshot-capture-restart-{self.restart_count}",
+            daemon=True
+        )
+        self.capture_thread.start()
+
+    def _write_frame_to_buffer(self, frame_data: FrameData) -> None:
+        """Write frame data to circular buffer."""
+        with self.buffer_lock:
+            # Simple circular buffer: keep two most recent frames
+            self.frame_buffer[0] = self.frame_buffer[1]  # Shift older frame
+            self.frame_buffer[1] = frame_data  # New frame
+
+    def get_latest_frame(self) -> Optional[FrameData]:
+        """Get latest frame from buffer (non-blocking)."""
+        with self.buffer_lock:
+            return self.frame_buffer[1] if self.frame_buffer[1] else self.frame_buffer[0]
+
+    def get_frame_for_game_state(self, game_frame: int, tolerance_ms: int = 10) -> Optional[FrameData]:
+        """Get frame synchronized with game state.
+
+        Args:
+            game_frame: Game frame counter to match
+            tolerance_ms: Maximum age tolerance in milliseconds
+
+        Returns:
+            Synchronized frame data or None if no match within tolerance
+        """
+        with self.buffer_lock:
+            for frame_data in reversed(self.frame_buffer):
+                if frame_data is None:
+                    continue
+
+                # Check frame counter match
+                if frame_data.frame == game_frame:
+                    age_ms = (time.time() - frame_data.timestamp) * 1000
+                    if age_ms <= tolerance_ms:
+                        return frame_data
+
+        return None
+
+    def get_latest_frame_or_capture_sync(self) -> Optional[FrameData]:
+        """Get latest frame or fall back to synchronous capture."""
+        frame = self.get_latest_frame()
+        if frame is not None:
+            return frame
+
+        # Fallback to sync capture
+        logger.warning("No buffered frames available, falling back to sync capture")
+        try:
+            timestamp = time.time()
+            frame_counter = self.last_frame_counter + 1
+            temp_path = f"temp_sync_fallback_{frame_counter}.png"
+            image = self.controller.grab_frame()
+
+            return FrameData(
+                frame=frame_counter,
+                timestamp=timestamp,
+                image=image,
+                game_state={"frame_counter": frame_counter}
+            )
+        except Exception as e:
+            logger.error("Sync fallback capture failed: %s", e)
+            return None
     
-    def capture_quad_view(self, frame: int, floor: int, dungeon_id: int, 
-                         room_kind: str, player_pos: tuple[int, int],
-                         entities_count: int, items_count: int) -> Optional[str]:
+    def capture_quad_view(self, frame: int, floor: int, dungeon_id: int,
+                          room_kind: str, player_pos: tuple[int, int],
+                          entities_count: int, items_count: int,
+                          enable_overlay: bool = True) -> Optional[str]:
         """Capture 4-up view and return capture ID.
-        
+
         Args:
             frame: Current frame number
             floor: Current floor
@@ -75,7 +296,8 @@ class QuadCapture:
             player_pos: Player position (x, y)
             entities_count: Number of entities visible
             items_count: Number of items visible
-            
+            enable_overlay: Enable grid overlay rendering (default: True)
+
         Returns:
             Capture ID or None if failed
         """
@@ -84,17 +306,11 @@ class QuadCapture:
         
         try:
             # Capture individual views
-            env_path = self.screens_dir / f"temp_env_{frame}.png"
-            env_img = self.controller.screenshot(str(env_path))
-            if env_path.exists():
-                env_img = Image.open(env_path)
-                env_path.unlink()  # Clean up temp file
-            else:
-                env_img = None
+            env_img = self.controller.grab_frame()
             map_img = self._capture_minimap()
-            grid_img = self._capture_grid_overlay()
-            meta_img = self._create_meta_view(floor, dungeon_id, room_kind, 
-                                             player_pos, entities_count, items_count)
+            grid_img = self._capture_grid_overlay(enable_overlay=enable_overlay)
+            meta_img = self._create_meta_view(floor, dungeon_id, room_kind,
+                                              player_pos, entities_count, items_count)
             
             if not all([env_img, map_img, grid_img, meta_img]):
                 logger.warning("Failed to capture all views for frame %d", frame)
@@ -154,17 +370,51 @@ class QuadCapture:
         draw.text((10, 10), "MINIMAP\n(TBD)", fill='white', font=self.font)
         return img
     
-    def _capture_grid_overlay(self) -> Optional[Image.Image]:
+    def _capture_grid_overlay(self, enable_overlay: bool = True) -> Optional[Image.Image]:
         """Capture grid overlay view.
-        
+
+        Args:
+            enable_overlay: Enable grid overlay rendering (default: True)
+
         Returns:
             Grid overlay image or None
         """
-        # For now, return a placeholder - would need grid parsing
-        img = Image.new('RGB', (160, 144), color='black')
-        draw = ImageDraw.Draw(img)
-        draw.text((10, 10), "GRID\n(TBD)", fill='white', font=self.font)
-        return img
+        if not enable_overlay:
+            # Return blank image if overlay disabled
+            return Image.new('RGB', (160, 144), color='black')
+
+        # Generate grid overlay using grid parser
+        try:
+            # For now, create a simple overlay - full implementation would parse RAM
+            # and use grid_parser to generate proper overlay
+            img = Image.new('RGBA', (160, 144), (0, 0, 0, 0))  # Transparent background
+            draw = ImageDraw.Draw(img)
+
+            # Add grid lines (placeholder for actual grid parsing)
+            grid_color = (255, 255, 255, 128)  # Semi-transparent white
+            for x in range(0, 160, 16):  # 16px tiles
+                draw.line([(x, 0), (x, 144)], fill=grid_color, width=1)
+            for y in range(0, 144, 16):
+                draw.line([(0, y), (160, y)], fill=grid_color, width=1)
+
+            # Add coordinate labels (placeholder)
+            label_font = ImageFont.load_default()
+            for r in range(0, 9):  # 9 rows
+                for c in range(0, 10):  # 10 columns
+                    label_x = c * 16 + 2
+                    label_y = r * 16 + 2
+                    draw.text((label_x, label_y), f"({r},{c})", fill=(255, 255, 255, 200), font=label_font)
+
+            logger.debug("Generated grid overlay image")
+            return img
+
+        except (OSError, ValueError) as e:
+            logger.error("Failed to generate grid overlay: %s", e)
+            # Fallback to placeholder
+            img = Image.new('RGB', (160, 144), color='black')
+            draw = ImageDraw.Draw(img)
+            draw.text((10, 10), "GRID\n(ERROR)", fill='white', font=self.font)
+            return img
     
     def _create_meta_view(self, floor: int, dungeon_id: int, room_kind: str,
                          player_pos: tuple[int, int], entities_count: int, 
@@ -221,27 +471,32 @@ Time: {time.strftime('%H:%M:%S')}"""
         assert meta is not None
 
         # Create 2x2 grid with new layout
-        width, height = env.size
-        composite = Image.new('RGB', (width * 2, height * 2))
+        half_width = self.video_config.width // 2
+        half_height = self.video_config.height // 2
+        composite = Image.new('RGB', (self.video_config.width, self.video_config.height))
 
         # Layout: (env | dynamic-map+grid)/(env+grid | meta)
-        # Top-left: env
-        composite.paste(env, (0, 0))
+        # Top-left: env (full size)
+        env_resized = env.resize((half_width, half_height), Image.Resampling.LANCZOS)
+        composite.paste(env_resized, (0, 0))
 
         # Top-right: dynamic-map+grid (overlay map and grid)
-        top_right = Image.new('RGB', (width, height))
-        top_right.paste(map_, (0, 0))
-        top_right.paste(grid, (0, 0), grid)  # Composite with alpha if available
-        composite.paste(top_right, (width, 0))
+        top_right = Image.new('RGB', (half_width, half_height))
+        map_resized = map_.resize((half_width, half_height), Image.Resampling.LANCZOS)
+        grid_resized = grid.resize((half_width, half_height), Image.Resampling.LANCZOS)
+        top_right.paste(map_resized, (0, 0))
+        top_right.paste(grid_resized, (0, 0), grid_resized)  # Composite with alpha if available
+        composite.paste(top_right, (half_width, 0))
 
         # Bottom-left: env+grid (overlay env and grid)
-        bottom_left = Image.new('RGB', (width, height))
-        bottom_left.paste(env, (0, 0))
-        bottom_left.paste(grid, (0, 0), grid)  # Composite with alpha if available
-        composite.paste(bottom_left, (0, height))
+        bottom_left = Image.new('RGB', (half_width, half_height))
+        bottom_left.paste(env_resized, (0, 0))
+        bottom_left.paste(grid_resized, (0, 0), grid_resized)  # Composite with alpha if available
+        composite.paste(bottom_left, (0, half_height))
 
         # Bottom-right: meta
-        composite.paste(meta, (width, height))
+        meta_resized = meta.resize((half_width, half_height), Image.Resampling.LANCZOS)
+        composite.paste(meta_resized, (half_width, half_height))
 
         # Add labels
         draw = ImageDraw.Draw(composite)
@@ -249,9 +504,9 @@ Time: {time.strftime('%H:%M:%S')}"""
 
         labels = [
             ("ENV", 10, 10),
-            ("MAP+GRID", width + 10, 10),
-            ("ENV+GRID", 10, height + 10),
-            ("META", width + 10, height + 10)
+            ("MAP+GRID", half_width + 10, 10),
+            ("ENV+GRID", 10, half_height + 10),
+            ("META", half_width + 10, half_height + 10)
         ]
 
         for label, x, y in labels:

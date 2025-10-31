@@ -27,18 +27,24 @@ class VectorStore:
         backend: str = "memory",  # "memory", "chromadb", "faiss"
         collection_name: str = "pokemon_md_embeddings",
         embedding_dimension: int = 1024,
+        pre_warm_indexes: bool = True,
+        index_cache_dir: Optional[str] = None,
     ):
         """Initialize vector store.
-        
+
         Args:
             backend: Storage backend ("memory", "chromadb", "faiss")
             collection_name: Name of collection/table
             embedding_dimension: Dimension of embedding vectors
+            pre_warm_indexes: Whether to pre-load FAISS indexes for performance
+            index_cache_dir: Directory for cached FAISS indexes
         """
         self.backend = backend
         self.collection_name = collection_name
         self.embedding_dimension = embedding_dimension
-        
+        self.pre_warm_indexes = pre_warm_indexes
+        self.index_cache_dir = index_cache_dir or "data/cache/indexes"
+
         # Initialize backend-specific storage
         if backend == "memory":
             self._init_memory_backend()
@@ -46,10 +52,14 @@ class VectorStore:
             self._init_chromadb_backend()
         elif backend == "faiss":
             self._init_faiss_backend()
+            # Pre-warm FAISS indexes if enabled
+            if pre_warm_indexes:
+                self._warm_faiss_indexes()
         else:
             raise ValueError(f"Unknown backend: {backend}")
-        
-        logger.info("Initialized vector store: backend=%s, collection=%s", backend, collection_name)
+
+        logger.info("Initialized vector store: backend=%s, collection=%s, pre_warm=%s",
+                   backend, collection_name, pre_warm_indexes)
     
     def _init_memory_backend(self) -> None:
         """Initialize in-memory storage backend."""
@@ -87,20 +97,93 @@ class VectorStore:
         """Initialize FAISS backend."""
         try:
             import faiss
-            
+
             # Create FAISS index
             self._index = faiss.IndexFlatIP(self.embedding_dimension)  # Inner product for cosine similarity
-            
+
             # Create metadata storage
             self._entries: Dict[str, VectorEntry] = {}
             self._id_mapping: Dict[int, str] = {}  # FAISS index -> entry ID
             self._faiss_lib = faiss  # Store reference
-            
+
+            # Initialize cache management
+            self._cached_indexes: Dict[str, Any] = {}  # silo_id -> cached index
+            self._cache_timestamps: Dict[str, float] = {}  # silo_id -> cache timestamp
+
             logger.info("FAISS backend initialized")
-            
+
         except ImportError:
             logger.error("FAISS not installed. Install with: pip install faiss-cpu")
             raise
+
+    def _warm_faiss_indexes(self) -> None:
+        """Pre-load and cache FAISS indexes for performance."""
+        try:
+            import faiss
+            from concurrent.futures import ThreadPoolExecutor
+            import os
+            import time
+
+            # Define silos to pre-warm (based on PMD-Red retrieval patterns)
+            silos = ["current", "species", "items", "dungeons", "rooms", "trajectories"]
+            cache_dir = self.index_cache_dir
+
+            # Ensure cache directory exists
+            os.makedirs(cache_dir, exist_ok=True)
+
+            def load_silo_index(silo_id: str):
+                """Load or create cached index for a silo."""
+                cache_path = os.path.join(cache_dir, f"{silo_id}_index.faiss")
+
+                try:
+                    # Check if cache is fresh
+                    if os.path.exists(cache_path):
+                        cache_mtime = os.path.getmtime(cache_path)
+                        # For now, consider cache valid if less than 1 hour old
+                        # In production, this would check against data modification times
+                        if time.time() - cache_mtime < 3600:  # 1 hour
+                            # Load with memory mapping for reduced memory usage
+                            index = faiss.read_index(cache_path, faiss.IO_FLAG_MMAP)
+                            logger.info(f"Pre-warmed cached index for silo {silo_id}")
+                            return silo_id, index, cache_mtime
+                        else:
+                            logger.info(f"Cache stale for silo {silo_id}, will rebuild")
+
+                    # Cache doesn't exist or is stale - create empty index for now
+                    # In production, this would rebuild from actual data
+                    index = faiss.IndexFlatIP(self.embedding_dimension)
+                    logger.info(f"Created new index for silo {silo_id}")
+                    return silo_id, index, time.time()
+
+                except Exception as e:
+                    logger.warning(f"Failed to load index for silo {silo_id}: {e}")
+                    # Fallback: create empty index
+                    index = faiss.IndexFlatIP(self.embedding_dimension)
+                    return silo_id, index, time.time()
+
+            # Parallel loading of indexes
+            logger.info("Starting parallel FAISS index warming...")
+            start_time = time.time()
+
+            with ThreadPoolExecutor(max_workers=min(len(silos), 4)) as executor:
+                futures = [executor.submit(load_silo_index, silo) for silo in silos]
+                results = [f.result() for f in futures]
+
+            # Store loaded indexes
+            for silo_id, index, timestamp in results:
+                self._cached_indexes[silo_id] = index
+                self._cache_timestamps[silo_id] = timestamp
+
+            load_time = time.time() - start_time
+            logger.info(f"FAISS index warming completed in {load_time:.2f}s for {len(silos)} silos")
+
+        except Exception as e:
+            logger.error(f"FAISS index warming failed: {e}")
+            # Continue without warming - system should still work
+
+    def _get_cached_index(self, silo_id: str) -> Any:
+        """Get cached index for silo, falling back to main index."""
+        return self._cached_indexes.get(silo_id, self._index)
     
     def _get_faiss(self):
         """Get FAISS library reference."""
@@ -449,16 +532,82 @@ class VectorStore:
         if self.backend == "memory":
             self._entries.clear()
             self._embeddings = np.array([])
-        
+
         elif self.backend == "chromadb":
             self._collection.delete()
-        
+
         elif self.backend == "faiss":
             self._index = self._faiss.IndexFlatIP(self.embedding_dimension)
             self._entries.clear()
             self._id_mapping.clear()
-        
+            # Clear cached indexes too
+            self._cached_indexes.clear()
+            self._cache_timestamps.clear()
+
         logger.info("Cleared vector store")
+
+    def save_indexes(self) -> None:
+        """Serialize FAISS indexes to disk cache."""
+        if self.backend != "faiss":
+            return
+
+        try:
+            import faiss
+            import time
+
+            cache_dir = self.index_cache_dir
+            os.makedirs(cache_dir, exist_ok=True)
+
+            # Save main index
+            main_path = os.path.join(cache_dir, "main_index.faiss")
+            faiss.write_index(self._index, main_path)
+
+            # Save cached silo indexes
+            for silo_id, index in self._cached_indexes.items():
+                silo_path = os.path.join(cache_dir, f"{silo_id}_index.faiss")
+                faiss.write_index(index, silo_path)
+                self._cache_timestamps[silo_id] = time.time()
+
+            logger.info(f"Saved {len(self._cached_indexes) + 1} FAISS indexes to cache")
+
+        except Exception as e:
+            logger.error(f"Failed to save FAISS indexes: {e}")
+
+    def rebuild_cache_if_needed(self) -> None:
+        """Rebuild cache if indexes are stale or missing."""
+        if self.backend != "faiss":
+            return
+
+        try:
+            import time
+
+            cache_dir = self.index_cache_dir
+            cache_fresh = True
+
+            # Check if all expected cache files exist and are fresh
+            expected_files = ["main_index.faiss"] + [f"{silo}_index.faiss" for silo in ["current", "species", "items", "dungeons", "rooms", "trajectories"]]
+
+            for filename in expected_files:
+                cache_path = os.path.join(cache_dir, filename)
+                if not os.path.exists(cache_path):
+                    cache_fresh = False
+                    break
+
+                # Check freshness (simple time-based for now)
+                cache_mtime = os.path.getmtime(cache_path)
+                if time.time() - cache_mtime > 3600:  # 1 hour
+                    cache_fresh = False
+                    break
+
+            if not cache_fresh:
+                logger.info("Cache stale or missing, rebuilding...")
+                self.save_indexes()
+            else:
+                logger.info("Cache is fresh, skipping rebuild")
+
+        except Exception as e:
+            logger.warning(f"Cache rebuild check failed: {e}")
+            # Continue without rebuilding
     
     def export_entries(
         self,

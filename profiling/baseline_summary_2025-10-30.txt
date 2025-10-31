@@ -1,0 +1,22 @@
+PMD-Red Agent Baseline Profiling Results
+==================================================
+
+Timestamp: 2025-10-30T01:19:01.053228
+Total execution time: 49.21 seconds
+Scripts run: 4
+Successful: 2
+Failed: 2
+
+Estimated profiling overhead: 246.1%
+Within target (<5%): NO
+
+SCRIPT RESULTS:
+------------------------------
+cpu_profiling   | PASS |   1.14s
+gpu_profiling   | FAIL |  11.80s
+memory_profiling | PASS |  35.91s
+io_profiling    | FAIL |   0.37s
+
+FAILED SCRIPTS:
+- gpu_profiling: None
+- io_profiling: None

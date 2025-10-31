@@ -9,14 +9,13 @@ import pytest
 from unittest.mock import Mock, patch
 from pathlib import Path
 
-from src.mgba_harness.cli import MGBACLI
 from src.environment.action_executor import ActionExecutor, Button
 
 
 def test_menu_profile_text_speed_slow():
     """Test menu profile navigates Options → Text Speed → Slow."""
     # Mock profile execution - test structure is valid
-    profile_path = Path("src/mgba-harness/profiles/set_text_speed_slow.json")
+    profile_path = Path("src/mgba_harness/profiles/set_text_speed_slow.json")
     assert profile_path.exists(), "Profile file should be created"
 
 

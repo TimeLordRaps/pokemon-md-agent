@@ -216,9 +216,9 @@ def main():
     """Run the quickstart demonstration."""
     print("Pokemon MD Autonomous Agent - Quick Start Demo")
     print("=" * 50)
-    
+
     setup_logging()
-    
+
     try:
         demonstrate_model_routing()
         demonstrate_memory_management()
@@ -226,22 +226,23 @@ def main():
         demonstrate_temporal_silos()
         demonstrate_vector_store()
         demonstrate_agent_controller()
-        
+
         print("\n=== Demo Complete ===")
         print("All components working correctly!")
         print("\nNext steps:")
         print("1. Install mgba and start mgba-http server")
         print("2. Load Pokemon Mystery Dungeon Red ROM")
-        print("3. Implement actual Qwen3-VL model loading")
-        print("4. Connect vision processing pipeline")
-        print("5. Run full agent loop")
-        
+        print("3. Run: python -m src --demo")
+        print("4. Implement actual Qwen3-VL model loading")
+        print("5. Connect vision processing pipeline")
+        print("6. Run full agent loop")
+
     except Exception as e:
         print(f"\nDemo failed with error: {e}")
         import traceback
         traceback.print_exc()
         return 1
-    
+
     return 0
 
 

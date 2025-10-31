@@ -1,189 +1,248 @@
-"""Tests for on-device buffer manager."""
+"""Test OnDeviceBuffer interface with Literate TestDoc.
+
+OnDeviceBuffer provides a simple interface for on-device retrieval with TTL-based eviction,
+top-k search with cross-silo delegation stubs, capacity/time-based pruning, and micro stuckness
+detection. The buffer maintains a ~60-minute window by evicting oldest entries on
+overflow, supports top-k retrieval with ordering by relevance, and signals stuckness when
+N recent queries return near-duplicates above threshold. All operations are deterministic
+and thread-safe with proper error handling.
+
+Key behaviors: store() adds entries with metadata, search() returns top-k by score,
+prune() removes by age/capacity, stats() reports metrics including stuckness flag.
+"""
 
 import pytest
 import numpy as np
+import time
 from unittest.mock import Mock, patch
-from PIL import Image
+from pathlib import Path
+import sys
 
-from src.retrieval.on_device_buffer import (
-    OnDeviceBufferManager,
-    OnDeviceBufferConfig,
-    BufferOperationResult
-)
-from src.retrieval.embedding_generator import EmbeddingGenerator
-from src.retrieval.deduplicator import Deduplicator
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from src.retrieval.on_device_buffer import OnDeviceBuffer
 
 
-class TestOnDeviceBufferManager:
-    """Test on-device buffer manager functionality."""
+class TestOnDeviceBuffer:
+    """Test OnDeviceBuffer interface functionality."""
 
     def setup_method(self):
-        """Set up test fixtures."""
-        self.config = OnDeviceBufferConfig(
-            circular_buffer_mb=10.0,
-            ann_index_max_elements=100,
-            enable_async=False  # Disable for simpler testing
+        """Set up test fixtures with deterministic seed."""
+        np.random.seed(42)  # For reproducible test results
+        self.buffer = OnDeviceBuffer(
+            max_entries=10,
+            ttl_minutes=60,
+            stuckness_threshold=0.8,
+            stuckness_window=3
         )
-        self.manager = OnDeviceBufferManager(self.config)
 
-    def test_initialization(self):
-        """Test manager initializes with correct components."""
-        assert self.manager.config == self.config
-        assert hasattr(self.manager, 'circular_buffer')
-        assert hasattr(self.manager, 'ann_index')
-        assert hasattr(self.manager, 'keyframe_policy')
-        assert hasattr(self.manager, 'meta_view_writer')
-        assert hasattr(self.manager, 'embedding_generator')
-        assert hasattr(self.manager, 'deduplicator')
+    def test_store_basic(self):
+        """Store operation adds entries with metadata and returns success."""
+        embedding = np.random.rand(128).astype(np.float32)
+        metadata = {"type": "test", "timestamp": time.time()}
 
-    @pytest.mark.asyncio
-    async def test_store_embedding(self):
-        """Test storing embedding in buffer system."""
-        embedding = np.random.rand(1024).astype(np.float32)
-        metadata = {"type": "test", "priority": 0.8}
+        result = self.buffer.store(embedding, metadata)
+        assert result is True
 
-        result = await self.manager.store_embedding(embedding, metadata)
+        # Verify entry was stored
+        stats = self.buffer.stats()
+        assert stats["total_entries"] == 1
+        assert stats["total_size_bytes"] > 0
 
-        assert isinstance(result, BufferOperationResult)
-        assert result.success
-        assert result.data_size == embedding.nbytes
-        assert result.metadata["embedding_id"].startswith("emb_")
-
-    @pytest.mark.asyncio
-    async def test_search_similar(self):
-        """Test searching for similar embeddings."""
-        # Store some test embeddings
-        embeddings = [
-            np.random.rand(1024).astype(np.float32),
-            np.random.rand(1024).astype(np.float32),
-            np.ones(1024).astype(np.float32)  # Similar to query
-        ]
+    def test_store_overflow_evicts_oldest(self):
+        """Store overflow evicts oldest entries to maintain window size."""
+        # Fill buffer beyond capacity
+        embeddings = [np.random.rand(128).astype(np.float32) for _ in range(12)]
 
         for i, emb in enumerate(embeddings):
-            await self.manager.store_embedding(emb, {"index": i})
+            metadata = {"index": i, "timestamp": time.time() + i}
+            self.buffer.store(emb, metadata)
 
-        # Search for similar
-        query = np.ones(1024).astype(np.float32)  # Should match last embedding
-        results = await self.manager.search_similar(query, top_k=2)
+        # Should maintain max_entries
+        stats = self.buffer.stats()
+        assert stats["total_entries"] == 10
 
-        assert len(results) <= 2
-        assert all(isinstance(r.score, float) for r in results)
-        assert all("metadata" in r.__dict__ for r in results)
+        # Oldest entries should be evicted (indices 0, 1)
+        results = self.buffer.search(embeddings[10], top_k=10)
+        stored_indices = [r.metadata["index"] for r in results]
+        assert 0 not in stored_indices
+        assert 1 not in stored_indices
+        assert 10 in stored_indices  # Most recent should remain
 
-    def test_embedding_generator(self):
-        """Test embedding generation for different content types."""
-        gen = self.manager.embedding_generator
+    def test_search_top_k_ordering(self):
+        """Search returns top-k results ordered by relevance score."""
+        # Store embeddings with known similarities
+        base_emb = np.ones(128).astype(np.float32)
+        similar_emb = base_emb * 0.9  # High similarity
+        dissimilar_emb = np.zeros(128).astype(np.float32)  # Low similarity
 
-        # Test text embedding
-        text_emb = gen.generate_text_embedding("test text")
-        assert len(text_emb) == 1024
-        assert np.isclose(np.linalg.norm(text_emb), 1.0)  # L2 normalized
+        embeddings = [base_emb, similar_emb, dissimilar_emb]
+        for i, emb in enumerate(embeddings):
+            metadata = {"id": i}
+            self.buffer.store(emb, metadata)
 
-        # Test ASCII embedding
-        ascii_emb = gen.generate_ascii_embedding("ASCII art")
-        assert len(ascii_emb) == 1024
+        # Search with base embedding
+        results = self.buffer.search(base_emb, top_k=2)
 
-        # Test grid embedding
-        grid_data = {"width": 10, "height": 10, "tiles": [[0] * 10] * 10}
-        grid_emb = gen.generate_grid_embedding(grid_data)
-        assert len(grid_emb) == 1024
+        assert len(results) == 2
+        assert results[0].score >= results[1].score  # Ordered by score descending
+        assert results[0].metadata["id"] == 0  # Most similar first
+        assert results[1].metadata["id"] == 1  # Second most similar
 
-    def test_deduplicator(self):
-        """Test content deduplication."""
-        dedup = self.manager.deduplicator
+    def test_search_cross_silo_stub(self):
+        """Search includes cross-silo delegation stub without actual calls."""
+        embedding = np.random.rand(128).astype(np.float32)
+        self.buffer.store(embedding, {"test": True})
 
-        # Create test images
-        img1 = Image.new('RGB', (10, 10), color='red')
-        img2 = Image.new('RGB', (10, 10), color='red')  # Duplicate
-        img3 = Image.new('RGB', (10, 10), color='blue')  # Different
+        with patch('src.retrieval.on_device_buffer.logger') as mock_logger:
+            results = self.buffer.search(embedding, top_k=5)
 
-        images = [img1, img2, img3]
-        deduplicated, hashes = dedup.deduplicate_images(images)
+            # Should log delegation attempt but not make real calls
+            mock_logger.debug.assert_called()
+            assert "cross-silo" in str(mock_logger.debug.call_args)
 
-        assert len(deduplicated) == 2  # Should remove duplicate
-        assert len(hashes) == 2
-        assert all(isinstance(h, str) for h in hashes)
+    def test_prune_by_time(self):
+        """Prune removes entries older than TTL."""
+        # Store entries with different timestamps
+        old_time = time.time() - (70 * 60)  # 70 minutes ago
+        recent_time = time.time() - (30 * 60)  # 30 minutes ago
 
-    @pytest.mark.asyncio
-    async def test_keyframe_processing(self):
-        """Test keyframe selection with triggers."""
-        # Create mock candidates with triggers
-        candidates = []
-        for i in range(5):
-            candidate = Mock()
-            candidate.timestamp = i * 10
-            candidate.embedding = np.random.rand(1024)
-            candidate.metadata = {"frame_id": i}
-            candidate.importance_score = 0.5
+        # Old entry
+        old_emb = np.random.rand(128).astype(np.float32)
+        self.buffer.store(old_emb, {"timestamp": old_time})
 
-            # Add specific triggers
-            if i == 0:
-                candidate.ssim_score = 0.7  # SSIM drop
-                candidate.floor_changed = False
-            elif i == 1:
-                candidate.floor_changed = True  # Floor change
-            elif i == 2:
-                candidate.combat_active = True  # Combat
-            else:
-                candidate.ssim_score = 0.95  # Normal
-
-            candidates.append(candidate)
-
-        # Mock the keyframe policy to avoid full implementation
-        with patch.object(self.manager.keyframe_policy, 'select_keyframes') as mock_select:
-            mock_result = Mock()
-            mock_result.selected_keyframes = candidates[:2]
-            mock_result.sampling_rate = 0.4
-            mock_select.return_value = mock_result
-
-            result = await self.manager.process_keyframes()
-
-            assert result is not None
-            mock_select.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_meta_view_generation(self):
-        """Test meta view generation."""
-        # Ensure we have some keyframes
-        self.manager.keyframe_policy.selected_keyframes = [
-            Mock(embedding=np.random.rand(1024), metadata={"test": True}, timestamp=1.0, importance_score=1.0)
-        ] * 4  # Need at least 2 for meta view
-
-        result = await self.manager.generate_meta_view("Test View")
-
-        if result:  # May be None if insufficient keyframes
-            assert hasattr(result, 'composite_image')
-            assert hasattr(result, 'grid_layout')
-            assert result.metadata["title"] == "Test View"
-
-    @pytest.mark.asyncio
-    async def test_buffer_status(self):
-        """Test getting buffer status."""
-        status = await self.manager.get_buffer_status()
-
-        required_keys = ["buffer", "ann_index", "keyframe_policy", "performance", "integrations", "config"]
-        for key in required_keys:
-            assert key in status
-
-        # Check performance metrics
-        perf = status["performance"]
-        assert "avg_operation_time" in perf
-        assert "avg_search_time_ms" in perf
-
-    def test_shutdown(self):
-        """Test manager shutdown."""
-        self.manager.shutdown()
-        # Should not raise exceptions
-        assert True
-
-    @pytest.mark.asyncio
-    async def test_cleanup_old_data(self):
-        """Test cleanup of old data."""
-        # Add some test data
+        # Recent entries
         for i in range(3):
-            emb = np.random.rand(1024)
-            await self.manager.store_embedding(emb, {"test": True})
+            emb = np.random.rand(128).astype(np.float32)
+            self.buffer.store(emb, {"timestamp": recent_time + i})
 
-        # Cleanup with very short max age (should remove nothing recent)
-        removed = await self.manager.cleanup_old_data(max_age_seconds=0.001)
-        assert isinstance(removed, int)
+        removed = self.buffer.prune()
+        assert removed == 1  # Only old entry removed
+
+        stats = self.buffer.stats()
+        assert stats["total_entries"] == 3
+
+    def test_prune_by_capacity(self):
+        """Prune reduces entries when exceeding capacity threshold."""
+        # Fill buffer
+        for i in range(15):
+            emb = np.random.rand(128).astype(np.float32)
+            self.buffer.store(emb, {"index": i})
+
+        # Prune should reduce to reasonable size
+        removed = self.buffer.prune(max_entries=8)
+        assert removed > 0
+
+        stats = self.buffer.stats()
+        assert stats["total_entries"] <= 8
+
+    def test_micro_stuckness_detection(self):
+        """Micro stuckness signals when N recent queries return near-duplicates."""
+        # Store diverse embeddings
+        embeddings = [np.random.rand(128).astype(np.float32) for _ in range(5)]
+        for emb in embeddings:
+            self.buffer.store(emb, {"type": "diverse"})
+
+        # First few searches on different embeddings - not stuck
+        for emb in embeddings[:2]:
+            results = self.buffer.search(emb, top_k=3)
+            assert not self.buffer.is_stuck()
+
+        # Search same embedding multiple times - should trigger stuckness
+        repeated_emb = embeddings[0]
+        for _ in range(3):
+            results = self.buffer.search(repeated_emb, top_k=3)
+            # Should have near-duplicate results
+
+        assert self.buffer.is_stuck()
+
+    def test_stats_comprehensive(self):
+        """Stats reports comprehensive metrics including stuckness."""
+        # Add some data
+        for i in range(5):
+            emb = np.random.rand(128).astype(np.float32)
+            self.buffer.store(emb, {"index": i})
+
+        stats = self.buffer.stats()
+
+        required_keys = ["total_entries", "total_size_bytes", "avg_entry_age_seconds",
+                        "stuckness_score", "is_stuck", "capacity_utilization"]
+        for key in required_keys:
+            assert key in stats
+
+        assert stats["total_entries"] == 5
+        assert isinstance(stats["is_stuck"], bool)
+        assert 0.0 <= stats["capacity_utilization"] <= 1.0
+
+    def test_concurrent_access(self):
+        """Buffer handles concurrent store/search operations safely."""
+        import threading
+        import concurrent.futures
+
+        results = []
+
+        def store_worker(worker_id):
+            for i in range(10):
+                emb = np.random.rand(128).astype(np.float32)
+                metadata = {"worker": worker_id, "index": i}
+                self.buffer.store(emb, metadata)
+
+        def search_worker():
+            query = np.random.rand(128).astype(np.float32)
+            result = self.buffer.search(query, top_k=5)
+            results.append(len(result))
+
+        # Run concurrent operations
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            # Start store operations
+            store_futures = [executor.submit(store_worker, i) for i in range(3)]
+            # Start search operations
+            search_futures = [executor.submit(search_worker) for _ in range(5)]
+
+            # Wait for completion
+            concurrent.futures.wait(store_futures + search_futures)
+
+        # Verify buffer integrity
+        stats = self.buffer.stats()
+        assert stats["total_entries"] > 0
+        assert all(r > 0 for r in results)
+
+    def test_empty_buffer_search(self):
+        """Search on empty buffer returns empty results without error."""
+        query = np.random.rand(128).astype(np.float32)
+        results = self.buffer.search(query, top_k=5)
+
+        assert results == []
+        assert not self.buffer.is_stuck()
+
+    def test_error_handling_invalid_embedding(self):
+        """Store rejects invalid embeddings with appropriate exceptions."""
+        # Test None embedding
+        with pytest.raises(ValueError, match="Invalid embedding"):
+            self.buffer.store(None, {"test": True})
+
+        # Test wrong shape
+        invalid_emb = np.random.rand(64)  # Wrong dimension
+        with pytest.raises(ValueError, match="Invalid embedding"):
+            self.buffer.store(invalid_emb, {"test": True})
+
+        # Test non-numeric
+        invalid_emb = "not_an_array"
+        with pytest.raises(ValueError, match="Invalid embedding"):
+            self.buffer.store(invalid_emb, {"test": True})
+
+    def test_metadata_validation(self):
+        """Metadata must be dictionary with serializable values."""
+        embedding = np.random.rand(128).astype(np.float32)
+
+        # Valid metadata
+        result = self.buffer.store(embedding, {"string": "value", "number": 42})
+        assert result is True
+
+        # Invalid metadata types
+        with pytest.raises(ValueError, match="Invalid metadata"):
+            self.buffer.store(embedding, "not_a_dict")
+
+        with pytest.raises(ValueError, match="Invalid metadata"):
+            self.buffer.store(embedding, {"unserializable": lambda x: x})
