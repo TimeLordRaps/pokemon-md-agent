@@ -119,6 +119,11 @@ class RouterGlue:
         """Attach or replace the maintenance daemon."""
         self._maintenance_daemon = daemon
 
+    @property
+    def maintenance_daemon(self) -> Optional["TemporalSiloMaintenanceDaemon"]:
+        """Access the attached maintenance daemon, if any."""
+        return self._maintenance_daemon
+
     def compute_uncertainty(self, perception_data: Dict[str, Any]) -> UncertaintyResult:
         """
         Compute uncertainty from perception data and determine routing.

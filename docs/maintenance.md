@@ -46,23 +46,19 @@ No retrieval path changes are required; the daemon only interacts with write-sid
 
 ### Router Glue Integration
 
-`RouterGlue` accepts an optional `maintenance_daemon` parameter. When attached, the daemon is stepped automatically at the end of each `execute_turn_loop` run. Existing orchestrator setups can inject the daemon when constructing `RouterGlue`:
+`RouterGlue` accepts an optional `maintenance_daemon` parameter. When attached, the daemon is stepped automatically at the end of each `execute_turn_loop` run. The runtime helper in `src/orchestrator/runtime.py` wires this up and returns both the glue instance and the shared daemon:
 
 ```python
-from src.orchestrator.router_glue import RouterGlue
-from src.retrieval.maint.daemon import TemporalSiloMaintenanceDaemon
-from src.retrieval.maint.policies import default_policies
+from src.orchestrator.runtime import build_router_runtime
 
-maintenance = TemporalSiloMaintenanceDaemon(
-    target=temporal_manager,
-    policies=default_policies(),
+router, maintenance = build_router_runtime(
+    silo_manager=temporal_manager,
     cadence_seconds=60,
     cadence_steps=25,
 )
-router = RouterGlue(maintenance_daemon=maintenance)
 ```
 
-The loop can also be wired later via `router.attach_maintenance_daemon(maintenance)`.
+The loop can also swap daemons later via `router.attach_maintenance_daemon(maintenance)` if needed.
 
 ## Metrics
 

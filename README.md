@@ -20,7 +20,67 @@ Multi-model Qwen3-VL agent with hierarchical RAG system, dynamic temporal resolu
 
 ---
 
-## � Dashboard & Monitoring
+## ⚡ Quick Start (5 minutes)
+
+### Prerequisites
+- **mGBA emulator** (version 0.8.0+) with Lua socket server running on port `8888`
+- **Pokemon Mystery Dungeon - Red Rescue Team (USA, Australia)** ROM file
+- **Python 3.11+** with conda/mamba environment
+- **Save file** with game in Tiny Woods or similar dungeon (starter floor)
+
+### Setup
+
+1. **Place ROM & Save in `rom/` directory:**
+   ```bash
+   # From project root (pokemon-md-agent/)
+   cp "Pokemon Mystery Dungeon - Red Rescue Team.gba" ./rom/
+   cp "Pokemon Mystery Dungeon - Red Rescue Team.sav" ./rom/
+   ```
+
+2. **Create & activate conda environment:**
+   ```bash
+   mamba create -n agent-hackathon python=3.11 -y
+   mamba activate agent-hackathon
+   pip install -r requirements.txt
+   ```
+
+3. **Start mGBA with Lua socket server** (Windows PowerShell example):
+   ```powershell
+   # Ensure mGBA-http is loaded (Lua console > File > Load script > mGBASocketServer.lua)
+   # Server defaults to port 8888
+   # Verify with: python .temp_check_ram.py
+   ```
+
+4. **Run final demo (50-step agent + 3-min video):**
+   ```bash
+   mamba activate agent-hackathon
+   cd pokemon-md-agent
+   python scripts/final_demo_runner.py
+   ```
+
+   **Output:**
+   - `runs/demo_*/trajectory_*.jsonl` - Full trajectory data
+   - `agent_demo.mp4` - 3-minute montage video (key frames)
+   - Console logs show real-time progress
+
+### Expected Timeline
+- **Initialization**: ~5s
+- **Agent execution** (50 steps): ~30-60s
+- **Video generation**: ~10-20s
+- **Total**: ~1-2 minutes
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| `Failed to connect to mGBA` | Verify mGBA is running, socket server active, port 8888 |
+| `No ROM files found` | Check ROM + SAV files are in `./rom/` directory |
+| `Perception failed: unpack requires...` | Stale mGBA connection; restart emulator |
+| `Video generation failed` | Ensure `opencv-python` installed: `pip install opencv-python` |
+
+---
+
+## 📊 Dashboard & Monitoring
 
 The agent includes a comprehensive dashboard system for monitoring gameplay and retrieving external knowledge:
 

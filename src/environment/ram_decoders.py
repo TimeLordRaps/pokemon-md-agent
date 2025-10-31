@@ -112,15 +112,21 @@ class PMDRedDecoder:
         }
 
     def decode_uint8(self, data: bytes, offset: int) -> int:
-        """Decode uint8 from data at offset."""
+        """Decode uint8 from data at offset. Returns 0 if buffer too short."""
+        if offset + 1 > len(data):
+            return 0
         return struct.unpack('<B', data[offset:offset+1])[0]
 
     def decode_uint16(self, data: bytes, offset: int) -> int:
-        """Decode uint16 from data at offset (little-endian)."""
+        """Decode uint16 from data at offset (little-endian). Returns 0 if buffer too short."""
+        if offset + 2 > len(data):
+            return 0
         return struct.unpack('<H', data[offset:offset+2])[0]
 
     def decode_uint32(self, data: bytes, offset: int) -> int:
-        """Decode uint32 from data at offset (little-endian)."""
+        """Decode uint32 from data at offset (little-endian). Returns 0 if buffer too short."""
+        if offset + 4 > len(data):
+            return 0
         return struct.unpack('<I', data[offset:offset+4])[0]
 
     def decode_bool(self, data: bytes, offset: int) -> bool:

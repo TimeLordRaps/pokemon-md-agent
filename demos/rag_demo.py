@@ -9,6 +9,7 @@ from pathlib import Path
 from src.embeddings.extractor import QwenEmbeddingExtractor, EmbeddingMode
 from src.embeddings.temporal_silo import TemporalSiloManager
 from src.retrieval.auto_retrieve import AutoRetriever, RetrievalQuery
+from src.orchestrator.runtime import build_router_runtime
 
 
 def demo_embedding_extraction():

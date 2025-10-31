@@ -10,6 +10,10 @@ import time
 from pathlib import Path
 from typing import Optional
 
+# Add project root to path for relative imports
+project_root = Path(__file__).parents[2]  # cli.py -> mgba-harness -> src -> pokemon-md-agent
+sys.path.insert(0, str(project_root))
+
 from ..environment.mgba_controller import MGBAController
 from ..environment.save_manager import SaveManager
 

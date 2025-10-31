@@ -214,6 +214,8 @@ class TestSpriteDatasetDumper:
             sprites_dir = dumper.sprites_dir
             assert len(list(sprites_dir.glob("*.png"))) == 2
             
+            dumper.close()  # Close before reading
+            
             # Check manifest content
             with open(dumper.manifest_path, 'r') as f:
                 reader = csv.reader(f)
@@ -224,8 +226,6 @@ class TestSpriteDatasetDumper:
             assert rows[0][2] == "player"  # label
             assert rows[0][3] == "0.9"    # confidence
             assert rows[0][6] == "16"     # bbox_w
-            
-            dumper.close()
     
     def test_low_confidence_filtering(self):
         """Test that low confidence detections are filtered out."""
@@ -308,6 +308,7 @@ class TestSpriteDatasetDumper:
             assert dumped_count == 2
             assert dumper.sprite_count == 2
             
+            # Close before cleanup
             dumper.close()
 
 
@@ -496,6 +497,9 @@ class TestIntegrationScenarios:
                     
                 def dump_frame_sprites(self, image_path: Path, frame_id: str, 
                                      timecode: float, detections: list) -> int:
+                    if not HAS_PIL or not Image:
+                        return 0
+                        
                     image = Image.open(image_path)
                     dumped_count = 0
                     
@@ -528,6 +532,7 @@ class TestIntegrationScenarios:
                     
                 def close(self):
                     if self.manifest_file:
+                        self.manifest_file.flush()
                         self.manifest_file.close()
                         self.manifest_file = None
             
@@ -566,7 +571,7 @@ class TestIntegrationScenarios:
                 rows = list(reader)
                 
             assert len(rows) == 4  # Header + 3 data rows
-            assert all(row[2] == "test_sprite" for row in rows[1:])  # All sprites have same label
+            assert all(row[2] == "test_sprite" for row in rows[1:])  # All sprites have same label  # All sprites have same label
 
 
 if __name__ == "__main__":

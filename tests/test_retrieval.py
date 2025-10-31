@@ -124,8 +124,9 @@ class TestRetrievalGatekeeper:
         with patch('shutil.disk_usage') as mock_disk_usage:
             mock_disk_usage.return_value = (1024**3, 0, 1024**3)
             
+            # Use a query that will pass shallow checks
             status, token, metadata = gatekeeper.check_and_gate(
-                "test query",
+                "How do I defeat the boss in Pokemon Mystery Dungeon Red Rescue Team?",
                 context={"shallow_hits": 5},
                 force_allow=False
             )
@@ -141,17 +142,17 @@ class TestRetrievalGatekeeper:
             min_free_space_mb=1000,
             check_disk_space=True
         )
-        
+
         # Mock insufficient disk space
         with patch('shutil.disk_usage') as mock_disk_usage:
             free_bytes = 100 * 1024 * 1024  # 100MB
             mock_disk_usage.return_value = (1024**3, 1024**3 - free_bytes, free_bytes)
-            
+
             status, token, metadata = gatekeeper.check_and_gate(
-                "test query",
+                "How do I defeat the final boss in Pokemon Mystery Dungeon Red Rescue Team?",
                 context={"shallow_hits": 5}
             )
-            
+
             # Should be denied due to insufficient disk space
             assert status == GatekeeperStatus.DENY
             assert token is None

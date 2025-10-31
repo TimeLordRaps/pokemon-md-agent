@@ -15,6 +15,7 @@ from src.agent.qwen_controller import QwenController, AgentState, InferenceResul
 from src.environment.fps_adjuster import FPSAdjuster
 from src.embeddings.temporal_silo import TemporalSiloManager
 from src.embeddings.vector_store import VectorStore
+from src.orchestrator.runtime import build_router_runtime
 
 
 def setup_logging():
@@ -173,6 +174,37 @@ def demonstrate_vector_store():
     print(f"Vector store stats: {stats}")
 
 
+def demonstrate_router_runtime():
+    """Demonstrate RouterGlue runtime wiring with maintenance daemon."""
+    print("\n=== Router Runtime Demo ===")
+
+    silo_manager = TemporalSiloManager(base_fps=30, silos=[1, 2])
+
+    router, maintenance = build_router_runtime(
+        silo_manager=silo_manager,
+        cadence_seconds=0,
+        cadence_steps=1,
+    )
+
+    import numpy as np
+
+    base_time = time.time()
+    for idx in range(4):
+        embedding = np.random.normal(0, 0.1, 1024)
+        silo_manager.store(
+            embedding=embedding,
+            trajectory_id=f"router_demo_{idx}",
+            metadata={"action": "move", "floor": 1},
+            current_time=base_time + idx,
+        )
+
+    metrics = maintenance.run(force=True)
+    print(f"Maintenance per-silo counts: {metrics.per_silo_counts}")
+    print(f"Removed (compact, expire): {metrics.total_removed_compaction}, {metrics.total_removed_retention}")
+    assert router.maintenance_daemon is maintenance
+    print("RouterGlue shares the maintenance daemon instance.")
+
+
 def demonstrate_agent_controller():
     """Demonstrate agent controller functionality."""
     print("\n=== Agent Controller Demo ===")
@@ -225,6 +257,7 @@ def main():
         demonstrate_fps_adjustment()
         demonstrate_temporal_silos()
         demonstrate_vector_store()
+        demonstrate_router_runtime()
         demonstrate_agent_controller()
 
         print("\n=== Demo Complete ===")
@@ -236,6 +269,7 @@ def main():
         print("4. Implement actual Qwen3-VL model loading")
         print("5. Connect vision processing pipeline")
         print("6. Run full agent loop")
+        print("7. Integrate RouterGlue runtime into production orchestrator")
 
     except Exception as e:
         print(f"\nDemo failed with error: {e}")
