@@ -12,6 +12,7 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 
 from src.environment.mgba_controller import MGBAController
+from src.environment.rom_gating import find_rom_files, ROMValidationError
 from src.vision.grid_parser import GridParser
 from src.vision.ascii_renderer import ASCIIRenderer
 from src.agent.qwen_controller import QwenController
@@ -102,6 +103,19 @@ class AgentCore:
 
         # Connect to mGBA with retry (skip in test mode)
         if not test_mode:
+            # Validate ROM files before connecting to mGBA
+            try:
+                rom_files = find_rom_files()
+                if not rom_files:
+                    raise ROMValidationError(
+                        "No ROM files found. Please ensure Pokemon Mystery Dungeon - Red Rescue Team "
+                        "is present in the rom/ directory."
+                    )
+                logger.info(f"Found {len(rom_files)} ROM file(s): {[f.name for f in rom_files]}")
+            except ROMValidationError as e:
+                logger.error(f"ROM validation failed: {e}")
+                raise RuntimeError(f"Agent initialization failed: {e}") from e
+
             # Don't fail init if connection fails - try during first perceive
             connected = self.mgba.connect_with_retry(max_retries=1)
             if connected:
