@@ -405,3 +405,443 @@
 2025-10-31 01:37:06,288 - src.agent.agent_core - ERROR - Reasoning failed: Pipeline request failed
 2025-10-31 01:37:07,958 - src.agent.agent_core - INFO - Action: random | Rationale: Fallback due to error: Pipeline request failed
 2025-10-31 01:37:08,057 - src.agent.agent_core - INFO - Step 1/50 complete - Action: random
+2025-10-31 23:17:26,734 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:17:26,734 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:17:26,734 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:17:26,735 - src.agent.agent_core - INFO - Belly trigger: 25.0% < 30.0%
+2025-10-31 23:17:26,741 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:17:26,741 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:17:26,741 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:17:26,741 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:17:26,741 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:17:26,741 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:17:26,742 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-10-31 23:17:26,742 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-10-31 23:17:26,747 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:17:26,747 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:17:26,747 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:17:26,747 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:17:26,747 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:17:26,747 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:17:26,748 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:17:26,748 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:17:26,748 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:17:26,758 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:17:26,758 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:17:26,758 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:17:26,758 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:17:26,758 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:17:26,758 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:17:26,758 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:17:26,758 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:17:26,758 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:17:26,758 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:17:26,758 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:17:26,758 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:19:26,660 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:19:26,661 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:19:26,661 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:19:26,662 - src.agent.agent_core - INFO - Belly trigger: 25.0% < 30.0%
+2025-10-31 23:19:26,669 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:19:26,669 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:19:26,669 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:19:26,669 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:19:26,669 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:19:26,669 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:19:26,670 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-10-31 23:19:26,670 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-10-31 23:19:26,676 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:19:26,676 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:19:26,676 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:19:26,676 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:19:26,676 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:19:26,676 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:19:26,676 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:19:26,676 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:19:26,676 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:19:26,687 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:19:26,687 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:19:26,687 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:19:26,687 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:19:26,687 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:19:26,687 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:19:26,687 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:19:26,687 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:19:26,687 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:19:26,687 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:19:26,687 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:19:26,687 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:21:21,727 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:21:21,727 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:21:21,727 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:21:21,728 - src.agent.agent_core - INFO - Belly trigger: 25.0% < 30.0%
+2025-10-31 23:21:21,739 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:21:21,739 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:21:21,739 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:21:21,739 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:21:21,740 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:21:21,740 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:21:21,740 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-10-31 23:21:21,740 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-10-31 23:21:21,748 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:21:21,748 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:21:21,748 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:21:21,748 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:21:21,748 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:21:21,748 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:21:21,748 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:21:21,748 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:21:21,748 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:21:21,760 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:21:21,760 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:21:21,760 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:21:21,760 - src.agent.agent_core - INFO - File logging initialized
+2025-10-31 23:21:21,760 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:21:21,760 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:21:21,760 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:21:21,760 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-10-31 23:21:21,760 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:21:21,760 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:21:21,760 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-10-31 23:21:21,760 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:11:32,005 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:11:32,005 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:11:32,006 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:11:32,006 - src.agent.agent_core - INFO - Belly trigger: 25.0% < 30.0%
+2025-11-01 02:11:32,012 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:11:32,012 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:11:32,012 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:11:32,012 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:11:32,013 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:11:32,013 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:11:32,013 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 02:11:32,013 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 02:11:32,019 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:11:32,019 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:11:32,019 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:11:32,020 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:11:32,020 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:11:32,020 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:11:32,020 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:11:32,020 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:11:32,020 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:11:32,030 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:11:32,030 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:11:32,030 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:11:32,030 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:11:32,030 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:11:32,030 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:11:32,030 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:11:32,030 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:11:32,030 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:11:32,030 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:11:32,030 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:11:32,030 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:15:41,081 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:15:41,081 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:15:41,081 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:15:41,082 - src.agent.agent_core - INFO - Belly trigger: 25.0% < 30.0%
+2025-11-01 02:15:41,088 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:15:41,088 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:15:41,089 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:15:41,089 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:15:41,089 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:15:41,089 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:15:41,089 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 02:15:41,089 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 02:15:41,095 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:15:41,095 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:15:41,095 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:15:41,096 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:15:41,096 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:15:41,096 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:15:41,096 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:15:41,096 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:15:41,096 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:15:41,105 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:15:41,105 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:15:41,105 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:15:41,105 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 02:15:41,106 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:15:41,106 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:15:41,106 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:15:41,106 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 02:15:41,106 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:15:41,106 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:15:41,106 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 02:15:41,106 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 05:12:34,607 - src.agent.agent_core - WARNING - All actions filtered out by gatekeeper
+2025-11-01 05:21:54,262 - src.agent.agent_core - WARNING - All actions filtered out by gatekeeper
+2025-11-01 06:43:48,746 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:43:48,747 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:43:48,747 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:43:48,747 - src.agent.agent_core - INFO - Belly trigger: 25.0% < 30.0%
+2025-11-01 06:43:48,750 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:43:48,750 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:43:48,750 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:43:48,750 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:43:48,750 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:43:48,750 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:43:48,750 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:43:48,750 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:43:48,750 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:43:48,753 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:43:48,753 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:43:48,754 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:43:48,754 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:43:48,754 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:43:48,754 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:43:48,754 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:43:48,754 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:43:48,754 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:43:48,754 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:43:48,754 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:43:48,758 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:43:48,758 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:43:48,758 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:43:48,759 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:43:48,759 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:43:48,759 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:43:48,759 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:43:48,759 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:43:48,759 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:43:48,759 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:43:48,759 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:43:48,759 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:43:48,759 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:43:48,759 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:43:48,759 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:45:27,243 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:45:27,243 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:45:27,243 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:45:27,244 - src.agent.agent_core - INFO - Belly trigger: 25.0% < 30.0%
+2025-11-01 06:45:27,246 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:45:27,247 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:45:27,247 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:45:27,247 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:45:27,247 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:45:27,247 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:45:27,247 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:45:27,247 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:45:27,247 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:45:27,250 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:45:27,250 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:45:27,250 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:45:27,250 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:45:27,250 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:45:27,250 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:45:27,250 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:45:27,250 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:45:27,250 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:45:27,250 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:45:27,250 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:45:27,255 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:45:27,255 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:45:27,255 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:45:27,256 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:45:27,256 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:45:27,256 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:45:27,256 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:45:27,256 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:45:27,256 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:45:27,256 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:45:27,256 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:45:27,256 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:45:27,256 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:45:27,256 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:45:27,256 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:47:08,630 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:47:08,630 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:47:08,630 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:47:08,630 - src.agent.agent_core - INFO - Belly trigger: 25.0% < 30.0%
+2025-11-01 06:47:08,633 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:47:08,633 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:47:08,633 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:47:08,633 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:47:08,633 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:47:08,633 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:47:08,633 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:47:08,633 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:47:08,633 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:47:08,636 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:47:08,636 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:47:08,636 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:47:08,636 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:47:08,636 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:47:08,636 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:47:08,636 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:47:08,636 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:47:08,636 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:47:08,636 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:47:08,636 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:47:08,642 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:47:08,642 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:47:08,642 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:47:08,642 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:47:08,642 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:47:08,642 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:47:08,642 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:47:08,642 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:47:08,642 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:47:08,642 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:47:08,642 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:47:08,642 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:47:08,642 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:47:08,642 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:47:08,642 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:48:07,180 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:48:07,180 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:48:07,180 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:48:07,181 - src.agent.agent_core - INFO - Belly trigger: 25.0% < 30.0%
+2025-11-01 06:48:07,184 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:48:07,184 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:48:07,184 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:48:07,184 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:48:07,184 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:48:07,184 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:48:07,184 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:48:07,184 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:48:07,184 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:48:07,188 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:48:07,188 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:48:07,188 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:48:07,188 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:48:07,188 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:48:07,188 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:48:07,188 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:48:07,188 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:48:07,188 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:48:07,188 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:48:07,188 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:48:07,193 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:48:07,193 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:48:07,193 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:48:07,194 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:48:07,194 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:48:07,194 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:48:07,194 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:48:07,194 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:48:07,194 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:48:07,194 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:48:07,194 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:48:07,194 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:48:07,194 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:48:07,194 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:48:07,194 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:50:21,749 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:50:21,749 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:50:21,749 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:50:21,749 - src.agent.agent_core - INFO - Belly trigger: 25.0% < 30.0%
+2025-11-01 06:50:21,752 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:50:21,752 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:50:21,752 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:50:21,752 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:50:21,752 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:50:21,752 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:50:21,752 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:50:21,752 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:50:21,752 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:50:21,756 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:50:21,756 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:50:21,756 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:50:21,756 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:50:21,756 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:50:21,756 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:50:21,756 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:50:21,756 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:50:21,756 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:50:21,756 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:50:21,756 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:50:21,760 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:50:21,760 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:50:21,760 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:50:21,760 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:50:21,760 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:50:21,760 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:50:21,760 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:50:21,761 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:50:21,761 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:50:21,761 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:50:21,761 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:50:21,761 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:50:21,761 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:50:21,761 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:50:21,761 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:52:15,425 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:52:15,425 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:52:15,425 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:52:15,426 - src.agent.agent_core - INFO - Belly trigger: 25.0% < 30.0%
+2025-11-01 06:52:15,428 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:52:15,428 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:52:15,428 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:52:15,428 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:52:15,428 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:52:15,429 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:52:15,429 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:52:15,429 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:52:15,429 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:52:15,431 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:52:15,431 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:52:15,431 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:52:15,431 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:52:15,431 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:52:15,431 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:52:15,431 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:52:15,431 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:52:15,431 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:52:15,431 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:52:15,431 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:52:15,436 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:52:15,436 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:52:15,436 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:52:15,436 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:52:15,436 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:52:15,436 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:52:15,436 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:52:15,437 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:52:15,437 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:52:15,437 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:52:15,437 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:52:15,437 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:52:15,437 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:52:15,437 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:52:15,437 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:53:16,255 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:53:16,255 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:53:16,255 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:53:16,255 - src.agent.agent_core - INFO - Belly trigger: 25.0% < 30.0%
+2025-11-01 06:53:16,258 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:53:16,258 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:53:16,258 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:53:16,258 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:53:16,258 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:53:16,258 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:53:16,258 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:53:16,258 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:53:16,258 - src.agent.agent_core - INFO - HP trigger: 20.0% < 25.0%
+2025-11-01 06:53:16,261 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:53:16,261 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:53:16,261 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:53:16,261 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:53:16,261 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:53:16,261 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:53:16,261 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:53:16,261 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:53:16,261 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:53:16,261 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:53:16,261 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:53:16,266 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:53:16,266 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:53:16,266 - src.agent.agent_core - WARNING - Could not initialize ANN search for gatekeeper: Could not load FAISS index: module 'faiss' has no attribute 'read_index'
+2025-11-01 06:53:16,266 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:53:16,266 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:53:16,266 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:53:16,266 - src.agent.agent_core - INFO - File logging initialized
+2025-11-01 06:53:16,266 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:53:16,266 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:53:16,266 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:53:16,266 - src.agent.agent_core - INFO - Agent initialized with objective: Autonomous Pokemon MD gameplay (test_mode: True)
+2025-11-01 06:53:16,266 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:53:16,266 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:53:16,266 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True
+2025-11-01 06:53:16,266 - src.agent.agent_core - INFO - PokemonMDAgent initialized: ROM=test.rom, runtime=1.0h, stuck_detection=True

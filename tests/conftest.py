@@ -13,7 +13,7 @@ IMPORTANT: Integration tests assume:
 import pytest
 import tempfile
 from pathlib import Path
-from typing import Generator
+from typing import Generator, TYPE_CHECKING
 import os
 import socket
 import time
@@ -26,9 +26,21 @@ _session_start_time = None
 # Track test durations for slow test reporting
 _test_durations = []
 
-# Import project modules
-from src.environment.mgba_controller import MGBAController, AddressManager
-from src.environment.config import VideoConfig
+# Import project modules (with error handling for test environment)
+if TYPE_CHECKING:
+    from src.environment.mgba_controller import MGBAController, AddressManager
+    from src.environment.config import VideoConfig
+else:
+    try:
+        from src.environment.mgba_controller import MGBAController, AddressManager
+        from src.environment.config import VideoConfig
+        IMPORTS_AVAILABLE = True
+    except ImportError:
+        # Mock classes for when imports fail in test environment
+        MGBAController = Mock  # type: ignore
+        AddressManager = Mock  # type: ignore
+        VideoConfig = Mock  # type: ignore
+        IMPORTS_AVAILABLE = False
 
 
 # ============================================================================
@@ -60,8 +72,8 @@ def pytest_sessionstart(session):
     global _session_start_time
     _session_start_time = time.time()
     
-    # Enable faulthandler traceback dumping on timeout
-    faulthandler.dump_traceback_later(int(os.getenv("PYTEST_FDUMP_S", "60")), repeat=True)
+    # Enable faulthandler traceback dumping on timeout (~45s)
+    faulthandler.dump_traceback_later(int(os.getenv("PYTEST_FDUMP_S", "45")), repeat=True)
 
 
 # ============================================================================

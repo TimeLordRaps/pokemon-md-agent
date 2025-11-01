@@ -24,6 +24,7 @@ class TestScreenshotLocking:
         """Create controller for testing."""
         return MGBAController(cache_dir=tmp_path)
 
+    @pytest.mark.network
     def test_screenshot_file_locking_during_high_frequency_capture(self, controller, tmp_path):
         """Test that reproduces WinError 32 (sharing violation) during rapid screenshot capture.
 
@@ -65,6 +66,7 @@ class TestScreenshotLocking:
                 # Verify retry mechanism was triggered
                 assert call_count > 1
 
+    @pytest.mark.network
     def test_screenshot_file_locking_persistent_failure(self, controller, tmp_path):
         """Test that persistent file locking leads to proper error handling.
 
@@ -79,6 +81,7 @@ class TestScreenshotLocking:
                 with pytest.raises(RuntimeError, match="Failed to read screenshot after"):
                     controller.capture_screenshot(str(screenshot_path), max_retries=3)
 
+    @pytest.mark.network
     def test_screenshot_file_deleted_during_retry(self, controller, tmp_path):
         """Test behavior when screenshot file is deleted during retry attempts."""
         screenshot_path = tmp_path / "deleted_during_retry.png"
@@ -103,6 +106,7 @@ class TestScreenshotLocking:
                 with pytest.raises(RuntimeError, match="Failed to read screenshot"):
                     controller.capture_screenshot(str(screenshot_path), max_retries=2)
 
+    @pytest.mark.network
     def test_screenshot_corrupted_during_write(self, controller, tmp_path):
         """Test handling of corrupted image files written by mGBA."""
         screenshot_path = tmp_path / "corrupted.png"
@@ -113,6 +117,7 @@ class TestScreenshotLocking:
                 with pytest.raises(RuntimeError, match="Failed to read screenshot"):
                     controller.capture_screenshot(str(screenshot_path))
 
+    @pytest.mark.network
     def test_concurrent_screenshot_requests(self, controller, tmp_path):
         """Test multiple concurrent screenshot capture requests.
 

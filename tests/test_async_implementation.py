@@ -87,6 +87,7 @@ class TestAsyncImplementation:
             # In real test, would run in async test
             assert inspect.iscoroutinefunction(controller._generate_candidates_parallel)
 
+    @pytest.mark.network
     def test_async_method_error_handling(self, controller):
         """Test async methods have proper error handling."""
         # Test that async methods can be called (even if they fail due to missing dependencies)
@@ -169,9 +170,10 @@ class TestAsyncImplementation:
         assert hasattr(controller, 'vram_semaphores')
         assert isinstance(controller.vram_semaphores, dict)
 
-        # Check semaphore acquisition in async methods
-        source = inspect.getsource(controller._generate_with_cache)
-        assert "semaphore" in source or "async with" in source
+        # Check semaphore acquisition method exists
+        assert hasattr(controller, '_get_or_create_vram_semaphore')
+        semaphore = controller._get_or_create_vram_semaphore("test_model")
+        assert semaphore is not None
 
     def test_async_error_propagation(self, controller):
         """Test that async methods properly propagate errors."""

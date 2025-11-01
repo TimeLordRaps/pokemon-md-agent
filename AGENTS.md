@@ -222,176 +222,222 @@ if stuckness["status"] == "stuck":
 
 ---
 
-## 🧪 Testing Patterns
+## 🧪 Testing & Profiling Commands
 
-### Test Markers & Scripts
+**Important**: Always cd to REPO ROOT (absolute) before running tests; scripts enforce this.
 
-**Fast Lane**: `scripts/test_fast.ps1` (Windows) or `bash scripts/test_fast.sh` (Linux/Mac)
-- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; $env:FAST="1"; $env:PYTEST_FDUMP_S="45"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python -m pytest -q --maxfail=1 -m "not slow and not network and not bench and not longctx"`
-- **Expected Runtime**: <3 minutes
-- **Purpose**: Quick validation excluding slow/network/bench/longctx tests
+### Test Scripts
 
-**Full Lane**: `scripts/test_full.ps1` (Windows) or `bash scripts/test_full.sh` (Linux/Mac)
-- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; Remove-Item Env:FAST -ErrorAction SilentlyContinue; $env:PYTEST_FDUMP_S="90"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python -m pytest -q`
-- **Expected Runtime**: 10-15 minutes
-- **Purpose**: Complete test suite with all markers
-
-**CI Lane**: `scripts/test_ci.ps1` (Windows) or `bash scripts/test_ci.sh` (Linux/Mac)
-- **Command**: Calls `scripts/test_fast.ps1`
-- **Expected Runtime**: <3 minutes
-- **Purpose**: Minimal CI validation
-
-**Bench Sweep**: `scripts/bench_sweep.ps1` (Windows) or `bash scripts/bench_sweep.sh` (Linux/Mac)
-- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; cd "C:\Homework\agent_hackathon\pokemon-md-agent"; $env:PYTHONPATH="C:\Homework\agent_hackathon\pokemon-md-agent\src"; python profiling/bench_qwen_vl.py --models all --csv bench_results.csv --time-budget-s 180 --full --plot bench_results.csv`
-- **Expected Runtime**: 5-10 minutes per configuration
-- **Purpose**: Performance benchmarking with parameter sweeps, saves CSV + JSONL + PNG plots to `profiling/results/<UTC_ISO>/`
-
-**Sync Profiling**: `scripts/sync_profiling.ps1` (Windows) or `bash scripts/sync_profiling.sh` (Linux/Mac)
-- **Command**: `mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; Copy-Item "..\profiling\*" ".\profiling\" -Recurse -Force -Exclude "__pycache__"`
-- **Expected Runtime**: <1 minute
-- **Purpose**: Idempotent move of legacy profiling folder to `pokemon-md-agent/profiling/`
-
-**Markers**:
-- `@pytest.mark.slow`: Long-running tests (model training, heavy parametrization)
-- `@pytest.mark.network`: Tests requiring emulator/web connections
-- `@pytest.mark.bench`: Performance benchmarking and plotting
-- `@pytest.mark.longctx`: Tests with ≥64k context
-
-**Environment Variables**:
-- `FAST=1`: Reduces test parameters for faster execution
-- `PYTEST_FDUMP_S=45`: Session timeout for deadlock detection (default 60s)
-
-**Flags**:
-- `--maxfail=1`: Stop after first failure
-- `--timeout=30 --timeout-method=thread`: 30s timeout per test with thread method
-- `-m "not slow and not network and not bench and not longctx"`: Exclude marked tests
-- `filterwarnings = ["ignore::DeprecationWarning"]`: Suppress deprecation warnings
-
-### Troubleshooting Guide
-
-**Test Execution Issues**:
-- **Command prefix failures**: Ensure mamba/conda environment is properly configured
-- **Import errors**: Verify `PYTHONPATH` includes project `src/` directory
-- **Timeout exceeded**: Check `PYTEST_FDUMP_S` value (default 60s) or investigate hanging tests
-- **faulthandler dumps**: Review traceback files for deadlock locations
-
-**Benchmark Problems**:
-- **Long execution times**: Use `--time-budget-s` parameter to limit run duration (default: 180s)
-- **Memory errors**: Reduce batch sizes (`--batches 1,2`) or context lengths (`--contexts 1024,2048`)
-- **Output path issues**: Ensure `profiling/results/` directory is writable
-- **Model loading failures**: Check CUDA availability and VRAM capacity
-- **Time budget exceeded**: Benchmark ran longer than `--time-budget-s` limit
-
-**Bench Flags**:
-- `--time-budget-s`: Time budget for entire benchmark suite (seconds, default: 180)
-- `--full`: Run full benchmark suite (longer, more comprehensive)
-- `--contexts`: Exact context lengths to test (comma-separated, overrides --min-ctx/--ctx-mult)
-- `--image-text-ratios`: Image-to-text content ratios to test (comma-separated floats, default: '0.5')
-- `--models`: Models to benchmark ('all' or comma-separated list)
-- `--min-ctx`: Minimum context length (default: 1024)
-- `--ctx-mult`: Context length multiplier (default: 1.5)
-- `--max-wall`: Maximum wall clock time per benchmark (seconds, default: 60)
-- `--batches`: Batch sizes to test (comma-separated, default: '1,2,4,8')
-- `--best-of`: Best-of values to test (comma-separated, default: '1,2,4,8')
-- `--csv`: Output CSV path (required for benchmarking)
-- `--plot`: CSV file to plot from (generates plots in profiling/plots/)
-- `--dry-run`: Use synthetic timings instead of real inference
-
-**Example Commands**:
+**Fast Lane** (≤3 minutes):
 ```bash
-# Fast lane benchmark (default)
-python profiling/bench_qwen_vl.py --csv results.csv --dry-run
-
-# Full benchmark with time budget
-python profiling/bench_qwen_vl.py --full --time-budget-s 300 --csv results.csv
-
-# Custom contexts and image-text ratios
-python profiling/bench_qwen_vl.py --contexts 1024,2048,4096,8192 --image-text-ratios 0.3,0.5,0.7 --csv results.csv
-
-# Plot existing results
-python profiling/bench_qwen_vl.py --plot results.csv
+# Windows PowerShell
+mamba info --envs; python --version; mamba activate agent-hackathon;
+if (-not (Test-Path 'C:\Homework\agent_hackathon\pokemon-md-agent\pyproject.toml')) { Write-Error 'Not at repo root'; exit 2 }
+Set-Location -Path 'C:\Homework\agent_hackathon\pokemon-md-agent';
+$env:PYTHONPATH='C:\Homework\agent_hackathon\pokemon-md-agent\src';
+python -m pytest -q --maxfail=1 -m "not slow and not network and not bench and not longctx"
 ```
 
-**Expected Runtimes**:
-- Fast lane: 2-3 minutes
-- Full lane: 10-15 minutes
-- Bench sweep: 5-10 minutes per configuration
-- CI validation: <3 minutes
-
-**Common Blockers**:
-- mGBA emulator not running (network tests will skip)
-- CUDA out of memory (reduce model size or batch size)
-- Syntax errors in core files (see `agent_mailbox/copilot2codex.md`)
-- Missing dependencies (run `pip install -e .`)
-
-### Unit Test Template
-
-```python
-# tests/test_temporal_silo.py
-import pytest
-from src.embeddings.temporal_silo import TemporalSiloManager
-
-def test_store_and_retrieve():
-    """Test basic store and retrieve from single silo"""
-    manager = TemporalSiloManager(base_fps=30, silos=[4])
-    
-    # Store embedding
-    test_embedding = [0.1] * 768
-    manager.store(
-        embedding=test_embedding,
-        metadata={"floor": 5},
-        silo_id="temporal_4frame"
-    )
-    
-    # Retrieve
-    results = manager.search(
-        query_embedding=test_embedding,
-        silo_id="temporal_4frame",
-        top_k=1
-    )
-    
-    assert len(results) == 1
-    assert results[0].similarity > 0.99
-
-def test_cross_silo_search():
-    """Test retrieval across multiple silos"""
-    # ... implementation
+**Full Suite** (10-15 minutes):
+```bash
+# Windows PowerShell
+mamba info --envs; python --version; mamba activate agent-hackathon;
+if (-not (Test-Path 'C:\Homework\agent_hackathon\pokemon-md-agent\pyproject.toml')) { Write-Error 'Not at repo root'; exit 2 }
+Set-Location -Path 'C:\Homework\agent_hackathon\pokemon-md-agent';
+$env:PYTHONPATH='C:\Homework\agent_hackathon\pokemon-md-agent\src';
+python -m pytest -q
 ```
 
-### Integration Test Template
-
-```python
-# tests/test_mgba_connection.py
-import pytest
-from src.environment.mgba_controller import MGBAController
-
-def test_mgba_http_connection():
-    """Verify mgba-http is running and responsive"""
-    controller = MGBAController(port=8888)
-    
-    try:
-        screenshot = controller.get_screenshot()
-        assert screenshot.shape == (640, 960, 3)  # Height x Width x Channels
-    except ConnectionError as e:
-        pytest.skip(f"mgba-http not running: {e}")
-
-def test_button_press():
-    """Test sending button commands"""
-    controller = MGBAController(port=8888)
-    
-    # Press A button
-    controller.press("A")
-    
-    # Verify game state changed (basic check)
-    screenshot_before = controller.get_screenshot()
-    controller.press("RIGHT")
-    screenshot_after = controller.get_screenshot()
-    
-    # Pixels should differ
-    assert not (screenshot_before == screenshot_after).all()
+**CI Validation**:
+```bash
+# Windows PowerShell
+& ".\test_fast.ps1"
 ```
+
+### Profiling & Benchmarking
+
+**Bench Sweep** (5-10 minutes):
+```bash
+# Windows PowerShell
+mamba info --envs; python --version; mamba activate agent-hackathon;
+Set-Location -Path 'C:\Homework\agent_hackathon\pokemon-md-agent';
+$env:PYTHONPATH='C:\Homework\agent_hackathon\pokemon-md-agent\src';
+python profiling/bench_qwen_vl.py --models all --time-budget-s 180 --full --plot
+```
+
+**Sync Profiling Data**:
+```bash
+# Windows PowerShell
+mamba info --envs; python --version; mamba activate agent-hackathon;
+Set-Location -Path 'C:\Homework\agent_hackathon\pokemon-md-agent';
+Copy-Item "..\profiling\*" ".\profiling\" -Recurse -Force -Exclude "__pycache__"
+```
+
+### Test Markers
+
+- `@pytest.mark.slow`: Long-running tests
+- `@pytest.mark.network`: Network-dependent tests  
+- `@pytest.mark.bench`: Performance benchmarks
+- `@pytest.mark.longctx`: Long context tests
+- `@pytest.mark.real_model`: Real model inference tests
+
+### Outputs
+
+- Test results: Console output with session summary and top slow tests
+- Bench results: `profiling/results/<UTC_ISO>/` (CSV, JSONL, plots)
+- Profiling data: Consolidated in `profiling/` directory
+
+### Benchmark Flags
+
+The benchmark harness supports the following flags:
+
+- `--time-budget-s`: Time budget for benchmark runs (default: 30)
+- `--full`: Run full benchmark suite including heavy sweeps
+- `--plot`: Create visualization plots during benchmarking
+- `--contexts`: Context lengths to test (default: '4096,8192,16384')
+- `--batches`: Batch sizes to test (default: '1,2,4')
+- `--image-text-ratios`: Image to text ratios to test (default: '0.1,0.25,0.5,0.75')
+- `--reasoning-budgets`: Reasoning budgets to test (optional: 'low,med,high')
 
 ---
+
+## 🧪 Test Organization Structure
+
+### Test Categories and Markers
+
+The test suite is organized with the following markers for selective execution:
+
+- **`slow`**: Tests that take significant time (>30 seconds)
+  - Model loading and inference tests
+  - Heavy parametrization tests
+  - Integration tests with real model calls
+
+- **`network`**: Tests requiring external network access
+  - mGBA emulator connection tests
+  - You.com Content API tests
+  - HuggingFace model download tests
+
+- **`bench`**: Performance benchmarking tests
+  - Qwen3-VL model throughput tests
+  - Memory usage profiling
+  - Latency measurements
+
+- **`longctx`**: Tests with long context windows (≥64k tokens)
+  - Multi-turn conversation tests
+  - Large document processing
+  - Extended trajectory analysis
+
+### Test File Organization
+
+```
+tests/
+├── conftest.py              # Pytest configuration and fixtures
+├── test_game_state_schema.py # GameState schema validation
+├── test_vision_prompts.py   # Vision system prompts
+├── test_message_packager.py # Message packaging
+├── test_mgba_connection.py  # Emulator integration
+├── test_qwen_controller.py  # Model controller
+├── test_model_router.py     # Model routing logic
+├── test_embedding_extractor.py # Embedding extraction
+├── test_temporal_silo.py    # Temporal resolution
+├── test_retrieval_system.py # RAG system
+└── test_dashboard.py        # Dashboard integration
+```
+
+### Adding New Test Categories
+
+To add a new test marker:
+
+1. **Update pyproject.toml**:
+   ```toml
+   [tool.pytest.ini_options]
+   markers = [
+       "new_category: description of when to use this marker",
+       # ... existing markers
+   ]
+   ```
+
+2. **Update conftest.py** (if needed):
+   ```python
+   def pytest_configure(config):
+       config.addinivalue_line(
+           "markers",
+           "new_category: description of when to use this marker"
+       )
+   ```
+
+3. **Apply marker to tests**:
+   ```python
+   @pytest.mark.new_category
+   def test_example():
+       pass
+   ```
+
+4. **Update test scripts** if needed:
+   - Modify `scripts/test_fast.ps1` to exclude/include the new marker
+   - Update `scripts/test_full.ps1` to include the new marker
+
+### Test Fixtures
+
+Common fixtures available in `conftest.py`:
+
+- `project_root`: Path to project root
+- `config_dir`: Path to config directory
+- `mgba_controller`: MGBA controller instance
+- `connected_mgba_controller`: Connected MGBA controller
+- `video_config_1x/2x/4x`: Video configuration fixtures
+- `temp_cache_dir`: Temporary cache directory
+
+### Test Execution Guidelines
+
+**Fast Lane** (≤3 minutes):
+- Excludes: slow, network, bench, longctx
+- Purpose: Quick validation during development
+- Command: `pytest -m "not slow and not network and not bench and not longctx"`
+
+**Full Suite** (10-15 minutes):
+- Includes: All tests
+- Purpose: Complete validation before commits
+- Command: `pytest`
+
+**CI Lane** (≤3 minutes):
+- Same as fast lane
+- Purpose: Automated validation in CI/CD
+- Command: `pytest --tb=short --maxfail=3`
+
+### Marker Usage Guidelines
+
+- **Use `slow`** for tests that take >30 seconds or require heavy resources
+- **Use `network`** for any test that makes HTTP requests or connects to external services
+- **Use `bench`** for performance measurement tests that generate metrics
+- **Use `longctx`** for tests that process large amounts of text or long sequences
+
+### Example Test Structure
+
+```python
+import pytest
+from pathlib import Path
+
+@pytest.mark.slow
+def test_model_inference_performance():
+    """Test that model inference meets performance requirements."""
+    # Implementation
+
+@pytest.mark.network
+def test_mgba_connection():
+    """Test connection to mGBA emulator."""
+    # Implementation
+
+@pytest.mark.bench
+def test_embedding_extraction_speed():
+    """Benchmark embedding extraction performance."""
+    # Implementation
+
+@pytest.mark.longctx
+def test_large_trajectory_processing():
+    """Test processing of long game trajectories."""
+    # Implementation
+```---
 
 ## 📝 Code Style
 

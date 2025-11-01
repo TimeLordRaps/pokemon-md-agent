@@ -1,5 +1,9 @@
 """Main entry point for Pokemon MD autonomous agent."""
 
+# Initialize logging before any other imports
+from .utils.logging_setup import setup_logging
+setup_logging()
+
 import asyncio
 import logging
 import sys
@@ -202,8 +206,6 @@ def test_imports():
 
 def run_demo():
     """Run the demo version."""
-    logging.basicConfig(level=logging.INFO)
-
     print("Pokemon MD Autonomous Agent - Demo Mode")
     print("=" * 50)
 
@@ -234,8 +236,6 @@ def run_demo():
 
 def main():
     """Main entry point."""
-    logging.basicConfig(level=logging.INFO)
-
     print("Pokemon MD Autonomous Agent - Main Entry Point")
     print("=" * 50)
 

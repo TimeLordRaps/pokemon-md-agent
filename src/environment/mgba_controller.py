@@ -3,7 +3,6 @@
 from typing import Optional, Dict, List, Any
 from dataclasses import dataclass
 from dataclasses import field
-import logging
 import socket
 import time
 import threading
@@ -16,10 +15,19 @@ import random
 from PIL import Image
 import numpy as np
 
+# Import logging setup with relative import
+try:
+    from ..utils.logging_setup import get_logger
+except ImportError:
+    # Final fallback
+    import logging
+    def get_logger(name: str) -> logging.Logger:
+        return logging.getLogger(name)
+
 from .config import VideoConfig
 from .fps_adjuster import FPSAdjuster
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -1757,11 +1765,15 @@ def main():
 
     args = parser.parse_args()
 
-    # Setup logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
+    # Setup logging via our standard logger
+    try:
+        from ..utils.logging_setup import setup_logging
+    except ImportError:
+        # Final fallback - use basic logging
+        import logging
+        def setup_logging():
+            logging.basicConfig(level=logging.INFO)
+    setup_logging()
 
     controller = MGBAController(
         host=args.host,

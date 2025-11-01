@@ -417,10 +417,10 @@ class AsyncScreenshotCapture:
             return img
     
     def _create_meta_view(self, floor: int, dungeon_id: int, room_kind: str,
-                         player_pos: tuple[int, int], entities_count: int, 
+                         player_pos: tuple[int, int], entities_count: int,
                          items_count: int) -> Optional[Image.Image]:
         """Create metadata view.
-        
+
         Args:
             floor: Current floor
             dungeon_id: Dungeon ID
@@ -428,15 +428,15 @@ class AsyncScreenshotCapture:
             player_pos: Player position
             entities_count: Entity count
             items_count: Item count
-            
+
         Returns:
             Meta view image
         """
         img = Image.new('RGB', (160, 144), color='navy')
         draw = ImageDraw.Draw(img)
-        
+
         # Draw metadata
-        text = ".2f"".2f"f"""META VIEW
+        text = f"""META VIEW
 Floor: {floor}
 Dungeon: {dungeon_id}
 Room: {room_kind}
@@ -444,7 +444,7 @@ Player: ({player_pos[0]}, {player_pos[1]})
 Entities: {entities_count}
 Items: {items_count}
 Time: {time.strftime('%H:%M:%S')}"""
-        
+
         draw.text((5, 5), text, fill='white', font=self.font)
         return img
     

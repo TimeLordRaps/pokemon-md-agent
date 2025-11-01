@@ -15,6 +15,7 @@ from collections import OrderedDict
 
 from .inference_queue import InferenceQueue
 from .timebudgets import TOKENIZE_BUDGET_S, FORWARD_BUDGET_S, DECODE_BUDGET_S
+from .caches import PromptCache, VisionCache, PromptKVCache
 
 logger = logging.getLogger(__name__)
 
@@ -161,9 +162,9 @@ class ModelRouter:
         self.two_stage_pipeline = TwoStagePipeline(self)
 
         # Wire in caches (will be populated later)
-        self.prompt_cache = None
-        self.vision_cache = None
-        self.prompt_kv_cache = None
+        self.prompt_cache: Optional[PromptCache] = None
+        self.vision_cache: Optional[VisionCache] = None
+        self.prompt_kv_cache: Optional[PromptKVCache] = None
 
         # Pipeline integration
         self.pipeline_engine = None  # Will be set by qwen_controller
@@ -822,15 +823,15 @@ class TwoStagePipeline:
             return
 
         try:
-            from .qwen_controller import PromptCache, VisionCache, PromptKVCache  # noqa: WPS433
+            from .qwen_controller import PromptCache as QwenPromptCache, VisionCache as QwenVisionCache, PromptKVCache as QwenPromptKVCache  # noqa: WPS433
             cache_dir = Path(self.model_router.hf_home)
             cache_dir.mkdir(parents=True, exist_ok=True)
             if self.model_router.prompt_cache is None:
-                self.model_router.prompt_cache = PromptCache(cache_dir / "pmd_prompt_cache")
+                self.model_router.prompt_cache = QwenPromptCache(cache_dir / "pmd_prompt_cache")
             if self.model_router.vision_cache is None:
-                self.model_router.vision_cache = VisionCache()
+                self.model_router.vision_cache = QwenVisionCache()
             if self.model_router.prompt_kv_cache is None:
-                self.model_router.prompt_kv_cache = PromptKVCache(cache_dir, max_ram_entries=5)
+                self.model_router.prompt_kv_cache = QwenPromptKVCache(cache_dir, max_ram_entries=5)
             logger.info("Initialized router caches using qwen_controller implementations")
             return
         except Exception as exc:  # pragma: no cover - fallback is simple in-memory

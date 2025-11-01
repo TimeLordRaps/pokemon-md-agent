@@ -15,9 +15,6 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from PIL import Image
 
-# Add parent directory to path for imports
-sys.path.append(str(Path(__file__).parent.parent))
-
 from ..sprite_detector import DetectionResult
 from ..sprite_phash import compute_phash
 

@@ -1,3 +1,5 @@
+Write-Host "Running: mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls; # Sync profiling directories - consolidate root profiling into pokemon-md-agent/profiling"
+
 # Sync profiling directories - consolidate root profiling into pokemon-md-agent/profiling
 mamba info --envs; python --version; mamba activate agent-hackathon; pwd; ls;
 

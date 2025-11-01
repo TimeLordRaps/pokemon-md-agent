@@ -10,6 +10,7 @@ from src.agent.memory_manager import MemoryManager
 
 
 @pytest.mark.real_model
+@pytest.mark.network
 @pytest.mark.skipif(not os.environ.get('HF_HOME'), reason="HF_HOME not set")
 class TestRealModelLoading:
     """Test real model loading with sanitized HF_HOME paths."""

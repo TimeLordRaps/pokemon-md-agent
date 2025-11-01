@@ -231,7 +231,7 @@ class TestPipelineBatching:
         engine = PipelineEngine()
         engine.prefill_queue.append(PipelineRequest("req1", "prompt1"))
 
-        batch = engine._assemble_batch(PipelineStage.PREFILL)
+        batch = engine._assemble_batch(PipelineStage.PREFILL, force_flush=True)
         assert batch is not None
         assert batch.size == 1
         assert len(engine.prefill_queue) == 0
@@ -272,7 +272,7 @@ class TestPipelineBatching:
 
         # Add a request and make it old
         old_request = PipelineRequest("old_req", "old_prompt")
-        old_request.created_at = time.time() - 1  # 1 second ago (less than threshold)
+        old_request.created_at = time.time() - 0.05  # 50ms ago (less than 100ms threshold)
         engine.prefill_queue.append(old_request)
 
         # Should not trigger starvation yet
@@ -280,7 +280,7 @@ class TestPipelineBatching:
         assert len(engine.prefill_queue) == 1
 
         # Make it old enough
-        old_request.created_at = time.time() - 2  # 2 seconds ago (> 100ms threshold)
+        old_request.created_at = time.time() - 0.2  # 200ms ago (> 100ms threshold)
         await engine._check_starvation()
 
         # Should have triggered forced flush
@@ -308,6 +308,9 @@ class TestPipelineCallbacks:
 
         await engine._flush_batch(batch)
 
+        # Wait a bit for async task to complete
+        await asyncio.sleep(0.01)
+
         # Callback should have been called
         prefill_callback.assert_called_once_with(batch)
 
@@ -325,8 +328,11 @@ class TestPipelineCallbacks:
         await engine.submit_request(request)
 
         # Manually trigger batch processing
-        batch = engine._assemble_batch(PipelineStage.PREFILL)
+        batch = engine._assemble_batch(PipelineStage.PREFILL, force_flush=True)
         await engine._flush_batch(batch)
+
+        # Wait for async batch processing to complete
+        await asyncio.sleep(0.01)
 
         # Request should be completed
         completed = await engine.get_completed_request("test_req")
@@ -347,8 +353,11 @@ class TestPipelineCallbacks:
         await engine.submit_request(request)
 
         # Manually trigger batch processing
-        batch = engine._assemble_batch(PipelineStage.PREFILL)
+        batch = engine._assemble_batch(PipelineStage.PREFILL, force_flush=True)
         await engine._flush_batch(batch)
+
+        # Wait for async batch processing to complete (even though it fails)
+        await asyncio.sleep(0.01)
 
         # Request should be back in queue (after failure)
         assert len(engine.prefill_queue) == 1
@@ -379,7 +388,7 @@ class TestTickLoop:
     @pytest.mark.asyncio
     async def test_tick_with_callbacks(self):
         """Test tick processing with callbacks set."""
-        engine = PipelineEngine(tick_interval_ms=10)
+        engine = PipelineEngine(max_batch_size=2, tick_interval_ms=10)  # Smaller batch size to trigger with 2 requests
 
         # Set mock callback
         callback = AsyncMock()
@@ -391,7 +400,7 @@ class TestTickLoop:
 
         # Start briefly
         await engine.start()
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.1)  # Increased wait time for async task to complete
         await engine.stop()
 
         # Callback should have been called

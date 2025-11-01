@@ -126,6 +126,7 @@ class TestMGBAControllerFrameCaptureIntegration:
         assert controller.current_frame_data.shape[2] == 3  # RGB channels
 
     @pytest.mark.timeout(5)
+    @pytest.mark.network
     def test_current_frame_returns_valid_number(self, connected_mgba_controller):
         """Test that current_frame() returns a valid frame number from emulator."""
         controller = connected_mgba_controller

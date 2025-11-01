@@ -122,6 +122,11 @@ class PipelineEngine:
                 await self.tick_task
             except asyncio.CancelledError:
                 pass
+        
+        # Wait for any pending batch processing tasks to complete
+        # In a real implementation, you'd track these tasks
+        await asyncio.sleep(0.01)  # Small delay to let async tasks complete
+        
         logger.info("Pipeline engine stopped")
 
     def set_prefill_callback(self, callback: Callable[[Batch], Any]) -> None:

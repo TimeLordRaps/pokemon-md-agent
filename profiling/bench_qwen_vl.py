@@ -569,7 +569,7 @@ class ComprehensiveQwenVLBenchmark:
         dry_run: bool = False,
         max_ctx: int = 262144,
         time_budget_s: int = 30,
-        create_plots: bool = False,
+        plot: bool = False,
     ) -> None:
         """Run comprehensive benchmarks across all configurations."""
         all_results = []
@@ -601,9 +601,10 @@ class ComprehensiveQwenVLBenchmark:
 
         # Save results
         self.save_csv(all_results, "comprehensive_benchmark_results.csv")
+        self.save_jsonl(all_results, "comprehensive_benchmark_results.jsonl")
 
         # Create visualizations only if requested
-        if create_plots:
+        if plot:
             self.create_visualizations(all_results)
 
         logger.info(f"Comprehensive benchmark complete. Results in {self.output_dir}")
@@ -620,6 +621,19 @@ class ComprehensiveQwenVLBenchmark:
             writer.writerows(results)
 
         logger.info(f"CSV written to {csv_path}")
+
+    def save_jsonl(self, results: List[Dict[str, Any]], filename: str) -> None:
+        """Save results to JSONL."""
+        if not results:
+            return
+
+        jsonl_path = self.data_dir / filename
+        with open(jsonl_path, 'w', encoding='utf-8') as f:
+            for result in results:
+                json.dump(result, f, ensure_ascii=False)
+                f.write('\n')
+
+        logger.info(f"JSONL written to {jsonl_path}")
 
     def create_visualizations(self, results: List[Dict[str, Any]]) -> None:
         """Create comprehensive visualizations."""
@@ -1122,15 +1136,15 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--contexts",
         type=str,
-        default="1024,2048,4096,8192,16384,32768,65536",
-        help="Context lengths to test (comma-separated, default: '1024,2048,4096,8192,16384,32768,65536')"
+        default="4096,8192,16384",
+        help="Context lengths to test (comma-separated, default: '4096,8192,16384')"
     )
 
     parser.add_argument(
         "--batches",
         type=str,
-        default="1,2,4,8",
-        help="Batch sizes to test (comma-separated, default: '1,2,4,8')"
+        default="1,2,4",
+        help="Batch sizes to test (comma-separated, default: '1,2,4')"
     )
 
     parser.add_argument(
@@ -1159,14 +1173,15 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--image-text-ratios",
         type=str,
-        default="0,1,2",
-        help="Image to text ratios to test (comma-separated counts, default: '0,1,2')"
+        default="0.1,0.25,0.5,0.75",
+        help="Image to text ratios to test (comma-separated floats, default: '0.1,0.25,0.5,0.75')"
     )
 
     parser.add_argument(
-        "--csv",
-        type=Path,
-        help="Output CSV path (required for benchmarking)"
+        "--reasoning-budgets",
+        type=str,
+        default=None,
+        help="Reasoning budgets to test (comma-separated: low,med,high). Maps to internal chain params if available, else noop."
     )
 
     parser.add_argument(
@@ -1208,7 +1223,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--create-plots",
+        "--plot",
         action="store_true",
         help="Create visualization plots during benchmarking (slower)"
     )
@@ -1354,7 +1369,7 @@ def main():
 
     asyncio.run(benchmark.run_comprehensive_benchmarks(
         models, tasks, args.max_new_tokens, args.num_runs, args.dry_run,
-        max_ctx=max_ctx, time_budget_s=time_budget_s, create_plots=args.create_plots
+        max_ctx=max_ctx, time_budget_s=time_budget_s, plot=args.plot
     ))
 
 

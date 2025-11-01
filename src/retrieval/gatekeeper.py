@@ -3,7 +3,6 @@
 from typing import Dict, Any, Optional, List, TYPE_CHECKING
 from dataclasses import dataclass, field
 from enum import Enum
-import logging
 import time
 import hashlib
 import shutil
@@ -12,7 +11,14 @@ import os
 if TYPE_CHECKING:
     from ..dashboard.content_api import ContentAPI
 
-logger = logging.getLogger(__name__)
+try:
+    from ...utils.logging_setup import get_logger
+except ImportError:
+    import logging
+    def get_logger(name: str):
+        return logging.getLogger(name)
+
+logger = get_logger(__name__)
 
 
 class GatekeeperStatus(Enum):

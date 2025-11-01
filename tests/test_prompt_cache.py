@@ -50,21 +50,31 @@ class TestPromptCache:
 
         assert cache.max_entries_per_model == 5
         assert not cache.enable_disk
-        assert cache.cache_dir.name == "pmd_prompt_cache"
+        assert cache.cache_dir.name == "prompt_cache"
         assert len(cache.model_caches) == 0
 
     def test_cache_initialization_custom(self):
         """Test cache initialization with custom settings."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            cache = PromptCache(
-                max_entries_per_model=3,
-                enable_disk=True,
-                cache_dir=Path(temp_dir)
-            )
+            # Mock environment variable to avoid interference
+            import os
+            original_env = os.environ.get("PROMPT_CACHE_DIR")
+            try:
+                os.environ.pop("PROMPT_CACHE_DIR", None)  # Remove if exists
+                
+                cache = PromptCache(
+                    max_entries_per_model=3,
+                    enable_disk=True,
+                    cache_dir=Path(temp_dir)
+                )
 
-            assert cache.max_entries_per_model == 3
-            assert cache.enable_disk
-            assert cache.cache_dir == Path(temp_dir)
+                assert cache.max_entries_per_model == 3
+                assert cache.enable_disk
+                assert cache.cache_dir == Path(temp_dir)
+            finally:
+                # Restore original environment
+                if original_env is not None:
+                    os.environ["PROMPT_CACHE_DIR"] = original_env
 
     def test_key_generation(self):
         """Test cache key generation."""
@@ -241,18 +251,27 @@ class TestPromptCacheDisk:
 
     def test_disk_directory_creation(self):
         """Test that cache directories are created."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            cache_dir = Path(temp_dir) / "test_cache"
-            cache = PromptCache(enable_disk=True, cache_dir=cache_dir)
+        import os
+        original_env = os.environ.get("PROMPT_CACHE_DIR")
+        try:
+            os.environ.pop("PROMPT_CACHE_DIR", None)  # Remove if exists
+            
+            with tempfile.TemporaryDirectory() as temp_dir:
+                cache_dir = Path(temp_dir) / "test_cache"
+                cache = PromptCache(enable_disk=True, cache_dir=cache_dir)
 
-            # Cache directory should exist
-            assert cache_dir.exists()
-            
-            # Put an entry to trigger directory creation
-            cache.put("test_model", "test prompt", "tokenized_data")
-            
-            # Now the model directory should exist
-            assert (cache_dir / "test_model").exists()
+                # Cache directory should exist
+                assert cache_dir.exists()
+                
+                # Put an entry to trigger directory creation
+                cache.put("test_model", "test prompt", "tokenized_data")
+                
+                # Now the model directory should exist
+                assert (cache_dir / "test_model").exists()
+        finally:
+            # Restore original environment
+            if original_env is not None:
+                os.environ["PROMPT_CACHE_DIR"] = original_env
 
     def test_preload_from_disk(self):
         """Test preloading cache from disk."""

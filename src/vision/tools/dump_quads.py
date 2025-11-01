@@ -15,9 +15,6 @@ from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 import time
 
-# Add parent directory to path for imports
-sys.path.append(str(Path(__file__).parent.parent))
-
 try:
     from PIL import Image, ImageDraw, ImageFont
     HAS_PIL = True

@@ -250,39 +250,13 @@ class SaveStateCheckpointPrimitive(PrimitiveBase):
 
 class LoadStateCheckpointPrimitive(PrimitiveBase):
     """Load a previously saved game state from a save slot.
-    
+
     Restores the dungeon to a known-good state, useful for recovery
     or trying alternative strategies after failed attempts.
     """
 
     primitive: Literal["load_checkpoint"] = "load_checkpoint"
     slot: int = Field(..., ge=0, le=15)
-
-
-class InferenceCheckpointPrimitive(PrimitiveBase):
-    """Pause skill execution and query the model for next steps.
-    
-    Enables mid-skill decision points where the LM can:
-    - Observe current game state (screenshot + semantic state)
-    - Decide whether to continue, abort, or change direction
-    - Return additional primitive steps to execute next
-    
-    This is critical for adaptive agent behavior and recovery from
-    unexpected situations that the skill didn't anticipate.
-    """
-
-    primitive: Literal["inference_checkpoint"] = "inference_checkpoint"
-    label: str = Field(..., min_length=1, max_length=64)
-    context: str = Field(
-        ..., 
-        min_length=1,
-        max_length=500,
-        description="Context about what the skill is trying to accomplish and why this checkpoint exists"
-    )
-    timeout_seconds: int = Field(
-        default=30, ge=5, le=300,
-        description="Max time to wait for model response"
-    )
 
 
 Primitive = Union[
@@ -303,12 +277,7 @@ Primitive = Union[
     SaveStateCheckpointPrimitive,
     LoadStateCheckpointPrimitive,
     InferenceCheckpointPrimitive,
-]    CheckpointPrimitive,
-    ResumePrimitive,
-    SaveStateCheckpointPrimitive,
-    LoadStateCheckpointPrimitive,
-    InferenceCheckpointPrimitive,
-]]
+]
 
 
 # ---------------------------------------------------------------------------

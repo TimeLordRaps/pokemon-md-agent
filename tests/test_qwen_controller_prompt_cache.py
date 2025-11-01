@@ -64,8 +64,8 @@ class TestQwenControllerCaches:
         assert result2 is mock_encoded
 
         # Verify telemetry
-        assert controller.vision_cache.hits == 1
-        assert controller.vision_cache.misses == 1
+        assert controller.vision_cache.telemetry.hits == 1
+        assert controller.vision_cache.telemetry.misses == 1
 
     def test_vision_cache_lru_eviction(self, controller):
         """Test LRU eviction in vision cache."""
@@ -102,8 +102,8 @@ class TestQwenControllerCaches:
         assert result2 is mock_kv
 
         # Verify telemetry
-        assert controller.prompt_kv_cache.hits == 1
-        assert controller.prompt_kv_cache.misses == 1
+        assert controller.prompt_kv_cache.telemetry.hits == 1
+        assert controller.prompt_kv_cache.telemetry.misses == 1
 
     def test_prompt_kv_cache_disk_spill(self, controller):
         """Test disk spill when RAM cache exceeds limit."""
@@ -111,12 +111,12 @@ class TestQwenControllerCaches:
 
         # Fill RAM cache
         cache_key1 = "key1"
-        mock_kv1 = Mock()
+        mock_kv1 = {"kv_data": "test_data_1", "shape": (1, 2, 3)}  # Serializable object
         controller.prompt_kv_cache.cache_kv_state(cache_key1, mock_kv1)
 
         # Add another - should spill to disk
         cache_key2 = "key2"
-        mock_kv2 = Mock()
+        mock_kv2 = {"kv_data": "test_data_2", "shape": (4, 5, 6)}  # Serializable object
         controller.prompt_kv_cache.cache_kv_state(cache_key2, mock_kv2)
 
         # RAM should have only latest
@@ -125,18 +125,18 @@ class TestQwenControllerCaches:
 
         # But should be retrievable from disk
         retrieved = controller.prompt_kv_cache.get_kv_state(cache_key1)
-        assert retrieved is mock_kv1
+        assert retrieved == mock_kv1
 
     @patch('time.time')
     def test_cache_latency_tracking(self, mock_time, controller, sample_prompt, model_name):
         """Test latency delta tracking for cache operations."""
-        mock_time.side_effect = [0.0, 0.1, 0.2, 0.25]  # 100ms miss, 50ms hit
+        mock_time.side_effect = [0.0, 0.1, 0.2, 0.25, 0.3, 0.35]  # Provide enough values for all calls
 
         prompt_sha = hashlib.sha256(sample_prompt.encode()).hexdigest()[:16]
         image_sha = hashlib.sha256(b"image").hexdigest()
         cache_key = f"{model_name}|{prompt_sha}|{image_sha}"
 
-        mock_kv = Mock()
+        mock_kv = {"kv_data": "test_data", "shape": (1, 2, 3)}  # Use serializable object
 
         # Miss
         controller.prompt_kv_cache.get_kv_state(cache_key)
@@ -146,12 +146,13 @@ class TestQwenControllerCaches:
         controller.prompt_kv_cache.get_kv_state(cache_key)
 
         # Check latency tracking
-        assert len(controller.prompt_kv_cache.latency_deltas) == 2
-        assert controller.prompt_kv_cache.latency_deltas[0] > 0  # miss latency
-        assert controller.prompt_kv_cache.latency_deltas[1] > 0  # hit latency
+        assert len(controller.prompt_kv_cache.telemetry.latency_deltas) == 2
+        assert controller.prompt_kv_cache.telemetry.latency_deltas[0] > 0  # miss latency
+        assert controller.prompt_kv_cache.telemetry.latency_deltas[1] > 0  # hit latency
 
     @patch('src.agent.qwen_controller.torch')
-    def test_generate_with_caches(self, mock_torch, controller, sample_prompt, sample_image_bytes):
+    @pytest.mark.asyncio
+    async def test_generate_with_caches(self, mock_torch, controller, sample_prompt, sample_image_bytes):
         """Test full generate path with caches and StaticCache fallback."""
         controller.enable_kv_cache_serialization = True
 
@@ -167,7 +168,7 @@ class TestQwenControllerCaches:
 
             # Mock generation
             with patch.object(controller, '_single_generate', return_value="test response") as mock_single:
-                result = controller.generate_async(
+                result, scores = await controller.generate_async(
                     prompt=sample_prompt,
                     images=[sample_image_bytes],
                     model_size=ModelSize.SIZE_2B
@@ -203,14 +204,14 @@ class TestQwenControllerCaches:
 
     def test_telemetry_reset(self, controller):
         """Test telemetry reset functionality."""
-        controller.vision_cache.hits = 5
-        controller.vision_cache.misses = 3
-        controller.prompt_kv_cache.hits = 2
-        controller.prompt_kv_cache.misses = 4
+        controller.vision_cache.telemetry.hits = 5
+        controller.vision_cache.telemetry.misses = 3
+        controller.prompt_kv_cache.telemetry.hits = 2
+        controller.prompt_kv_cache.telemetry.misses = 4
 
         controller.reset_cache_telemetry()
 
-        assert controller.vision_cache.hits == 0
-        assert controller.vision_cache.misses == 0
-        assert controller.prompt_kv_cache.hits == 0
-        assert controller.prompt_kv_cache.misses == 0
+        assert controller.vision_cache.telemetry.hits == 0
+        assert controller.vision_cache.telemetry.misses == 0
+        assert controller.prompt_kv_cache.telemetry.hits == 0
+        assert controller.prompt_kv_cache.telemetry.misses == 0

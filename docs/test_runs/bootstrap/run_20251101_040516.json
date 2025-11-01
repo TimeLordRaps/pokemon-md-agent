@@ -1,0 +1,1148 @@
+{
+  "run_id": "run_20251101_040516",
+  "timestamp": "2025-11-01T04:05:22.356645",
+  "learned_skills": [
+    {
+      "name": "trajectory_run_20251101_040438",
+      "description": "Discovered trajectory from run_20251101_040438",
+      "steps": [
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 1/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 2/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 3/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 4/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 5/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 6/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 7/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 8/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 9/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 10/10"
+        }
+      ],
+      "precondition": null,
+      "postcondition": null,
+      "success_rate": 0.0,
+      "times_used": 0,
+      "created_at": "2025-11-01T04:04:40.217716",
+      "last_used_at": null,
+      "tags": [
+        "discovered",
+        "live_run"
+      ]
+    },
+    {
+      "name": "trajectory_run_20251101_040441",
+      "description": "Discovered trajectory from run_20251101_040441",
+      "steps": [
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 1/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 2/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 3/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 4/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 5/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 6/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 7/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 8/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 9/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 10/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 11/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 12/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 13/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 14/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 15/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 16/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 17/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 18/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 19/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 20/20"
+        }
+      ],
+      "precondition": null,
+      "postcondition": null,
+      "success_rate": 0.0,
+      "times_used": 0,
+      "created_at": "2025-11-01T04:04:44.964897",
+      "last_used_at": null,
+      "tags": [
+        "discovered",
+        "live_run"
+      ]
+    },
+    {
+      "name": "trajectory_run_20251101_040445",
+      "description": "Discovered trajectory from run_20251101_040445",
+      "steps": [
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 1/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 2/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 3/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 4/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 5/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 6/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 7/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 8/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 9/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 10/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 11/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 12/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 13/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 14/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 15/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 16/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 17/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 18/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 19/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 20/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 21/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 22/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 23/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 24/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 25/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 26/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 27/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 28/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 29/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 30/30"
+        }
+      ],
+      "precondition": null,
+      "postcondition": null,
+      "success_rate": 0.0,
+      "times_used": 0,
+      "created_at": "2025-11-01T04:04:51.580635",
+      "last_used_at": null,
+      "tags": [
+        "discovered",
+        "live_run"
+      ]
+    },
+    {
+      "name": "trajectory_run_20251101_040452",
+      "description": "Discovered trajectory from run_20251101_040452",
+      "steps": [
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 1/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 2/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 3/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 4/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 5/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 6/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 7/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 8/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 9/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 10/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 11/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 12/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 13/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 14/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 15/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 16/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 17/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 18/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 19/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 20/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 21/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 22/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 23/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 24/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 25/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 26/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 27/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 28/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 29/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 30/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 31/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 32/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 33/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 34/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 35/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 36/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 37/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 38/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 39/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 40/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 41/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 42/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 43/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 44/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 45/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 46/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 47/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 48/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 49/50"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 50/50"
+        }
+      ],
+      "precondition": null,
+      "postcondition": null,
+      "success_rate": 0.0,
+      "times_used": 0,
+      "created_at": "2025-11-01T04:05:01.934029",
+      "last_used_at": null,
+      "tags": [
+        "discovered",
+        "live_run"
+      ]
+    },
+    {
+      "name": "trajectory_run_20251101_040509",
+      "description": "Discovered trajectory from run_20251101_040509",
+      "steps": [
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 1/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 2/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 3/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 4/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 5/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 6/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 7/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 8/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 9/10"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 10/10"
+        }
+      ],
+      "precondition": null,
+      "postcondition": null,
+      "success_rate": 0.0,
+      "times_used": 0,
+      "created_at": "2025-11-01T04:05:10.997047",
+      "last_used_at": null,
+      "tags": [
+        "discovered",
+        "live_run"
+      ]
+    },
+    {
+      "name": "trajectory_run_20251101_040512",
+      "description": "Discovered trajectory from run_20251101_040512",
+      "steps": [
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 1/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 2/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 3/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 4/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 5/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 6/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 7/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 8/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 9/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 10/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 11/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 12/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 13/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 14/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 15/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 16/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 17/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 18/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 19/20"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 20/20"
+        }
+      ],
+      "precondition": null,
+      "postcondition": null,
+      "success_rate": 0.0,
+      "times_used": 0,
+      "created_at": "2025-11-01T04:05:15.732631",
+      "last_used_at": null,
+      "tags": [
+        "discovered",
+        "live_run"
+      ]
+    },
+    {
+      "name": "trajectory_run_20251101_040516",
+      "description": "Discovered trajectory from run_20251101_040516",
+      "steps": [
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 1/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 2/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 3/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 4/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 5/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 6/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 7/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 8/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 9/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 10/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 11/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 12/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 13/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 14/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 15/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 16/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 17/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 18/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 19/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 20/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 21/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 22/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 23/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 24/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 25/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 26/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 27/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 28/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 29/30"
+        },
+        {
+          "action": "move_down",
+          "confidence": 0.8,
+          "observation": null,
+          "reasoning": "Step 30/30"
+        }
+      ],
+      "precondition": null,
+      "postcondition": null,
+      "success_rate": 0.0,
+      "times_used": 0,
+      "created_at": "2025-11-01T04:05:22.355143",
+      "last_used_at": null,
+      "tags": [
+        "discovered",
+        "live_run"
+      ]
+    }
+  ],
+  "memory_buffer": {},
+  "trajectory_embeddings": {},
+  "last_known_position": null,
+  "last_known_hp": null,
+  "dungeon_level": null,
+  "is_bootstrap": false,
+  "parent_run_id": null,
+  "total_steps": 30,
+  "success_rate": 0.0,
+  "skills_discovered": 1
+}

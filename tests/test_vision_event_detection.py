@@ -32,6 +32,7 @@ def test_detect_vision_events_basic():
 
 
 @pytest.mark.real_model
+@pytest.mark.network
 def test_detect_vision_events_with_qwen_vl():
     """Test vision event detection with real Qwen-VL model."""
     # Skip if real models not enabled

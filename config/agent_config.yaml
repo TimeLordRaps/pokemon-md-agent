@@ -1,0 +1,273 @@
+# Agent runtime configuration for Pokémon Mystery Dungeon Red Rescue Team agent
+# Consolidates runtime parameters for FPS, model routing, memory management, and retrieval settings
+# All paths are relative and Windows-compatible
+
+# FPS adjustment settings
+fps_settings:
+  # Target FPS for agent operation (game runs at 59.73 FPS)
+  target_fps: 30.0
+
+  # FPS multipliers for different game states
+  fps_multipliers:
+    # Combat scenes require higher FPS for real-time decision making
+    combat: 1.5
+    # Menu screens can run slower to conserve resources
+    menu: 0.5
+    # Exploration uses baseline FPS
+    exploration: 1.0
+
+  # FPS adjustment thresholds (percentage of target FPS)
+  fps_thresholds:
+    # Drop below this threshold triggers performance optimization
+    low_threshold: 0.8
+    # Exceed this threshold allows resource-intensive features
+    high_threshold: 1.2
+
+# Model routing parameters
+model_routing:
+  # Time budgets for different processing stages (seconds)
+  time_budgets:
+    # Total time allowed per agent loop iteration
+    total_loop: 0.1
+    # Vision processing budget
+    vision_processing: 0.03
+    # Retrieval and RAG processing budget
+    retrieval_processing: 0.04
+    # Model inference budget
+    inference: 0.02
+    # Action execution budget
+    action_execution: 0.01
+
+  # Model size preferences and thresholds
+  model_preferences:
+    # Preferred model sizes (ordered by preference)
+    size_order: ["small", "medium", "large"]
+    # Maximum context window size (tokens)
+    max_context_tokens: 4096
+    # Quality vs speed trade-off (0.0 = fastest, 1.0 = highest quality)
+    quality_preference: 0.7
+
+  # Routing thresholds
+  routing_thresholds:
+    # Confidence threshold for accepting model predictions
+    confidence_threshold: 0.8
+    # Maximum retries per routing decision
+    max_routing_retries: 3
+    # Timeout for model switching (seconds)
+    model_switch_timeout: 5.0
+
+# Memory management settings
+memory_management:
+  # VRAM budgets (MB) - respect mGBA constraints
+  vram_budgets:
+    # Screenshot buffer allocation
+    screenshot_buffer: 50
+    # Sprite cache allocation
+    sprite_cache: 25
+    # Grid/map data allocation
+    grid_data: 10
+    # Total VRAM limit (leave headroom for mGBA)
+    total_limit: 100
+
+  # Context limits for different components
+  context_limits:
+    # Maximum keyframes in circular buffer
+    max_keyframes: 1000
+    # Maximum entries in ANN index
+    max_ann_entries: 5000
+    # Maximum sprites in detection cache
+    max_sprite_cache: 500
+    # Maximum retrieval results per query
+    max_retrieval_results: 50
+
+  # Eviction policies for memory management
+  eviction_policies:
+    # Keyframe eviction: LRU (Least Recently Used)
+    keyframe_eviction: "lru"
+    # Sprite cache eviction: LFU (Least Frequently Used)
+    sprite_eviction: "lfu"
+    # ANN index eviction: similarity-based
+    ann_eviction: "similarity"
+    # Retrieval cache eviction: time-based
+    retrieval_eviction: "time_based"
+
+# Retrieval and gatekeeper settings
+retrieval_settings:
+  # Circular buffer configuration
+  buffer_config:
+    # Buffer duration window (minutes)
+    window_minutes: 60
+    # Keyframe policy triggers
+    keyframe_triggers:
+      # SSIM difference threshold for new keyframes
+      ssim_threshold: 0.1
+      # Always keyframe on floor/room changes
+      floor_change: true
+      # Always keyframe on combat start/end
+      combat_events: true
+      # Keyframe on inventory changes
+      inventory_changes: true
+      # Keyframe on new species encounters
+      new_species: true
+
+  # Approximate Nearest Neighbor (ANN) settings
+  ann_config:
+    # ANN algorithm (annoy/hnsw)
+    algorithm: "annoy"
+    # Dimensionality for embeddings
+    dimensions: 512
+    # Trees for annoy algorithm
+    trees: 10
+    # Maximum distance for similarity search
+    max_distance: 0.5
+
+  # Gatekeeper configuration for web retrieval
+  gatekeeper_config:
+    # Minimum shallow hits required before web query
+    min_shallow_hits: 3
+    # Maximum web queries per session
+    max_web_queries: 10
+    # Content API budget (total requests)
+    content_api_budget: 1000
+    # Preferred batch size for batched reads
+    batch_size: 50
+    # Timeout for web requests (seconds)
+    web_timeout: 30.0
+
+  # Stuckness detection parameters
+  stuckness_config:
+    # Maximum turns without progress before stuck detection
+    max_stuck_turns: 50
+    # Similarity threshold for considering stuck
+    stuck_similarity_threshold: 0.95
+    # Minimum time between stuckness checks (seconds)
+    stuck_check_interval: 10.0
+
+# Logging configuration
+logging_config:
+  # Log level settings (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+  # Can be overridden with LOG_LEVEL environment variable
+  level: "INFO"
+
+  # Output format for log messages
+  # Can be overridden with LOG_FORMAT environment variable
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  # Date format for timestamps in logs
+  # Can be overridden with LOG_DATE_FORMAT environment variable
+  date_format: "%Y-%m-%d %H:%M:%S"
+
+  # Log file directory (relative to project root)
+  # Can be overridden with LOG_DIR environment variable
+  log_dir: "logs"
+
+  # Log file naming pattern
+  # Can be overridden with LOG_FILE_PATTERN environment variable
+  file_pattern: "agent_%Y%m%d_%H%M%S.log"
+
+  # Maximum log file size before rotation (MB)
+  # Can be overridden with LOG_MAX_SIZE_MB environment variable
+  max_file_size_mb: 10
+
+  # Maximum number of backup log files to keep
+  # Can be overridden with LOG_BACKUP_COUNT environment variable
+  backup_count: 5
+
+  # Log rotation settings
+  rotation:
+    # When to rotate logs (daily, size-based)
+    when: "midnight"
+    # Interval for rotation (1 = daily, 7 = weekly, etc.)
+    interval: 1
+
+  # Handler configurations
+  handlers:
+    # Console handler for real-time output
+    console:
+      enabled: true
+      level: "INFO"
+      format: "%(levelname)s - %(message)s"
+
+    # File handler for persistent logging
+    file:
+      enabled: true
+      level: "DEBUG"
+      # Additional file-specific settings
+      encoding: "utf-8"
+
+    # Error file handler for separate error logs
+    error_file:
+      enabled: true
+      level: "ERROR"
+      # Error log filename pattern
+      error_pattern: "agent_error_%Y%m%d_%H%M%S.log"
+
+  # Logger-specific configurations
+  loggers:
+    # Root logger configuration
+    root:
+      level: "INFO"
+      handlers: ["console", "file", "error_file"]
+
+    # Module-specific loggers
+    "src.environment.mgba_controller":
+      level: "DEBUG"
+      handlers: ["file"]
+      propagate: false
+
+    "src.vision.sprite_detector":
+      level: "INFO"
+      handlers: ["file"]
+      propagate: false
+
+    "src.retrieval.gatekeeper":
+      level: "WARNING"
+      handlers: ["console", "error_file"]
+      propagate: false
+
+    "src.agent.model_router":
+      level: "DEBUG"
+      handlers: ["file"]
+      propagate: false
+
+# Other runtime parameters
+runtime_params:
+  # I/O rate limits (requests per second)
+  rate_limits:
+    # Screenshot capture rate limit
+    screenshots_per_second: 30.0
+    # Memory polling rate limit
+    memory_polls_per_second: 10.0
+    # Memory polls during combat (higher rate allowed)
+    memory_polls_combat: 20.0
+
+  # Resilience settings for mGBA connection
+  resilience:
+    # Socket timeout (seconds)
+    socket_timeout: 10.0
+    # Maximum reconnection attempts
+    max_reconnect_attempts: 5
+    # Exponential backoff multiplier
+    backoff_multiplier: 2.0
+    # Maximum backoff delay (seconds)
+    max_backoff_delay: 60.0
+
+  # Sprite detection thresholds
+  sprite_detection:
+    # Default confidence threshold for sprite matching
+    confidence_threshold: 0.85
+    # Hash similarity threshold for sprite deduplication
+    hash_similarity_threshold: 0.9
+    # Maximum sprites to process per frame
+    max_sprites_per_frame: 20
+
+  # Snapshot policies for RAM monitoring
+  snapshot_policies:
+    # Snapshot on floor transitions
+    floor_transitions: true
+    # Snapshot every N turns
+    turns_interval: 10
+    # Snapshot on room changes
+    room_changes: true
+    # Snapshot on combat events
+    combat_events: true

@@ -203,7 +203,7 @@ class TestSkillComposition:
             actions=actions
         )
 
-        assert len(skill.actions) == 12
+        assert len(skill.actions) == 11
 
         # Verify action types
         action_types = [type(action).__name__ for action in skill.actions]

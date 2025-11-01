@@ -4,36 +4,42 @@
 [2mNo custom config found at repomix.config.json5, repomix.config.jsonc, repomix.config.json or global config at C:\Users\tyler\AppData\Local\Repomix\repomix.config.json5, C:\Users\tyler\AppData\Local\Repomix\repomix.config.jsonc, C:\Users\tyler\AppData\Local\Repomix\repomix.config.json.
 You can add a config file for additional settings. Please check https://github.com/yamadashy/repomix for more information.[22m
 [36m⠙[39m Searching for files...
-[2K[1A[2K[G[36m⠹[39m Collect file... (4/249) [2mcheckpoint.md[22m
+[2K[1A[2K[G[36m⠹[39m Collect file... (4/302) [2magent_log.txt[22m
 [2K[1A[2K[G[36m⠸[39m Running security check...
-[2K[1A[2K[G[36m⠼[39m Running security check... (182/240) [2mtests/test_auto_retrieve.py[22m
+[2K[1A[2K[G[36m⠼[39m Running security check... (165/285) [2msrc/retrieval/maint/policies.py[22m
 [2K[1A[2K[G[36m⠴[39m Processing files...
-[2K[1A[2K[G[36m⠦[39m Generating output...
-[2K[1A[2K[G[36m⠧[39m Calculating metrics...
-[2K[1A[2K[G[36m⠇[39m Calculating metrics...
-[2K[1A[2K[G[36m⠏[39m Calculating metrics... (6/240) [2m.gitignore[22m
-[2K[1A[2K[G[36m⠋[39m Calculating metrics... (95/240) [2msrc/dashboard/api.py[22m
-[2K[1A[2K[G[36m⠙[39m Calculating metrics... (212/240) [2mtests/test_parallel_rrf_retrieval.py[22m
+[2K[1A[2K[G[36m⠦[39m Processing file... (116/285) [2msrc/config/loader.py[22m
+[2K[1A[2K[G[36m⠧[39m Processing file... (236/285) [2mtests/test_logging_setup.py[22m
+[2K[1A[2K[G[36m⠇[39m Generating output...
+[2K[1A[2K[G[36m⠏[39m Generating output...
+[2K[1A[2K[G[36m⠋[39m Calculating metrics...
+[2K[1A[2K[G[36m⠙[39m Calculating metrics...
+[2K[1A[2K[G[36m⠹[39m Calculating metrics...
+[2K[1A[2K[G[36m⠸[39m Calculating metrics... (6/285) [2mcheckpoint.md[22m
+[2K[1A[2K[G[36m⠼[39m Calculating metrics... (49/285) [2mFINAL_SUMMARY.md[22m
+[2K[1A[2K[G[36m⠴[39m Calculating metrics... (119/285) [2msrc/embeddings/__init__.py[22m
+[2K[1A[2K[G[36m⠦[39m Calculating metrics... (237/285) [2mtests/test_logging_setup.py[22m
 [2K[1A[2K[G[32m✔[39m Packing completed successfully!
 
 [37m📈 Top 5 Files by Token Count:[39m
 [2m──────────────────────────────[22m
-[37m1. [39m [37magent_log.txt[39m [2m(14,282 tokens, 46,082 chars, 2.8%)[22m
-[37m2. [39m [37msrc/environment/mgba_controller.py[39m [2m(13,892 tokens, 67,551 chars, 2.7%)[22m
-[37m3. [39m [37msrc/agent/qwen_controller.py[39m [2m(13,410 tokens, 63,127 chars, 2.6%)[22m
-[37m4. [39m [37mrouter_telemetry.jsonl[39m [2m(12,641 tokens, 34,167 chars, 2.5%)[22m
-[37m5. [39m [37msrc/vision/grid_parser.py[39m [2m(9,553 tokens, 46,164 chars, 1.9%)[22m
+[37m1. [39m [37magent_log.txt[39m [2m(17,816 tokens, 57,518 chars, 4.8%)[22m
+[37m2. [39m [37mrouter_telemetry.jsonl[39m [2m(12,641 tokens, 34,167 chars, 3.4%)[22m
+[37m3. [39m [37msrc/environment/mgba_controller.py[39m [2m(7,699 tokens, 31,297 chars, 2.1%)[22m
+[37m4. [39m [37msrc/agent/qwen_controller.py[39m [2m(6,397 tokens, 25,153 chars, 1.7%)[22m
+[37m5. [39m [37msrc/mgba-harness/mgba-http/mGBASocketServer.lua[39m [2m(5,842 tokens, 24,518 chars, 1.6%)[22m
 
 🔢 Token Count Tree:
 [2m────────────────────[22m
 ├── .gitignore [2m(329 tokens)[22m
-├── .temp_check_ram.py [2m(706 tokens)[22m
-├── agent_log.txt [2m(14,282 tokens)[22m
-├── AGENTS.md [2m(5,581 tokens)[22m
-├── analyze_dumps.py [2m(3,136 tokens)[22m
+├── .temp_check_ram.py [2m(301 tokens)[22m
+├── agent_log.txt [2m(17,816 tokens)[22m
+├── AGENTS.md [2m(5,146 tokens)[22m
+├── analyze_dumps.py [2m(1,249 tokens)[22m
 ├── checkpoint.md [2m(339 tokens)[22m
+├── CLAUDE_CODE_COMPLETION_SUMMARY.md [2m(2,444 tokens)[22m
 ├── DEADLINE_EXECUTION_PLAN.md [2m(2,061 tokens)[22m
-├── demo_agent.py [2m(353 tokens)[22m
+├── demo_agent.py [2m(133 tokens)[22m
 ├── DEMO_EXECUTION_SUMMARY.md [2m(2,953 tokens)[22m
 ├── DEMO_READY.md [2m(1,875 tokens)[22m
 ├── FINAL_SUMMARY.md [2m(2,173 tokens)[22m
@@ -41,8 +47,9 @@ You can add a config file for additional settings. Please check https://github.c
 ├── LICENSE [2m(224 tokens)[22m
 ├── MANIFEST.in [2m(85 tokens)[22m
 ├── MORNING_ACTION_PLAN.md [2m(1,648 tokens)[22m
+├── PRIORITY_1_2_COMPLETION_SUMMARY.md [2m(2,153 tokens)[22m
 ├── PRODUCTION_RUNBOOK.md [2m(1,932 tokens)[22m
-├── pyproject.toml [2m(953 tokens)[22m
+├── pyproject.toml [2m(967 tokens)[22m
 ├── pytorch_cuda_research.md [2m(941 tokens)[22m
 ├── REPO_UPLOAD_STATUS.md [2m(2,647 tokens)[22m
 ├── REPORT_SMART.md [2m(2,182 tokens)[22m
@@ -51,29 +58,44 @@ You can add a config file for additional settings. Please check https://github.c
 ├── SKILL_IMPROVEMENTS_SUMMARY.md [2m(1,857 tokens)[22m
 ├── STANDUP_REPORT.md [2m(2,080 tokens)[22m
 ├── test_budget.json [2m(21 tokens)[22m
-├── token_tree.txt [2m(213 tokens)[22m
-├── config/ [2m(4,223 tokens)[22m
+├── token_tree.txt [2m(214 tokens)[22m
+├── VISION_PHASE1_SUMMARY.md [2m(2,430 tokens)[22m
+├── VISION_PHASE2_SUMMARY.md [2m(3,345 tokens)[22m
+├── agent_mailbox/ [2m(354 tokens)[22m
+│   └── runtime_fix_needed.md [2m(354 tokens)[22m
+├── config/ [2m(6,218 tokens)[22m
+│   ├── agent_config.yaml [2m(1,995 tokens)[22m
 │   ├── mgba_config.ini [2m(325 tokens)[22m
 │   ├── sprite_library.yaml [2m(765 tokens)[22m
 │   └── addresses/ [2m(3,133 tokens)[22m
 │       └── pmd_red_us_v1.json [2m(3,133 tokens)[22m
-├── demos/ [2m(5,820 tokens)[22m
-│   ├── embedding_visualization.py [2m(4,152 tokens)[22m
-│   └── rag_demo.py [2m(1,668 tokens)[22m
-├── docs/ [2m(23,135 tokens)[22m
+├── demos/ [2m(1,912 tokens)[22m
+│   ├── embedding_visualization.py [2m(1,290 tokens)[22m
+│   └── rag_demo.py [2m(622 tokens)[22m
+├── docs/ [2m(42,722 tokens)[22m
 │   ├── agent-scaffold.md [2m(252 tokens)[22m
-│   ├── build_indexes.py [2m(1,903 tokens)[22m
+│   ├── build_indexes.py [2m(514 tokens)[22m
+│   ├── CLAUDE_CODE_STATUS_REPORT.md [2m(2,711 tokens)[22m
 │   ├── DASHBOARD_AND_MEMORY_INTEGRATION_VERIFIED.md [2m(2,864 tokens)[22m
 │   ├── demo_execution_summary.json [2m(129 tokens)[22m
 │   ├── demo_execution_summary.md [2m(183 tokens)[22m
+│   ├── embedding-types.md [2m(630 tokens)[22m
+│   ├── FEATURE_INVENTORY_AND_RECOVERY.md [2m(4,770 tokens)[22m
+│   ├── hf_home_path_sanitization_adr.md [2m(1,061 tokens)[22m
 │   ├── index.html [2m(463 tokens)[22m
+│   ├── integration_guide.md [2m(2,613 tokens)[22m
 │   ├── maintenance.md [2m(688 tokens)[22m
+│   ├── missing_features_analysis.md [2m(1,170 tokens)[22m
 │   ├── netio.md [2m(1,831 tokens)[22m
 │   ├── OPERATIONS_RUNBOOK.md [2m(3,058 tokens)[22m
 │   ├── optimization_roadmap.md [2m(2,161 tokens)[22m
+│   ├── prompt_engineering_findings.md [2m(1,641 tokens)[22m
+│   ├── PROMPT_OPTIMIZATION_GUIDE.md [2m(3,814 tokens)[22m
 │   ├── rag-system-architecture.md [2m(505 tokens)[22m
 │   ├── ram-primitives.md [2m(1,423 tokens)[22m
 │   ├── REAL_MODELS.md [2m(1,319 tokens)[22m
+│   ├── retrieval_architecture.md [2m(2,299 tokens)[22m
+│   ├── runtime_fix_needed.md [2m(267 tokens)[22m
 │   ├── skills_pause_checkpoint.md [2m(2,555 tokens)[22m
 │   ├── vision_tools.md [2m(2,283 tokens)[22m
 │   └── docs/ [2m(1,518 tokens)[22m
@@ -84,224 +106,255 @@ You can add a config file for additional settings. Please check https://github.c
 │       │   └── index.md [2m(366 tokens)[22m
 │       └── species/ [2m(417 tokens)[22m
 │           └── index.md [2m(417 tokens)[22m
-├── examples/ [2m(2,521 tokens)[22m
-│   ├── navigate_to_stairs.py [2m(322 tokens)[22m
-│   └── quickstart.py [2m(2,199 tokens)[22m
-├── prototypes/ [2m(6,627 tokens)[22m
-│   └── wram_decoder_fix/ [2m(6,627 tokens)[22m
-│       ├── analyze_dumps.py [2m(1,906 tokens)[22m
-│       ├── capture_dumps.py [2m(576 tokens)[22m
-│       ├── decoder_v2.py [2m(2,338 tokens)[22m
+├── examples/ [2m(1,678 tokens)[22m
+│   ├── adaptive_dungeon_exploration_skill.py [2m(786 tokens)[22m
+│   ├── navigate_to_stairs.py [2m(115 tokens)[22m
+│   └── quickstart.py [2m(777 tokens)[22m
+├── prototypes/ [2m(3,075 tokens)[22m
+│   └── wram_decoder_fix/ [2m(3,075 tokens)[22m
+│       ├── analyze_dumps.py [2m(736 tokens)[22m
+│       ├── capture_dumps.py [2m(202 tokens)[22m
+│       ├── decoder_v2.py [2m(1,028 tokens)[22m
 │       ├── findings.md [2m(557 tokens)[22m
-│       └── test_decoder.py [2m(1,250 tokens)[22m
-├── scripts/ [2m(17,700 tokens)[22m
+│       └── test_decoder.py [2m(552 tokens)[22m
+├── scripts/ [2m(13,963 tokens)[22m
 │   ├── __init__.py [2m(8 tokens)[22m
-│   ├── bench_sweep.ps1 [2m(54 tokens)[22m
-│   ├── bench_sweep.sh [2m(61 tokens)[22m
-│   ├── check_you_api.py [2m(553 tokens)[22m
-│   ├── demo_with_youcom.py [2m(1,373 tokens)[22m
+│   ├── bench_sweep.ps1 [2m(211 tokens)[22m
+│   ├── bench_sweep.sh [2m(378 tokens)[22m
+│   ├── check_you_api.py [2m(259 tokens)[22m
+│   ├── demo_with_youcom.py [2m(432 tokens)[22m
 │   ├── enable_real_models.ps1 [2m(138 tokens)[22m
-│   ├── enable_real_models.sh [2m(146 tokens)[22m
-│   ├── final_demo_runner.py [2m(1,439 tokens)[22m
+│   ├── enable_real_models.sh [2m(148 tokens)[22m
+│   ├── final_demo_runner.py [2m(473 tokens)[22m
 │   ├── finalize_and_snapshot.bat [2m(1,075 tokens)[22m
 │   ├── finalize_and_snapshot.sh [2m(830 tokens)[22m
-│   ├── generate_montage_video.py [2m(9,510 tokens)[22m
+│   ├── generate_montage_video.py [2m(4,485 tokens)[22m
 │   ├── push_now.bat [2m(215 tokens)[22m
 │   ├── push_to_github.bat [2m(355 tokens)[22m
 │   ├── push_to_github.sh [2m(377 tokens)[22m
 │   ├── quick_smoke_test.sh [2m(322 tokens)[22m
 │   ├── sync_profiling.ps1 [2m(124 tokens)[22m
 │   ├── sync_profiling.sh [2m(97 tokens)[22m
-│   ├── test_ci.ps1 [2m(17 tokens)[22m
+│   ├── test_ci.ps1 [2m(107 tokens)[22m
 │   ├── test_ci.sh [2m(18 tokens)[22m
-│   ├── test_fast.ps1 [2m(80 tokens)[22m
-│   ├── test_fast.sh [2m(87 tokens)[22m
-│   ├── test_full.ps1 [2m(92 tokens)[22m
-│   ├── test_full.sh [2m(81 tokens)[22m
+│   ├── test_fast.ps1 [2m(127 tokens)[22m
+│   ├── test_fast.sh [2m(131 tokens)[22m
+│   ├── test_full.ps1 [2m(106 tokens)[22m
+│   ├── test_full.sh [2m(110 tokens)[22m
+│   ├── test_vision_prompts.py [2m(212 tokens)[22m
+│   ├── test_vision_schema.py [2m(107 tokens)[22m
 │   ├── validate_integration.sh [2m(171 tokens)[22m
-│   └── validate_video.py [2m(477 tokens)[22m
+│   ├── validate_video.py [2m(317 tokens)[22m
+│   ├── validate_vision_prompts.ps1 [2m(1,455 tokens)[22m
+│   └── validate_vision_schema.ps1 [2m(1,175 tokens)[22m
 ├── skill-libraries/ [2m(969 tokens)[22m
 │   ├── README.md [2m(639 tokens)[22m
 │   └── basic/ [2m(330 tokens)[22m
 │       ├── heal_when_low_hp.yaml [2m(113 tokens)[22m
 │       ├── take_stairs_when_visible.yaml [2m(98 tokens)[22m
 │       └── use_food_when_hungry.yaml [2m(119 tokens)[22m
-├── src/ [2m(235,883 tokens)[22m
-│   ├── __main__.py [2m(26 tokens)[22m
-│   ├── main.py [2m(1,979 tokens)[22m
-│   ├── agent/ [2m(40,217 tokens)[22m
-│   │   ├── __init__.py [2m(131 tokens)[22m
-│   │   ├── agent_core.py [2m(5,930 tokens)[22m
-│   │   ├── context_cap.py [2m(761 tokens)[22m
-│   │   ├── inference_queue.py [2m(3,843 tokens)[22m
-│   │   ├── memory_manager.py [2m(3,819 tokens)[22m
-│   │   ├── model_router.py [2m(6,694 tokens)[22m
-│   │   ├── pipeline_engine.py [2m(2,358 tokens)[22m
-│   │   ├── prompt_cache.py [2m(2,555 tokens)[22m
-│   │   ├── qwen_controller.py [2m(13,410 tokens)[22m
-│   │   ├── timebudgets.py [2m(441 tokens)[22m
-│   │   └── utils.py [2m(275 tokens)[22m
-│   ├── dashboard/ [2m(14,687 tokens)[22m
-│   │   ├── api.py [2m(3,319 tokens)[22m
-│   │   ├── content_api.py [2m(5,656 tokens)[22m
-│   │   └── uploader.py [2m(5,712 tokens)[22m
-│   ├── embeddings/ [2m(19,070 tokens)[22m
-│   │   ├── __init__.py [2m(97 tokens)[22m
-│   │   ├── extractor.py [2m(4,852 tokens)[22m
-│   │   ├── temporal_silo.py [2m(9,027 tokens)[22m
-│   │   └── vector_store.py [2m(5,094 tokens)[22m
-│   ├── environment/ [2m(32,823 tokens)[22m
-│   │   ├── __init__.py [2m(67 tokens)[22m
-│   │   ├── action_executor.py [2m(2,489 tokens)[22m
-│   │   ├── config.py [2m(1,138 tokens)[22m
-│   │   ├── fps_adjuster.py [2m(2,047 tokens)[22m
-│   │   ├── mgba_controller.py [2m(13,892 tokens)[22m
-│   │   ├── ram_decoders.py [2m(2,580 tokens)[22m
-│   │   ├── ram_watch.py [2m(1,065 tokens)[22m
-│   │   ├── rom_gating.py [2m(1,399 tokens)[22m
-│   │   ├── save_manager.py [2m(2,449 tokens)[22m
-│   │   ├── state_map.py [2m(2,493 tokens)[22m
-│   │   └── netio/ [2m(3,204 tokens)[22m
-│   │       ├── __init__.py [2m(106 tokens)[22m
-│   │       ├── adaptive_socket.py [2m(2,100 tokens)[22m
-│   │       └── screenshot_guard.py [2m(998 tokens)[22m
-│   ├── mgba-harness/ [2m(11,025 tokens)[22m
+├── src/ [2m(133,911 tokens)[22m
+│   ├── __main__.py [2m(16 tokens)[22m
+│   ├── main.py [2m(591 tokens)[22m
+│   ├── agent/ [2m(20,358 tokens)[22m
+│   │   ├── __init__.py [2m(17 tokens)[22m
+│   │   ├── agent_core.py [2m(2,363 tokens)[22m
+│   │   ├── caches.py [2m(825 tokens)[22m
+│   │   ├── context_cap.py [2m(398 tokens)[22m
+│   │   ├── inference_queue.py [2m(1,564 tokens)[22m
+│   │   ├── memory_manager.py [2m(2,051 tokens)[22m
+│   │   ├── model_router.py [2m(3,882 tokens)[22m
+│   │   ├── pipeline_engine.py [2m(1,198 tokens)[22m
+│   │   ├── prompt_cache.py [2m(999 tokens)[22m
+│   │   ├── qwen_controller.py [2m(6,397 tokens)[22m
+│   │   ├── timebudgets.py [2m(424 tokens)[22m
+│   │   └── utils.py [2m(240 tokens)[22m
+│   ├── config/ [2m(1,078 tokens)[22m
+│   │   ├── __init__.py [2m(29 tokens)[22m
+│   │   └── loader.py [2m(1,049 tokens)[22m
+│   ├── dashboard/ [2m(7,206 tokens)[22m
+│   │   ├── api.py [2m(1,582 tokens)[22m
+│   │   ├── content_api.py [2m(2,772 tokens)[22m
+│   │   └── uploader.py [2m(2,852 tokens)[22m
+│   ├── embeddings/ [2m(9,395 tokens)[22m
+│   │   ├── __init__.py [2m(17 tokens)[22m
+│   │   ├── extractor.py [2m(2,869 tokens)[22m
+│   │   ├── temporal_silo.py [2m(4,228 tokens)[22m
+│   │   └── vector_store.py [2m(2,281 tokens)[22m
+│   ├── environment/ [2m(18,263 tokens)[22m
+│   │   ├── __init__.py [2m(34 tokens)[22m
+│   │   ├── action_executor.py [2m(1,392 tokens)[22m
+│   │   ├── config.py [2m(797 tokens)[22m
+│   │   ├── fps_adjuster.py [2m(965 tokens)[22m
+│   │   ├── mgba_controller.py [2m(7,699 tokens)[22m
+│   │   ├── ram_decoders.py [2m(1,437 tokens)[22m
+│   │   ├── ram_watch.py [2m(903 tokens)[22m
+│   │   ├── rom_gating.py [2m(711 tokens)[22m
+│   │   ├── save_manager.py [2m(1,179 tokens)[22m
+│   │   ├── state_map.py [2m(1,349 tokens)[22m
+│   │   └── netio/ [2m(1,797 tokens)[22m
+│   │       ├── __init__.py [2m(65 tokens)[22m
+│   │       ├── adaptive_socket.py [2m(1,225 tokens)[22m
+│   │       └── screenshot_guard.py [2m(507 tokens)[22m
+│   ├── mgba-harness/ [2m(9,267 tokens)[22m
 │   │   ├── __init__.py [2m(11 tokens)[22m
-│   │   ├── cli.py [2m(3,196 tokens)[22m
+│   │   ├── cli.py [2m(1,438 tokens)[22m
 │   │   ├── mgba-http/ [2m(7,316 tokens)[22m
 │   │   │   ├── ImplementedApis.md [2m(1,474 tokens)[22m
 │   │   │   └── mGBASocketServer.lua [2m(5,842 tokens)[22m
 │   │   └── profiles/ [2m(502 tokens)[22m
 │   │       └── set_text_speed_slow.json [2m(502 tokens)[22m
-│   ├── models/ [2m(4,326 tokens)[22m
-│   │   ├── real_loader.py [2m(1,196 tokens)[22m
-│   │   └── world_model.py [2m(3,130 tokens)[22m
-│   ├── orchestrator/ [2m(8,775 tokens)[22m
-│   │   ├── message_packager.py [2m(2,894 tokens)[22m
-│   │   ├── router_glue.py [2m(4,696 tokens)[22m
-│   │   ├── runtime.py [2m(560 tokens)[22m
-│   │   └── telemetry.py [2m(625 tokens)[22m
-│   ├── rag/ [2m(3,406 tokens)[22m
-│   │   ├── retrieval.py [2m(2,375 tokens)[22m
-│   │   └── schema.py [2m(1,031 tokens)[22m
-│   ├── retrieval/ [2m(43,469 tokens)[22m
-│   │   ├── __init__.py [2m(154 tokens)[22m
-│   │   ├── auto_retrieve.py [2m(8,403 tokens)[22m
-│   │   ├── circular_buffer.py [2m(3,419 tokens)[22m
-│   │   ├── cross_silo_search.py [2m(2,828 tokens)[22m
-│   │   ├── deduplicator.py [2m(1,638 tokens)[22m
-│   │   ├── embedding_generator.py [2m(1,356 tokens)[22m
-│   │   ├── gatekeeper.py [2m(3,500 tokens)[22m
-│   │   ├── keyframe_policy.py [2m(3,654 tokens)[22m
-│   │   ├── local_ann_index.py [2m(3,829 tokens)[22m
-│   │   ├── meta_view_writer.py [2m(2,775 tokens)[22m
-│   │   ├── on_device_buffer.py [2m(2,253 tokens)[22m
-│   │   ├── questions_bucket.py [2m(1,826 tokens)[22m
-│   │   ├── stuckness_detector.py [2m(3,443 tokens)[22m
-│   │   ├── trajectory_logger.py [2m(2,149 tokens)[22m
-│   │   └── maint/ [2m(2,242 tokens)[22m
-│   │       ├── daemon.py [2m(1,752 tokens)[22m
-│   │       └── policies.py [2m(490 tokens)[22m
-│   ├── router/ [2m(2,461 tokens)[22m
-│   │   └── policy_v2.py [2m(2,461 tokens)[22m
-│   ├── skills/ [2m(10,635 tokens)[22m
-│   │   ├── __init__.py [2m(330 tokens)[22m
-│   │   ├── dsl.py [2m(1,035 tokens)[22m
-│   │   ├── prompting.py [2m(669 tokens)[22m
-│   │   ├── python_runtime_async.py [2m(1,651 tokens)[22m
-│   │   ├── python_runtime.py [2m(1,601 tokens)[22m
-│   │   ├── runtime.py [2m(1,507 tokens)[22m
-│   │   ├── spec.py [2m(2,708 tokens)[22m
-│   │   └── examples/ [2m(1,134 tokens)[22m
-│   │       ├── eat_apple.py [2m(362 tokens)[22m
-│   │       ├── fight_wild_monster.py [2m(450 tokens)[22m
-│   │       └── navigate_to_stairs.py [2m(322 tokens)[22m
-│   ├── telemetry/ [2m(530 tokens)[22m
-│   │   └── events.py [2m(530 tokens)[22m
-│   └── vision/ [2m(42,454 tokens)[22m
-│       ├── __init__.py [2m(62 tokens)[22m
+│   ├── models/ [2m(4,570 tokens)[22m
+│   │   ├── game_state_schema.py [2m(875 tokens)[22m
+│   │   ├── game_state_utils.py [2m(690 tokens)[22m
+│   │   ├── real_loader.py [2m(571 tokens)[22m
+│   │   ├── vision_prompts.py [2m(820 tokens)[22m
+│   │   └── world_model.py [2m(1,614 tokens)[22m
+│   ├── orchestrator/ [2m(5,425 tokens)[22m
+│   │   ├── message_packager.py [2m(2,273 tokens)[22m
+│   │   ├── router_glue.py [2m(2,580 tokens)[22m
+│   │   ├── runtime.py [2m(227 tokens)[22m
+│   │   └── telemetry.py [2m(345 tokens)[22m
+│   ├── rag/ [2m(1,800 tokens)[22m
+│   │   ├── retrieval.py [2m(1,294 tokens)[22m
+│   │   └── schema.py [2m(506 tokens)[22m
+│   ├── retrieval/ [2m(22,013 tokens)[22m
+│   │   ├── __init__.py [2m(19 tokens)[22m
+│   │   ├── auto_retrieve.py [2m(3,792 tokens)[22m
+│   │   ├── circular_buffer.py [2m(1,513 tokens)[22m
+│   │   ├── cross_silo_search.py [2m(1,472 tokens)[22m
+│   │   ├── deduplicator.py [2m(929 tokens)[22m
+│   │   ├── embedding_generator.py [2m(1,128 tokens)[22m
+│   │   ├── gatekeeper.py [2m(1,684 tokens)[22m
+│   │   ├── keyframe_policy.py [2m(2,111 tokens)[22m
+│   │   ├── local_ann_index.py [2m(1,872 tokens)[22m
+│   │   ├── meta_view_writer.py [2m(1,608 tokens)[22m
+│   │   ├── on_device_buffer.py [2m(1,224 tokens)[22m
+│   │   ├── questions_bucket.py [2m(852 tokens)[22m
+│   │   ├── stuckness_detector.py [2m(1,593 tokens)[22m
+│   │   ├── trajectory_logger.py [2m(1,224 tokens)[22m
+│   │   └── maint/ [2m(992 tokens)[22m
+│   │       ├── daemon.py [2m(739 tokens)[22m
+│   │       └── policies.py [2m(253 tokens)[22m
+│   ├── router/ [2m(1,366 tokens)[22m
+│   │   └── policy_v2.py [2m(1,366 tokens)[22m
+│   ├── skills/ [2m(11,388 tokens)[22m
+│   │   ├── __init__.py [2m(119 tokens)[22m
+│   │   ├── async_skill_runtime.py [2m(1,119 tokens)[22m
+│   │   ├── checkpoint_state_backup.py [2m(883 tokens)[22m
+│   │   ├── checkpoint_state_temp.py [2m(1,243 tokens)[22m
+│   │   ├── checkpoint_state.py [2m(883 tokens)[22m
+│   │   ├── dsl.py [2m(835 tokens)[22m
+│   │   ├── prompting.py [2m(308 tokens)[22m
+│   │   ├── python_runtime_async.py [2m(697 tokens)[22m
+│   │   ├── python_runtime.py [2m(1,579 tokens)[22m
+│   │   ├── runtime.py [2m(842 tokens)[22m
+│   │   ├── screenshot_analyzer.py [2m(707 tokens)[22m
+│   │   ├── spec.py [2m(1,775 tokens)[22m
+│   │   └── examples/ [2m(398 tokens)[22m
+│   │       ├── eat_apple.py [2m(125 tokens)[22m
+│   │       ├── fight_wild_monster.py [2m(158 tokens)[22m
+│   │       └── navigate_to_stairs.py [2m(115 tokens)[22m
+│   ├── telemetry/ [2m(269 tokens)[22m
+│   │   └── events.py [2m(269 tokens)[22m
+│   ├── utils/ [2m(907 tokens)[22m
+│   │   └── logging_setup.py [2m(907 tokens)[22m
+│   └── vision/ [2m(19,999 tokens)[22m
+│       ├── __init__.py [2m(30 tokens)[22m
 │       ├── .vision_agent_lock [2m(58 tokens)[22m
 │       ├── .vision_agent_status [2m(86 tokens)[22m
-│       ├── ascii_renderer.py [2m(3,544 tokens)[22m
-│       ├── fps_adjuster.py [2m(1,670 tokens)[22m
-│       ├── grid_parser.py [2m(9,553 tokens)[22m
-│       ├── packaging.py [2m(3,587 tokens)[22m
-│       ├── quad_capture.py [2m(5,476 tokens)[22m
-│       ├── sprite_detector.py [2m(9,102 tokens)[22m
-│       ├── sprite_library.py [2m(3,279 tokens)[22m
-│       ├── sprite_phash.py [2m(1,430 tokens)[22m
-│       └── tools/ [2m(4,607 tokens)[22m
-│           ├── dump_quads.py [2m(2,664 tokens)[22m
-│           └── dump_sprites.py [2m(1,943 tokens)[22m
-└── tests/ [2m(139,210 tokens)[22m
+│       ├── ascii_renderer.py [2m(1,857 tokens)[22m
+│       ├── fps_adjuster.py [2m(1,069 tokens)[22m
+│       ├── grid_parser.py [2m(3,969 tokens)[22m
+│       ├── packaging.py [2m(1,746 tokens)[22m
+│       ├── quad_capture.py [2m(2,854 tokens)[22m
+│       ├── sprite_detector.py [2m(3,504 tokens)[22m
+│       ├── sprite_library.py [2m(1,909 tokens)[22m
+│       ├── sprite_phash.py [2m(1,083 tokens)[22m
+│       └── tools/ [2m(1,834 tokens)[22m
+│           ├── dump_quads.py [2m(1,049 tokens)[22m
+│           └── dump_sprites.py [2m(785 tokens)[22m
+└── tests/ [2m(86,538 tokens)[22m
     ├── __init__.py [2m(3 tokens)[22m
-    ├── conftest.py [2m(2,293 tokens)[22m
-    ├── test_ascii_renderer.py [2m(1,887 tokens)[22m
-    ├── test_async_implementation.py [2m(2,203 tokens)[22m
-    ├── test_async_screenshot_capture.py [2m(1,676 tokens)[22m
-    ├── test_auto_retrieve.py [2m(4,049 tokens)[22m
-    ├── test_bench_cli.py [2m(1,710 tokens)[22m
-    ├── test_bench_smoke.py [2m(1,125 tokens)[22m
-    ├── test_best_of_n.py [2m(1,823 tokens)[22m
-    ├── test_circular_buffer.py [2m(4,076 tokens)[22m
-    ├── test_content_api_batch.py [2m(2,537 tokens)[22m
-    ├── test_content_api.py [2m(3,198 tokens)[22m
-    ├── test_context_cap.py [2m(606 tokens)[22m
-    ├── test_current_frame.py [2m(812 tokens)[22m
-    ├── test_embeddings.py [2m(1,855 tokens)[22m
-    ├── test_grid_parser.py [2m(4,497 tokens)[22m
-    ├── test_inference_queue_stages.py [2m(1,613 tokens)[22m
-    ├── test_inference_queue.py [2m(1,045 tokens)[22m
-    ├── test_keyframe_policy.py [2m(1,472 tokens)[22m
-    ├── test_local_ann_index.py [2m(2,018 tokens)[22m
-    ├── test_maint_temporal_silos.py [2m(1,198 tokens)[22m
-    ├── test_memory_manager_model_cache.py [2m(1,001 tokens)[22m
-    ├── test_message_packager.py [2m(4,316 tokens)[22m
-    ├── test_mgba_connection.py [2m(1,515 tokens)[22m
-    ├── test_mgba_controller_frame_capture.py [2m(1,034 tokens)[22m
-    ├── test_mgba_socket.py [2m(5,065 tokens)[22m
-    ├── test_model_router_batching.py [2m(2,784 tokens)[22m
-    ├── test_model_router_deadline.py [2m(1,090 tokens)[22m
-    ├── test_netio_circuit_breaker.py [2m(1,545 tokens)[22m
-    ├── test_netio_rate_limits.py [2m(1,142 tokens)[22m
-    ├── test_netio_screenshot_guard.py [2m(1,649 tokens)[22m
-    ├── test_on_device_buffer.py [2m(2,136 tokens)[22m
-    ├── test_orchestrator_runtime.py [2m(258 tokens)[22m
-    ├── test_packaging.py [2m(2,167 tokens)[22m
-    ├── test_parallel_rrf_retrieval.py [2m(1,531 tokens)[22m
-    ├── test_path_sanitization.py [2m(866 tokens)[22m
-    ├── test_pipeline_engine.py [2m(2,862 tokens)[22m
-    ├── test_prompt_cache.py [2m(2,684 tokens)[22m
-    ├── test_qwen_controller_prompt_cache.py [2m(1,876 tokens)[22m
-    ├── test_qwen_controller.py [2m(898 tokens)[22m
-    ├── test_ram_decoders.py [2m(1,434 tokens)[22m
-    ├── test_ram_watch.py [2m(1,227 tokens)[22m
-    ├── test_real_model_loading.py [2m(1,131 tokens)[22m
-    ├── test_real_model_smoke.py [2m(278 tokens)[22m
-    ├── test_retrieval.py [2m(3,285 tokens)[22m
-    ├── test_router_glue.py [2m(2,915 tokens)[22m
-    ├── test_router.py [2m(5,104 tokens)[22m
-    ├── test_screenshot_locking.py [2m(1,369 tokens)[22m
-    ├── test_skill_dsl.py [2m(1,975 tokens)[22m
-    ├── test_skill_triggers.py [2m(1,372 tokens)[22m
-    ├── test_skills.py [2m(1,246 tokens)[22m
-    ├── test_socket_cleanup.py [2m(2,414 tokens)[22m
-    ├── test_sprite_detection.py [2m(6,519 tokens)[22m
-    ├── test_sprite_detector.py [2m(3,341 tokens)[22m
-    ├── test_state_map.py [2m(2,681 tokens)[22m
-    ├── test_telemetry.py [2m(673 tokens)[22m
-    ├── test_temporal_silo_episodes.py [2m(2,128 tokens)[22m
-    ├── test_text_speed_guarantee.py [2m(328 tokens)[22m
-    ├── test_unsloth_benchmark.py [2m(1,416 tokens)[22m
-    ├── test_uploader_rate_limit.py [2m(1,872 tokens)[22m
-    ├── test_vision_event_detection.py [2m(568 tokens)[22m
-    ├── test_vision_tools.py [2m(4,737 tokens)[22m
-    ├── test_wram_bounds.py [2m(2,504 tokens)[22m
-    └── regressions/ [2m(10,578 tokens)[22m
-        ├── test_bug_0001_model_name_mismatch.py [2m(2,160 tokens)[22m
-        ├── test_bug_0002_ram_address_mismatch.py [2m(1,801 tokens)[22m
-        ├── test_mgba_http_snapshot.py [2m(4,605 tokens)[22m
-        └── test_wram_decoder_first_mon.py [2m(2,012 tokens)[22m
+    ├── conftest.py [2m(1,549 tokens)[22m
+    ├── test_adaptive_skill_example.py [2m(668 tokens)[22m
+    ├── test_ascii_renderer.py [2m(941 tokens)[22m
+    ├── test_async_implementation.py [2m(1,389 tokens)[22m
+    ├── test_async_screenshot_capture.py [2m(1,050 tokens)[22m
+    ├── test_async_skill_runtime.py [2m(1,430 tokens)[22m
+    ├── test_auto_retrieve.py [2m(1,229 tokens)[22m
+    ├── test_bench_cli.py [2m(452 tokens)[22m
+    ├── test_bench_smoke.py [2m(547 tokens)[22m
+    ├── test_best_of_n.py [2m(1,176 tokens)[22m
+    ├── test_checkpoint_handlers.py [2m(1,255 tokens)[22m
+    ├── test_checkpoint_savemanager.py [2m(1,176 tokens)[22m
+    ├── test_checkpoint_state.py [2m(1,420 tokens)[22m
+    ├── test_circular_buffer.py [2m(1,987 tokens)[22m
+    ├── test_config_loader.py [2m(310 tokens)[22m
+    ├── test_content_api_batch.py [2m(1,164 tokens)[22m
+    ├── test_content_api.py [2m(1,791 tokens)[22m
+    ├── test_context_cap.py [2m(356 tokens)[22m
+    ├── test_current_frame.py [2m(362 tokens)[22m
+    ├── test_embeddings.py [2m(941 tokens)[22m
+    ├── test_game_state_schema.py [2m(1,035 tokens)[22m
+    ├── test_game_state_utils.py [2m(875 tokens)[22m
+    ├── test_grid_parser.py [2m(2,273 tokens)[22m
+    ├── test_inference_queue_stages.py [2m(954 tokens)[22m
+    ├── test_inference_queue.py [2m(640 tokens)[22m
+    ├── test_keyframe_policy.py [2m(1,045 tokens)[22m
+    ├── test_local_ann_index.py [2m(1,110 tokens)[22m
+    ├── test_logging_setup.py [2m(827 tokens)[22m
+    ├── test_logging_system.py [2m(1,364 tokens)[22m
+    ├── test_maint_temporal_silos.py [2m(394 tokens)[22m
+    ├── test_memory_manager_model_cache.py [2m(629 tokens)[22m
+    ├── test_message_packager_vision.py [2m(1,211 tokens)[22m
+    ├── test_message_packager.py [2m(1,698 tokens)[22m
+    ├── test_mgba_connection.py [2m(672 tokens)[22m
+    ├── test_mgba_controller_frame_capture.py [2m(626 tokens)[22m
+    ├── test_mgba_socket.py [2m(2,823 tokens)[22m
+    ├── test_model_router_batching.py [2m(1,692 tokens)[22m
+    ├── test_model_router_deadline.py [2m(760 tokens)[22m
+    ├── test_netio_circuit_breaker.py [2m(934 tokens)[22m
+    ├── test_netio_rate_limits.py [2m(802 tokens)[22m
+    ├── test_netio_screenshot_guard.py [2m(1,035 tokens)[22m
+    ├── test_on_device_buffer.py [2m(1,406 tokens)[22m
+    ├── test_orchestrator_runtime.py [2m(97 tokens)[22m
+    ├── test_packaging.py [2m(1,004 tokens)[22m
+    ├── test_parallel_rrf_retrieval.py [2m(970 tokens)[22m
+    ├── test_path_sanitization.py [2m(413 tokens)[22m
+    ├── test_pipeline_engine.py [2m(1,606 tokens)[22m
+    ├── test_prompt_cache.py [2m(1,449 tokens)[22m
+    ├── test_qwen_controller_prompt_cache.py [2m(1,186 tokens)[22m
+    ├── test_qwen_controller.py [2m(535 tokens)[22m
+    ├── test_ram_decoders.py [2m(628 tokens)[22m
+    ├── test_ram_watch.py [2m(804 tokens)[22m
+    ├── test_real_model_loading.py [2m(892 tokens)[22m
+    ├── test_real_model_smoke.py [2m(161 tokens)[22m
+    ├── test_retrieval.py [2m(1,242 tokens)[22m
+    ├── test_router_glue.py [2m(1,629 tokens)[22m
+    ├── test_router.py [2m(3,456 tokens)[22m
+    ├── test_screenshot_locking.py [2m(827 tokens)[22m
+    ├── test_skill_dsl.py [2m(1,013 tokens)[22m
+    ├── test_skill_triggers.py [2m(550 tokens)[22m
+    ├── test_skills.py [2m(577 tokens)[22m
+    ├── test_socket_cleanup.py [2m(1,400 tokens)[22m
+    ├── test_sprite_detection.py [2m(3,562 tokens)[22m
+    ├── test_sprite_detector.py [2m(2,064 tokens)[22m
+    ├── test_state_map.py [2m(1,528 tokens)[22m
+    ├── test_telemetry.py [2m(235 tokens)[22m
+    ├── test_temporal_silo_episodes.py [2m(797 tokens)[22m
+    ├── test_text_speed_guarantee.py [2m(253 tokens)[22m
+    ├── test_unsloth_benchmark.py [2m(699 tokens)[22m
+    ├── test_uploader_rate_limit.py [2m(1,086 tokens)[22m
+    ├── test_vision_event_detection.py [2m(286 tokens)[22m
+    ├── test_vision_prompts.py [2m(1,590 tokens)[22m
+    ├── test_vision_tools.py [2m(1,353 tokens)[22m
+    ├── test_wram_bounds.py [2m(1,752 tokens)[22m
+    └── regressions/ [2m(4,893 tokens)[22m
+        ├── test_bug_0001_model_name_mismatch.py [2m(821 tokens)[22m
+        ├── test_bug_0002_ram_address_mismatch.py [2m(1,054 tokens)[22m
+        ├── test_mgba_http_snapshot.py [2m(1,817 tokens)[22m
+        └── test_wram_decoder_first_mon.py [2m(1,201 tokens)[22m
 
 [37m🔎 Security Check:[39m
 [2m──────────────────[22m
@@ -318,9 +371,9 @@ These files have been excluded from the output.[39m
 
 [37m📊 Pack Summary:[39m
 [2m────────────────[22m
-[37m  Total Files:[39m [37m240[39m files
-[37m Total Tokens:[39m [37m507,154[39m tokens
-[37m  Total Chars:[39m [37m2,260,305[39m chars
+[37m  Total Files:[39m [37m285[39m files
+[37m Total Tokens:[39m [37m374,515[39m tokens
+[37m  Total Chars:[39m [37m1,463,150[39m chars
 [37m       Output:[39m [37mrepomix-output.xml[39m
 [37m     Security:[39m [37m[37m✔ No suspicious files detected[37m[39m
 

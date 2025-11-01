@@ -11,7 +11,6 @@ if hf_home:
 
 from typing import Optional, Dict, List, Any, Union, Callable, Literal
 import asyncio
-import logging
 import hashlib
 import pickle
 import mmap
@@ -48,18 +47,28 @@ except Exception:  # pragma: no cover - optional dependency
     AutoModelForVision2Seq = None  # type: ignore
     AutoModelForCausalLM = None  # type: ignore
 
+# Import logging setup with relative import
+try:
+    from ..utils.logging_setup import get_logger
+except ImportError:
+    # Final fallback
+    import logging
+    def get_logger(name: str) -> logging.Logger:
+        return logging.getLogger(name)
 
 def is_unsloth_model(model_id: str) -> bool:
     """Check if a model id corresponds to an Unsloth 4-bit checkpoint."""
     return model_id.startswith("unsloth/Qwen3-VL-") and "unsloth-bnb-4bit" in model_id
 
-from .model_router import ModelSize, ModelRouter, DecodeResult
+# Import only the types needed, avoiding circular dependency
+from .model_router import ModelSize, DecodeResult, ModelRouter
+# from .caches import PromptCache, VisionCache, PromptKVCache  # Commented out due to duplicate definitions
 from .inference_queue import InferenceQueue
 from .timebudgets import PROMPT_CACHE_SIZE, ROUTER_MAX_WALL_S
 from .prompt_cache import PromptCache as PromptCacheNew, PromptCacheEntry as PromptCacheEntryNew
 from .pipeline_engine import PipelineEngine, PipelineRequest, Batch
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass

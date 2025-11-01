@@ -314,64 +314,122 @@ examples = generate_few_shot_examples(num_examples=3)
 text = format_state_for_decision(state)
 ```
 
-### Next Steps (Phases 3-5)
+---
 
-Phases 1-2 complete. Remaining work:
+## 🛡️ Agent Gatekeeper
 
-1. **Phase 3**: Few-shot in-context learning (5-10 curated examples)
-   - Cover diverse scenarios (exploring, combat, boss, shop, stairs)
-   - Entity positioning edge cases
-   - Confidence scoring patterns
+The Agent Gatekeeper provides safety filtering for agent actions, ensuring only valid and vetted actions are executed.
 
-2. **Phase 4**: Model selection strategy (2B/4B/8B by task complexity)
-   - Auto-select based on game state
-   - Latency vs. quality tradeoffs
-   - Cost-aware routing
+### Features
 
-3. **Phase 5**: A/B testing + prompt optimization
-   - Compare prompt variants systematically
-   - Track quality metrics vs. agent performance
-   - Optimize based on empirical results
+- **Safety Filtering**: Rejects explicitly invalid actions (e.g., `self-destruct`, `quit`, `exit`, `die`, `end_game`)
+- **ANN Validation**: Requires ≥3 shallow ANN hits to permit actions via vector similarity search
+- **Fallback Behavior**: On ANN failure, conservatively rejects all actions
+- **Async Operation**: Supports async ANN search for non-blocking validation
 
-See [PROMPT_OPTIMIZATION_GUIDE.md](docs/PROMPT_OPTIMIZATION_GUIDE.md) for full 5-phase plan.
+### Usage
 
-### Upload Modes
-1. **Git Push**: Direct push to `pages` branch (recommended for development)
-2. **GitHub API**: REST API calls (fallback when git unavailable)
-3. **No-op**: Dashboard disabled, retains local cache only
-
-### Content API Integration
-- **You.com Wrapper**: Multi-URL batch fetching with budget management
-- **Monthly Budget**: 1,000 calls/month default, persisted to `~/.cache/pmd-red/youcom_budget.json`
-- **Gate Policy**: Requires ≥3 on-device shallow hits before issuing gate burst (max 2 content calls)
-- **Cool-down**: Per-gate invocation permits 2 calls max (bulk defaults + focused deep-dive)
-- **Environment**: Set `YOU_API_KEY` (and optionally `YOU_API_BASE`) before running the agent
-- **Smoke Test**: `python -m scripts.check_you_api --url https://example.com --live` validates credentials before demos
-
-### Configuration
 ```python
-config = AgentConfig(
-    # Skill triggers
-    enable_skill_triggers=True,       # Enable automatic skill triggers
-    skill_belly_threshold=0.3,        # Trigger when belly < 30%
-    skill_hp_threshold=0.25,          # Trigger when HP < 25%
-    skill_backoff_seconds=5.0,        # Backoff after failures
+from src.agent.gatekeeper import Gatekeeper
+from src.retrieval.ann_search import VectorSearch
 
-    # Dashboard
-    dashboard_enabled=True,           # Toggle dashboard uploads
-    dashboard_branch="pages",         # Git branch for Pages
-    dashboard_site_root="docs",       # Site root directory
-    dashboard_flush_seconds=30.0,     # Batch flush interval
-    dashboard_max_batch_bytes=8*1024*1024,  # 8MB batch limit
-    dashboard_max_files_per_minute=30 # Rate limit
-)
+# Initialize with ANN search dependency
+ann_search = VectorSearch(index_path="path/to/ann/index")
+gatekeeper = Gatekeeper(ann_search=ann_search, min_hits=3)
+
+# Filter actions
+valid_actions = ["move", "attack", "use_item"]
+state = {"ascii": "dungeon_grid", "player_x": 10, "player_y": 10}
+filtered_actions = await gatekeeper.filter(valid_actions, state)
+# Returns: ["move", "attack", "use_item"] if ANN validation passes
 ```
 
-### Costs & Limits
-- **Pages Bandwidth**: 100GB/month free, then $0.008/GB
-- **LFS Storage**: 1GB free, then $0.008/GB/month
-- **LFS Bandwidth**: $0.008/GB
-- **Recommendation**: Disable dashboard or use external storage (Cloudflare R2) when approaching limits
+### Integration
+
+The gatekeeper is automatically integrated into the agent reasoning pipeline:
+
+- Actions are extracted from LLM responses
+- Passed through gatekeeper filtering before execution
+- Invalid actions trigger fallback to safe defaults
+
+## 🧪 Testing & Profiling
+
+**Important**: Always cd to REPO ROOT (absolute) before running tests; scripts enforce this.
+
+### Test Scripts
+
+**Fast Lane** (≤3 minutes):
+```bash
+# Windows PowerShell
+mamba info --envs; python --version; mamba activate agent-hackathon;
+if (-not (Test-Path 'C:\Homework\agent_hackathon\pokemon-md-agent\pyproject.toml')) { Write-Error 'Not at repo root'; exit 2 }
+Set-Location -Path 'C:\Homework\agent_hackathon\pokemon-md-agent';
+$env:PYTHONPATH='C:\Homework\agent_hackathon\pokemon-md-agent\src';
+python -m pytest -q --maxfail=1 -m "not slow and not network and not bench and not longctx"
+```
+
+```bash
+# Git Bash
+mamba info --envs && python --version && mamba activate agent-hackathon && \
+[ -f /c/Homework/agent_hackathon/pokemon-md-agent/pyproject.toml ] || { echo "Not at repo root"; exit 2; } && \
+cd /c/Homework/agent_hackathon/pokemon-md-agent && pwd && ls -la && \
+export PYTHONPATH=/c/Homework/agent_hackathon/pokemon-md-agent/src && \
+python -m pytest -q --maxfail=1 -m "not slow and not network and not bench and not longctx"
+```
+
+**Full Suite** (10-15 minutes):
+```bash
+# Windows PowerShell
+mamba info --envs; python --version; mamba activate agent-hackathon;
+if (-not (Test-Path 'C:\Homework\agent_hackathon\pokemon-md-agent\pyproject.toml')) { Write-Error 'Not at repo root'; exit 2 }
+Set-Location -Path 'C:\Homework\agent_hackathon\pokemon-md-agent';
+$env:PYTHONPATH='C:\Homework\agent_hackathon\pokemon-md-agent\src';
+python -m pytest -q
+```
+
+```bash
+# Git Bash
+mamba info --envs && python --version && mamba activate agent-hackathon && \
+[ -f /c/Homework/agent_hackathon/pokemon-md-agent/pyproject.toml ] || { echo "Not at repo root"; exit 2; } && \
+cd /c/Homework/agent_hackathon/pokemon-md-agent && pwd && ls -la && \
+export PYTHONPATH=/c/Homework/agent_hackathon/pokemon-md-agent/src && \
+python -m pytest -q
+```
+
+### Profiling & Benchmarking
+
+**Bench Sweep** (5-10 minutes):
+```bash
+# Windows PowerShell
+mamba info --envs; python --version; mamba activate agent-hackathon;
+Set-Location -Path 'C:\Homework\agent_hackathon\pokemon-md-agent';
+$env:PYTHONPATH='C:\Homework\agent_hackathon\pokemon-md-agent\src';
+python profiling/bench_qwen_vl.py --models all --time-budget-s 180 --full --plot
+```
+
+**Sync Profiling Data**:
+```bash
+# Windows PowerShell
+mamba info --envs; python --version; mamba activate agent-hackathon;
+Set-Location -Path 'C:\Homework\agent_hackathon\pokemon-md-agent';
+Copy-Item "..\profiling\*" ".\profiling\" -Recurse -Force -Exclude "__pycache__"
+```
+
+### Test Markers
+
+- `@pytest.mark.slow`: Long-running tests
+- `@pytest.mark.network`: Network-dependent tests  
+- `@pytest.mark.bench`: Performance benchmarks
+- `@pytest.mark.longctx`: Long context tests
+- `@pytest.mark.real_model`: Real model inference tests
+
+### Outputs
+
+- Test results: Console output with session summary and top slow tests
+- Bench results: `profiling/results/<UTC_ISO>/` (CSV, JSONL, plots)
+- Profiling data: Consolidated in `profiling/` directory
+
+---
 
 ---
 
@@ -914,43 +972,133 @@ Results saved to `profiling/results/<UTC_TIMESTAMP>/` with CSV metrics, JSON sum
 
 ---
 
-## 📈 Performance Targets
+## 🧪 Test Execution
 
-- **Inference speed**: <2 sec per decision (2B), <5 sec (4B), <10 sec (8B)
-- **Token efficiency**: <200k tokens/inference (2B/4B), <64k (8B)
-- **Memory footprint**: <50GB local cache (<1 hour history)
-- **API budget**: <100 Content API calls total (for stuck situations only)
+### Test Runner Commands
+
+**Fast Lane** (under 3 minutes):
+```bash
+# Windows PowerShell
+.\scripts\test_fast.ps1
+
+# Linux/Mac bash
+bash scripts/test_fast.sh
+```
+
+**Full Suite** (10-15 minutes):
+```bash
+# Windows PowerShell  
+.\scripts\test_full.ps1
+
+# Linux/Mac bash
+bash scripts/test_full.sh
+```
+
+**CI Validation**:
+```bash
+# Windows PowerShell
+.\scripts\test_ci.ps1
+
+# Linux/Mac bash  
+bash scripts/test_ci.sh
+```
+
+### Expected Runtimes
+
+- Fast lane: ≤3 minutes
+- Full suite: 10-15 minutes
+- Bench sweep: 5-10 minutes per config
+- CI: ≤3 minutes
+
+### Troubleshooting Common Test Failures
+
+| Issue | Solution |
+|-------|----------|
+| `faulthandler timeout` | Tests hanging - check for blocking I/O operations, increase `PYTEST_FDUMP_S` |
+| `Top slow tests` | Review session output for slowest tests to optimize |
+| `SyntaxError in qwen_controller.py` | See `agent_mailbox/copilot2codex.md` for core team fix |
+| `mGBA connection failures` | Verify emulator is running with Lua script on port 8888 |
+| `CUDA out of memory` | Reduce batch sizes or use smaller models for testing |
+| `Import errors` | Ensure `PYTHONPATH` includes `src/` directory |
+| `Timeout errors` | Increase `PYTEST_FDUMP_S` environment variable or check for infinite loops |
+| `Benchmark time budget exceeded` | Benchmark suite ran longer than `--time-budget-s` limit - check summary.json |
+| `No plots generated` | Ensure matplotlib is installed and CSV file exists |
+| `Output directory errors` | Check write permissions for `profiling/results/<UTC_TIMESTAMP>/` |
+
+### Test Markers
+
+- `@pytest.mark.slow`: Long-running tests (model training, heavy parametrization)
+- `@pytest.mark.network`: Tests requiring emulator/web connections
+- `@pytest.mark.bench`: Performance benchmarking and plotting
+- `@pytest.mark.longctx`: Tests with ≥64k context
 
 ---
 
-## 🔗 Related Resources
+### Test Scripts
 
-- [Qwen3-VL Models](https://huggingface.co/Qwen)
-- [mgba-http Documentation](https://mgba.io/)
-- [You.com Content API](https://documentation.you.com/)
-- [Pokemon Mystery Dungeon Red Wiki](https://bulbapedia.bulbagarden.net/)
+**Fast Lane** (under 3 minutes):
+```bash
+# Windows PowerShell
+.\scripts\test_fast.ps1
 
----
+# Linux/Mac bash
+bash scripts/test_fast.sh
+```
 
-## 📝 Next Actions
+**Full Suite** (10-15 minutes):
+```bash
+# Windows PowerShell  
+.\scripts\test_full.ps1
 
-1. ✅ Extract this zip to `C:\Homework\agent_hackathon`
-2. Install dependencies: `pip install -r requirements.txt` (includes `imagehash` for retrieval deduplication tests)
-3. Configure mgba (see `config/mgba_config.ini`)
-4. Test mgba connection: `python tests/test_mgba_connection.py`
-5. **Run fast test suite**: `.\scripts\test_fast.ps1` (Windows) or `bash scripts/test_fast.sh` (Linux/Mac)
-6. Run quickstart: `python examples/quickstart.py`
-7. Read architecture docs in `docs/` folder
-8. Review `AGENTS.md` for code agent instructions
+# Linux/Mac bash
+bash scripts/test_full.sh
+```
 
-**Current Status**: ⚙️ Seed project structure - ready for implementation
+**CI Validation**:
+```bash
+# Windows PowerShell
+.\scripts\test_ci.ps1
 
----
+# Linux/Mac bash  
+bash scripts/test_ci.sh
+```
 
-## 📜 License
+### Profiling & Benchmarking
 
-MIT License - See LICENSE file for details
+**Bench Sweep** (5-10 minutes):
+```bash
+# Windows PowerShell
+.\scripts\bench_sweep.ps1 -time_budget_s 180 -full -create_plots
 
-## 🤝 Contributing
+# Linux/Mac bash
+bash scripts/bench_sweep.sh
+```
 
-This is a hackathon project. Contributions welcome via pull requests!
+**Sync Profiling Data**:
+```bash
+# Windows PowerShell
+.\scripts\sync_profiling.ps1
+
+# Linux/Mac bash
+bash scripts/sync_profiling.sh
+```
+
+### Test Markers
+
+- `@pytest.mark.slow`: Long-running tests
+- `@pytest.mark.network`: Network-dependent tests  
+- `@pytest.mark.bench`: Performance benchmarks
+- `@pytest.mark.longctx`: Long context tests
+
+### Expected Runtimes
+
+- Fast lane: ≤3 minutes
+- Full suite: 10-15 minutes
+- Bench sweep: 5-10 minutes per config
+- CI: ≤3 minutes
+
+### Outputs
+
+- Test results: Console output
+- Bench results: `profiling/results/<UTC_ISO>/` (CSV, JSONL, plots)
+- Profiling data: Consolidated in `profiling/` directory

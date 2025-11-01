@@ -16,12 +16,23 @@ from src.environment.rom_gating import find_rom_files, ROMValidationError
 from src.vision.grid_parser import GridParser
 from src.vision.ascii_renderer import ASCIIRenderer
 from src.agent.qwen_controller import QwenController
+from src.agent.gatekeeper import Gatekeeper
 from src.skills.runtime import SkillRuntime
 from src.retrieval.stuckness_detector import StucknessDetector, StucknessAnalysis, StucknessStatus
 from src.retrieval.auto_retrieve import AutoRetriever, RetrievalQuery, RetrievedTrajectory
 from src.environment.ram_decoders import RAMSnapshot, PlayerState, MapData, PartyStatus
+from src.environment.ram_watch import RAMWatcher, create_ram_watcher
+from src.retrieval.ann_search import VectorSearch
+from .agent_config import AgentConfig
 
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "AgentCore",
+    "PokemonMDAgent",
+    "RAMWatcher",
+    "create_ram_watcher",
+]
 
 
 class AgentConfig:
@@ -82,6 +93,25 @@ class AgentCore:
         self.skills = SkillRuntime(self.mgba)
         self.stuckness = StucknessDetector()
         self.retriever = None
+
+        # Initialize gatekeeper with ANN search if retrieval enabled
+        if enable_retrieval:
+            # Initialize ANN search from retrieval components
+            try:
+                from src.retrieval.ann_search import VectorSearch
+                # Assume ANN index path is configured - would be passed as parameter in production
+                ann_search = VectorSearch(index_path="data/ann_index.faiss")
+                logger.info("ANN search initialized for gatekeeper")
+            except Exception as e:
+                logger.warning(f"Could not initialize ANN search for gatekeeper: {e}")
+                ann_search = None
+        else:
+            ann_search = None
+
+        self.gatekeeper = Gatekeeper(
+            ann_search=ann_search,
+            min_hits=3
+        )
 
         # Set objective
         self.objective = objective
@@ -348,8 +378,20 @@ class AgentCore:
             decision_text, scores = await self.qwen.generate_async(prompt)
             logger.debug(f"Qwen response: {decision_text[:100]}...")
 
-            # Parse decision
+            # Parse decision - get potential actions
             decision = self._parse_decision(decision_text)
+
+            # Filter actions through gatekeeper
+            valid_actions = self._extract_valid_actions(decision_text)
+            filtered_actions = await self.gatekeeper.filter(valid_actions, state)
+
+            if not filtered_actions:
+                logger.warning("All actions filtered out by gatekeeper")
+                return {"action": "random", "rationale": "Gatekeeper filtered all actions"}
+
+            # Use first filtered action
+            decision['action'] = filtered_actions[0]
+            logger.debug(f"Gatekeeper filtered actions: {valid_actions} -> {filtered_actions}")
 
             # Try skill execution if action maps to skill
             if decision['action'] in ['TAKE_STAIRS', 'USE_ITEM', 'ATTACK']:
@@ -402,6 +444,36 @@ Example: MOVE_UP | Stairs likely to the north
             rationale = "Could not parse decision"
 
         return {"action": action, "rationale": rationale}
+
+    def _extract_valid_actions(self, text: str) -> List[str]:
+        """Extract potential valid actions from Qwen response."""
+        # Parse actions from prompt format
+        # Example: "What action should the agent take? Choose from:
+        # - MOVE_UP, MOVE_DOWN, MOVE_LEFT, MOVE_RIGHT
+        # - USE_ITEM, ATTACK, TAKE_STAIRS
+        # - WAIT"
+
+        actions = []
+        if "MOVE_UP" in text or "move up" in text.lower():
+            actions.extend(["MOVE_UP", "MOVE_DOWN", "MOVE_LEFT", "MOVE_RIGHT"])
+        if "USE_ITEM" in text or "use item" in text.lower():
+            actions.append("USE_ITEM")
+        if "ATTACK" in text or "attack" in text.lower():
+            actions.append("ATTACK")
+        if "TAKE_STAIRS" in text or "take stairs" in text.lower():
+            actions.append("TAKE_STAIRS")
+        if "WAIT" in text or "wait" in text.lower():
+            actions.append("WAIT")
+
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_actions = []
+        for action in actions:
+            if action not in seen:
+                seen.add(action)
+                unique_actions.append(action)
+
+        return unique_actions if unique_actions else ["WAIT"]
 
     def act(self, decision: dict):
         """Execute action."""

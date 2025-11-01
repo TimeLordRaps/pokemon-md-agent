@@ -7,9 +7,14 @@ from .model_router import (
 )
 from .inference_queue import InferenceQueue
 from .memory_manager import MemoryManager
+from .agent_core import (
+    AgentCore, PokemonMDAgent, RAMWatcher, create_ram_watcher
+)
+from .agent_config import AgentConfig
 
 __all__ = [
     "QwenController", "ModelRouter", "ModelSize", "TwoStagePipeline",
     "PrefillRequest", "PrefillResult", "DecodeRequest", "DecodeResult", "GroupKey",
-    "InferenceQueue", "MemoryManager"
+    "InferenceQueue", "MemoryManager",
+    "AgentCore", "PokemonMDAgent", "AgentConfig", "RAMWatcher", "create_ram_watcher"
 ]
