@@ -5,6 +5,8 @@ Handles different model sizes (2B, 4B, 8B) with specific visual token budgets
 and message structures. Implements pack(step_state, policy_hint) returning list[Message].
 Consumes Copilot's {png,meta.json} format and supports multi-image packs with env_plus_grid + retrieved thumbnails.
 Images are separate files, not composites.
+
+Integrates vision system prompts from Phase 2 for structured GameState JSON output.
 """
 
 import logging
@@ -12,8 +14,17 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from PIL import Image
+
+try:
+    from src.models.vision_prompts import (
+        get_vision_system_prompt,
+        format_vision_prompt_with_examples,
+    )
+    VISION_PROMPTS_AVAILABLE = True
+except ImportError:
+    VISION_PROMPTS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -326,3 +337,95 @@ def unpack_triplet(blob: dict) -> tuple[str, str, str]:
         if not isinstance(blob[key], str):
             raise ValueError(f"Value for '{key}' must be str, got {type(blob[key])}")
     return blob['system'], blob['plan'], blob['act']
+
+
+# ============================================================================
+# VISION PROMPT INTEGRATION (Phase 2)
+# ============================================================================
+
+def get_vision_system_prompt_for_model(model_size: str = '4B') -> str:
+    """
+    Get optimized vision system prompt for model size.
+
+    For smaller models (2B/4B), uses instruct variant.
+    For larger/thinking models (8B+), can use thinking variant.
+
+    Args:
+        model_size: Model size ('2B', '4B', '8B')
+
+    Returns:
+        Vision system prompt string
+
+    Raises:
+        ValueError: If vision prompts not available or invalid model_size
+    """
+    if not VISION_PROMPTS_AVAILABLE:
+        raise ValueError("Vision prompts module not available. Ensure src.models.vision_prompts is installed.")
+
+    # Map model sizes to prompt variants
+    prompt_variant = "instruct" if model_size in ['2B', '4B'] else "thinking"
+    return get_vision_system_prompt(prompt_variant)
+
+
+def pack_with_vision_prompts(
+    step_state: Dict[str, Any],
+    policy_hint: str,
+    model_size: str = '4B',
+    num_examples: int = 3
+) -> Tuple[str, List[Message]]:
+    """
+    Package step state with vision system prompt and messages.
+
+    Combines vision system prompt (for GameState JSON output) with three-message protocol.
+
+    Args:
+        step_state: Current game state with image paths
+        policy_hint: Action policy hint (e.g., "explore", "fight")
+        model_size: Model size ('2B', '4B', '8B')
+        num_examples: Few-shot examples to include (1-5)
+
+    Returns:
+        Tuple of (system_prompt, messages_list)
+        - system_prompt: Vision system prompt for model
+        - messages_list: Standard three-message protocol (MSG[-2], MSG[-1], MSG[0])
+
+    Raises:
+        ValueError: If vision prompts unavailable or invalid parameters
+    """
+    if not VISION_PROMPTS_AVAILABLE:
+        raise ValueError("Vision prompts module not available.")
+
+    # Get vision system prompt
+    vision_system_prompt = get_vision_system_prompt_for_model(model_size)
+
+    # Get standard message packing
+    messages = pack(step_state, policy_hint, model_size)
+
+    logger.info("Packed messages with vision prompts for %s model", model_size)
+    return vision_system_prompt, messages
+
+
+def pack_from_copilot_with_vision(
+    copilot_input: CopilotInput,
+    policy_hint: str,
+    model_size: str = '4B',
+    num_examples: int = 3
+) -> Tuple[str, List[Message]]:
+    """
+    Package Copilot input with vision system prompt.
+
+    Args:
+        copilot_input: Copilot input with png, meta.json, and thumbnails
+        policy_hint: Action policy hint
+        model_size: Model size ('2B', '4B', '8B')
+        num_examples: Few-shot examples (1-5)
+
+    Returns:
+        Tuple of (system_prompt, messages_list)
+
+    Raises:
+        ValueError: If inputs invalid or vision prompts unavailable
+        FileNotFoundError: If input files don't exist
+    """
+    step_state = parse_copilot_input(copilot_input)
+    return pack_with_vision_prompts(step_state, policy_hint, model_size, num_examples)

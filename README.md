@@ -201,6 +201,99 @@ python scripts/test_vision_schema.py
 .\scripts\validate_vision_schema.ps1 -RunTests
 ```
 
+### Phase 2: Vision System Prompts
+
+**Phase 2 Implementation** (Complete): Structured system prompts for Qwen3-VL vision models.
+
+#### Key Features
+- ✅ **58 unit + integration tests** (1.34s runtime) covering prompt variants and message integration
+- ✅ **Instruct variant** — Direct JSON output for 2B/4B models
+- ✅ **Thinking variant** — Chain-of-thought reasoning for reasoning-enabled models
+- ✅ **PromptBuilder class** — Type-safe prompt assembly with few-shot examples
+- ✅ **Message packager integration** — Seamless integration with three-message protocol
+- ✅ **Model-specific optimization** — 2B/4B use instruct, 8B uses thinking variant
+
+#### System Prompts
+
+Located in `src/models/vision_prompts.py`:
+
+```python
+from src.models.vision_prompts import (
+    VISION_SYSTEM_PROMPT_INSTRUCT,
+    VISION_SYSTEM_PROMPT_THINKING,
+    PromptBuilder,
+    format_vision_prompt_with_examples
+)
+
+# Build complete prompt with context and examples
+builder = PromptBuilder("instruct")
+builder.add_few_shot_examples(3)
+builder.add_context(policy_hint="explore", model_size="4B")
+
+prompt = builder.build_complete_prompt()
+# Returns: {"system": "...", "user": "..."}
+
+# Or use high-level function
+complete = format_vision_prompt_with_examples(
+    policy_hint="battle",
+    model_variant="thinking",
+    num_examples=3,
+    model_size="8B"
+)
+```
+
+#### Message Packager Integration
+
+Located in `src/orchestrator/message_packager.py`:
+
+```python
+from src.orchestrator.message_packager import pack_with_vision_prompts
+
+# Pack game state with vision prompts
+step_state = {...}  # From Copilot or agent state
+system_prompt, messages = pack_with_vision_prompts(
+    step_state,
+    policy_hint="explore",
+    model_size="4B",
+    num_examples=3
+)
+
+# Returns: (system_prompt_str, [msg1, msg2, msg3])
+# Ready to send to Qwen3-VL with three-message protocol
+```
+
+#### Quick Validation
+
+```bash
+# Activate environment
+mamba activate agent-hackathon
+
+# Run all vision tests (Phase 1 + Phase 2)
+python -m pytest tests/test_game_state_*.py tests/test_vision_prompts.py tests/test_message_packager_vision.py -v
+
+# Quick validation (Phase 2 only)
+python scripts/test_vision_prompts.py
+
+# (Windows) PowerShell validation script
+.\scripts\validate_vision_prompts.ps1 -RunTests
+```
+
+#### Prompt Characteristics
+
+**Instruct Variant (2B/4B models)**
+- ~2,234 characters
+- Direct JSON output format
+- Explicit requirements and rules
+- Optimized for smaller models with less reasoning capability
+- Focus on clear instructions and schema compliance
+
+**Thinking Variant (8B+ reasoning models)**
+- ~2,521 characters
+- 6-step chain-of-thought reasoning (OBSERVATION → CLASSIFICATION → STATE → THREATS → CONFIDENCE → JSON)
+- Encourages explicit reasoning about visual input
+- Better for models that benefit from intermediate reasoning steps
+- Chain of thought helps with complex multi-entity scenes
+
 ### Utility Functions
 
 Located in `src/models/game_state_utils.py`:
@@ -221,12 +314,24 @@ examples = generate_few_shot_examples(num_examples=3)
 text = format_state_for_decision(state)
 ```
 
-### Next Steps (Phases 2-5)
+### Next Steps (Phases 3-5)
 
-1. **Phase 2**: System prompts for instruct/thinking variants
-2. **Phase 3**: Few-shot in-context examples
-3. **Phase 4**: Model selection strategy (2B/4B/8B by task)
-4. **Phase 5**: A/B testing + prompt optimization
+Phases 1-2 complete. Remaining work:
+
+1. **Phase 3**: Few-shot in-context learning (5-10 curated examples)
+   - Cover diverse scenarios (exploring, combat, boss, shop, stairs)
+   - Entity positioning edge cases
+   - Confidence scoring patterns
+
+2. **Phase 4**: Model selection strategy (2B/4B/8B by task complexity)
+   - Auto-select based on game state
+   - Latency vs. quality tradeoffs
+   - Cost-aware routing
+
+3. **Phase 5**: A/B testing + prompt optimization
+   - Compare prompt variants systematically
+   - Track quality metrics vs. agent performance
+   - Optimize based on empirical results
 
 See [PROMPT_OPTIMIZATION_GUIDE.md](docs/PROMPT_OPTIMIZATION_GUIDE.md) for full 5-phase plan.
 
