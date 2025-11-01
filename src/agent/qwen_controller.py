@@ -1,10 +1,18 @@
 """Qwen3-VL controller for PMD-Red agent with batching and KV cache support."""
 
+# Sanitize HF_HOME before any imports that might use it
+import os
+from .utils import sanitize_hf_home, get_hf_cache_dir
+
+hf_home = sanitize_hf_home()
+if hf_home:
+    os.environ['HF_HOME'] = hf_home
+    print(f"DEBUG: Sanitized HF_HOME to: {repr(hf_home)}")
+
 from typing import Optional, Dict, List, Any, Union, Callable, Literal
 import asyncio
 import logging
 import hashlib
-import os
 import pickle
 import mmap
 from pathlib import Path
@@ -13,11 +21,37 @@ from collections import OrderedDict
 import time
 
 try:
+    from unsloth import FastLanguageModel  # type: ignore[import-untyped]
+    HAS_UNSLOTH = True
+except Exception:  # pragma: no cover - optional dependency
+    FastLanguageModel = None  # type: ignore
+    HAS_UNSLOTH = False
+
+try:
     import torch
     from transformers.cache_utils import StaticCache
 except ImportError:  # pragma: no cover - optional dependency
     torch = None  # type: ignore
     StaticCache = None  # type: ignore
+
+# Optional HF imports - used when MODEL_BACKEND=hf
+try:
+    from transformers import (
+        AutoTokenizer,
+        AutoProcessor,
+        AutoModelForVision2Seq,
+        AutoModelForCausalLM,
+    )
+except Exception:  # pragma: no cover - optional dependency
+    AutoTokenizer = None  # type: ignore
+    AutoProcessor = None  # type: ignore
+    AutoModelForVision2Seq = None  # type: ignore
+    AutoModelForCausalLM = None  # type: ignore
+
+
+def is_unsloth_model(model_id: str) -> bool:
+    """Check if a model id corresponds to an Unsloth 4-bit checkpoint."""
+    return model_id.startswith("unsloth/Qwen3-VL-") and "unsloth-bnb-4bit" in model_id
 
 from .model_router import ModelSize, ModelRouter, DecodeResult
 from .inference_queue import InferenceQueue
@@ -359,7 +393,7 @@ class QwenController:
         self,
         model_router: Optional[ModelRouter] = None,
         hf_home: Optional[str] = None,
-        local_files_only: bool = True,
+        local_files_only: bool = False,  # Changed to False for real model downloads
         trust_remote_code: bool = True,
         enable_kv_cache_serialization: bool = False,
         use_cache: bool = True,
@@ -379,13 +413,25 @@ class QwenController:
             best_of_n: Default best-of-n value (1,2,4,8)
         """
         self.model_router = model_router or ModelRouter()
-        self.hf_home = hf_home or os.environ.get("HF_HOME", str(Path.home() / ".cache" / "huggingface")).strip('"')
         self.local_files_only = local_files_only
         self.trust_remote_code = trust_remote_code
         self.enable_kv_cache_serialization = enable_kv_cache_serialization
         self.use_cache = use_cache
         self.use_pipeline = use_pipeline
         self.best_of_n = best_of_n
+
+        # HF_HOME is already sanitized at module level
+        self.hf_home = hf_home or os.environ.get("HF_HOME", str(Path.home() / ".cache" / "huggingface"))
+        print(f"DEBUG: Controller HF_HOME: {self.hf_home}")
+
+        cache_dir_env = os.environ.get("PROMPT_CACHE_DIR")
+        if cache_dir_env:
+            sanitized_cache = cache_dir_env.strip().strip('"').strip("'")
+            self.cache_root = Path(sanitized_cache).expanduser()
+        else:
+            # Use sanitized HF_HOME with hub subdirectory for cache root
+            hf_cache_dir = get_hf_cache_dir()
+            self.cache_root = Path(hf_cache_dir) if hf_cache_dir else Path(self.hf_home)
 
         # Shared components across model variants of same size
         self.shared_tokenizers: Dict[ModelSize, Any] = {}
@@ -394,17 +440,31 @@ class QwenController:
         # Loaded models
         self.loaded_models: Dict[str, ModelHandle] = {}
         self.loaded_model_order: "OrderedDict[str, ModelHandle]" = OrderedDict()
-        self.max_loaded_models = 4
+        self.max_loaded_models = 2  # Reduced for real models to manage VRAM
         self.vram_guard_enabled = bool(torch is not None and torch.cuda.is_available())
 
+        # Expose router batch sizes for backward-compatible tests
+        self.batch_sizes = {
+            ModelSize.SIZE_2B: self.model_router.batch_size_2b,
+            ModelSize.SIZE_4B: self.model_router.batch_size_4b,
+            ModelSize.SIZE_8B: self.model_router.batch_size_8b,
+        }
+
         # Initialize new prompt cache (LRU 2-5 per model, RAM + optional disk)
-        cache_dir = Path(self.hf_home)
-        self.prompt_cache = PromptCacheNew(max_entries_per_model=5, enable_disk=True, cache_dir=cache_dir)
-        logger.info(f"Initialized new PromptCache with 5 entries per model, disk enabled")
+        # Use separate prompt cache directory, not HF cache directory
+        prompt_cache_dir = os.environ.get("PROMPT_CACHE_DIR")
+        if prompt_cache_dir:
+            sanitized_cache = prompt_cache_dir.strip().strip('"').strip("'")
+            prompt_cache_path = Path(sanitized_cache).expanduser()
+        else:
+            prompt_cache_path = Path.home() / ".cache" / "pmd_prompt_cache"
+        
+        self.prompt_cache = PromptCacheNew(max_entries_per_model=5, enable_disk=True, cache_dir=prompt_cache_path)
+        logger.info(f"Initialized new PromptCache with 5 entries per model, disk enabled at {prompt_cache_path}")
 
         # Legacy caches for compatibility (will be phased out)
         self.vision_cache = VisionCache()
-        self.prompt_kv_cache = PromptKVCache(cache_dir, max_ram_entries=5)
+        self.prompt_kv_cache = PromptKVCache(self.cache_root, max_ram_entries=5)
 
         # Pipeline engine for continuous batching with ≤50ms tick
         self.pipeline_engine = PipelineEngine(max_batch_size=8, tick_interval_ms=50)
@@ -478,19 +538,119 @@ class QwenController:
 
         self._ensure_vram_capacity(size)
 
-        # Load shared components if not already loaded
+        # Ensure HF_HOME is properly set for model loading
+        if self.hf_home:
+            os.environ['HF_HOME'] = self.hf_home
+            print(f"DEBUG: Set HF_HOME to {self.hf_home} for model loading")
+
+        # Attempt to load real HF models when requested
+        backend = os.environ.get("MODEL_BACKEND", "unsloth").lower()  # Default to unsloth, fallback to hf
+        loaded_tokenizer = None
+        loaded_processor = None
+        loaded_model = None
+
+        # Try Unsloth first if available and model supports it (default behavior)
+        unsloth_success = False
+        if HAS_UNSLOTH and FastLanguageModel and is_unsloth_model(name):
+            logger.info("Attempting Unsloth load for %s (default backend)", name)
+            try:
+                loaded_model, loaded_tokenizer = FastLanguageModel.from_pretrained(
+                    model_name=name,
+                    max_seq_length=2048,  # Configurable, but reasonable default for VL models
+                    dtype=None,  # Let Unsloth handle dtype for dynamic precision
+                    load_in_4bit=True,  # 4-bit memory loading
+                    inference_only=True,  # No fine-tuning
+                    cache_dir=os.path.join(self.hf_home, "hub"),  # Use HF hub directory for caching
+                )
+                # For vision models, we may need to load processor separately if not included
+                if "VL" in name or "Vision" in name:
+                    try:
+                        from transformers import AutoProcessor
+                        loaded_processor = AutoProcessor.from_pretrained(
+                            name,
+                            cache_dir=os.path.join(self.hf_home, "hub"),  # Use HF hub directory for caching
+                            local_files_only=self.local_files_only,
+                            trust_remote_code=self.trust_remote_code,
+                        )
+                    except Exception as e:
+                        logger.warning("Failed to load processor for Unsloth vision model %s: %s", name, e)
+                logger.info("Unsloth model loaded successfully: %s", name)
+                unsloth_success = True
+            except Exception as exc:
+                logger.warning(f"Unsloth model load failed for {name}: {exc}")
+                logger.info("Falling back to HF transformers backend")
+                import traceback
+                logger.debug(f"Unsloth traceback: {traceback.format_exc()}")
+
+        # Fall back to HF if Unsloth failed or not available
+        if not unsloth_success:
+            logger.info("MODEL_BACKEND=hf requested - attempting HF load for %s", name)
+            try:
+                # Choose vision vs causal model loader heuristically
+                is_vision = "VL" in name or "Vision" in name or "vision" in name
+                load_kwargs = {
+                    "cache_dir": os.path.join(self.hf_home, "hub"),
+                    "local_files_only": self.local_files_only,
+                    "trust_remote_code": self.trust_remote_code,
+                }
+                logger.info(f"HF load_kwargs: {load_kwargs}")
+
+                # Load tokenizer/processor
+                try:
+                    from transformers import AutoTokenizer
+                    loaded_tokenizer = AutoTokenizer.from_pretrained(name, **load_kwargs)
+                    logger.info(f"Successfully loaded tokenizer for {name}")
+                except Exception as e:
+                    logger.warning("Failed to load tokenizer for %s: %s", name, e)
+
+                if is_vision:
+                    try:
+                        from transformers import AutoProcessor
+                        loaded_processor = AutoProcessor.from_pretrained(name, **load_kwargs)
+                        logger.info(f"Successfully loaded processor for {name}")
+                    except Exception as e:
+                        logger.warning("Failed to load processor for %s: %s", name, e)
+
+                # Load the model object
+                if is_vision:
+                    try:
+                        from transformers import AutoModelForVision2Seq
+                        loaded_model = AutoModelForVision2Seq.from_pretrained(name, **load_kwargs)
+                        logger.info(f"Successfully loaded vision model for {name}")
+                    except Exception as e:
+                        logger.warning("Failed to load vision model for %s: %s", name, e)
+                else:
+                    try:
+                        from transformers import AutoModelForCausalLM
+                        loaded_model = AutoModelForCausalLM.from_pretrained(name, **load_kwargs)
+                        logger.info(f"Successfully loaded causal LM for {name}")
+                    except Exception as e:
+                        logger.warning("Failed to load causal LM for %s: %s", name, e)
+
+            except Exception as exc:
+                logger.warning("HF model load attempt failed for %s: %s", name, exc)
+
+        # Fallback to placeholders when HF backend not selected or load failed
         if size not in self.shared_tokenizers:
-            # Placeholder - would load actual tokenizer
-            self.shared_tokenizers[size] = f"tokenizer_{size.value}"
-            logger.info(f"Loaded shared tokenizer for {size.value}")
+            if loaded_tokenizer is not None:
+                self.shared_tokenizers[size] = loaded_tokenizer
+                logger.info(f"Loaded shared tokenizer for {size.value} from HF: {name}")
+            else:
+                # Placeholder - would load actual tokenizer
+                self.shared_tokenizers[size] = f"tokenizer_{size.value}"
+                logger.info(f"Loaded placeholder shared tokenizer for {size.value}")
 
         if size not in self.shared_vision_processors:
-            # Placeholder - would load actual vision processor
-            self.shared_vision_processors[size] = f"vision_processor_{size.value}"
-            logger.info(f"Loaded shared vision processor for {size.value}")
+            if loaded_processor is not None:
+                self.shared_vision_processors[size] = loaded_processor
+                logger.info(f"Loaded shared vision processor for {size.value} from HF: {name}")
+            else:
+                # Placeholder - would load actual vision processor
+                self.shared_vision_processors[size] = f"vision_processor_{size.value}"
+                logger.info(f"Loaded placeholder shared vision processor for {size.value}")
 
-        # Load model (placeholder)
-        model = f"loaded_{name}_{variant}"
+        # Use real model instance if we succeeded loading it, otherwise placeholder
+        model = loaded_model if loaded_model is not None else f"loaded_{name}_{variant}"
 
         handle = ModelHandle(
             model=model,
@@ -607,7 +767,7 @@ class QwenController:
         if not self.enable_kv_cache_serialization:
             return
 
-        cache_file = Path(self.hf_home) / "pmd_kv_cache" / f"{cache_key}.mm"
+        cache_file = self.cache_root / "pmd_kv_cache" / f"{cache_key}.mm"
         cache_file.parent.mkdir(parents=True, exist_ok=True)
 
         try:
@@ -624,7 +784,7 @@ class QwenController:
         if not self.enable_kv_cache_serialization:
             return None
 
-        cache_file = Path(self.hf_home) / "pmd_kv_cache" / f"{cache_key}.mm"
+        cache_file = self.cache_root / "pmd_kv_cache" / f"{cache_key}.mm"
 
         if not cache_file.exists():
             return None
@@ -645,8 +805,7 @@ class QwenController:
     def _get_or_create_prompt_cache_ring(self, model_name: str) -> PromptCacheRing:
         """Get or create prompt cache ring for model."""
         if model_name not in self.prompt_cache_rings:
-            cache_dir = Path(self.hf_home)
-            self.prompt_cache_rings[model_name] = PromptCacheRing(model_name, cache_dir)
+            self.prompt_cache_rings[model_name] = PromptCacheRing(model_name, self.cache_root)
         return self.prompt_cache_rings[model_name]
 
     def _get_or_create_vram_semaphore(self, model_name: str) -> asyncio.Semaphore:
@@ -724,6 +883,17 @@ class QwenController:
                 model_size = ModelSize.SIZE_4B
             else:
                 model_size = ModelSize.SIZE_8B
+        elif isinstance(model_size, str):
+            # Convert string to ModelSize enum
+            model_size_str = model_size.upper()
+            if model_size_str == "2B":
+                model_size = ModelSize.SIZE_2B
+            elif model_size_str == "4B":
+                model_size = ModelSize.SIZE_4B
+            elif model_size_str == "8B":
+                model_size = ModelSize.SIZE_8B
+            else:
+                raise ValueError(f"Invalid model_size string: {model_size}. Must be '2B', '4B', or '8B'")
 
         model_name = self._get_model_name(model_size, use_thinking)
         self._validate_model_name(model_name)
@@ -747,6 +917,7 @@ class QwenController:
 
         # Cache miss or cache disabled - use pipeline if enabled
         if self.use_pipeline:
+            await self.initialize_async()
             # Submit to pipeline
             request = PipelineRequest(
                 id=f"req_{int(time.time()*1000)}",
@@ -759,15 +930,18 @@ class QwenController:
 
             success = await self.pipeline_engine.submit_request(request)
             if not success:
-                raise RuntimeError("Pipeline queue full")
+                logger.warning("Pipeline queue full, falling back to direct generation")
+            else:
+                # Poll for completion with short timeout
+                deadline = time.time() + 0.5  # 500ms budget for simulated pipeline
+                while time.time() < deadline:
+                    completed = await self.pipeline_engine.get_completed_request(request.id)
+                    if completed:
+                        # Mock result - in real impl would parse from completed request
+                        return f"Pipeline result for: {prompt[:50]}...", [1.0] * best_of_n
+                    await asyncio.sleep(0)  # Yield control to allow pipeline ticks
 
-            # Wait for completion
-            completed = await self.pipeline_engine.get_completed_request(request.id)
-            if completed:
-                # Mock result - in real impl would parse from completed request
-                return f"Pipeline result for: {prompt[:50]}...", [1.0] * best_of_n
-
-            raise RuntimeError("Pipeline request failed")
+                logger.warning("Pipeline request timed out, falling back to direct generation")
 
         # Fallback to parallel generation for best_of_n
         if best_of_n > 1:
@@ -807,51 +981,124 @@ class QwenController:
             combined_bytes = b"".join(img if isinstance(img, bytes) else str(img).encode() for img in images)
             image_sha = hashlib.sha256(combined_bytes).hexdigest()
 
+        # Determine model size for shared components
+        if "2B" in model_name:
+            size = ModelSize.SIZE_2B
+        elif "4B" in model_name:
+            size = ModelSize.SIZE_4B
+        elif "8B" in model_name:
+            size = ModelSize.SIZE_8B
+        else:
+            raise ValueError(f"Cannot determine size from model name: {model_name}")
+
+        # Get model handle
+        variant = "thinking" if "Thinking" in model_name else "instruct"
+        cache_key = f"{model_name}_{variant}"
+        if cache_key not in self.loaded_models:
+            # Load model if not already loaded
+            self.load_model(model_name, variant)
+
+        handle = self.loaded_models[cache_key]
+        model = handle.model
+        tokenizer = self.shared_tokenizers.get(size)
+        processor = self.shared_vision_processors.get(size)
+
+        if model is None or isinstance(model, str):
+            # Fallback to mock if model not loaded
+            logger.warning(f"Model {model_name} not properly loaded, using mock response")
+            return f"Generated response (mock) for: {prompt[:50]}..."
+
         # Check prompt cache
         tokenized = self.get_tokenized_prefix(prompt, model_name)
-        if tokenized is None:
-            # Tokenize and cache
-            tokenized = f"tokenized_{prompt_sha}"  # Placeholder
-            self.cache_tokenized_prefix(prompt, model_name, tokenized)
-            logger.debug(f"Cached tokenized prefix for {model_name}: {prompt_sha}")
+        input_ids = None
+        if tokenized is None or isinstance(tokenized, str):
+            # Tokenize input
+            try:
+                if images and processor:
+                    # Vision model - use processor
+                    inputs = processor(text=[prompt], images=images, return_tensors="pt")
+                    input_ids = inputs["input_ids"]
+                    if "image_grid_thw" in inputs:
+                        # Qwen3-VL specific handling
+                        inputs = {k: v.to(model.device) if hasattr(v, 'to') else v for k, v in inputs.items()}
+                elif tokenizer:
+                    # Text-only model
+                    inputs = tokenizer(prompt, return_tensors="pt")
+                    input_ids = inputs["input_ids"].to(model.device)
+                    inputs = {k: v.to(model.device) if hasattr(v, 'to') else v for k, v in inputs.items()}
+                else:
+                    raise ValueError("No tokenizer or processor available")
+
+                # Cache tokenized input
+                self.cache_tokenized_prefix(prompt, model_name, input_ids)
+                logger.debug(f"Cached tokenized prefix for {model_name}: {prompt_sha}")
+
+            except Exception as e:
+                logger.error(f"Failed to tokenize input for {model_name}: {e}")
+                return f"Tokenization failed for: {prompt[:50]}..."
+        else:
+            # Use cached tokenized input
+            input_ids = tokenized
+            inputs = {"input_ids": input_ids.to(model.device) if hasattr(input_ids, 'to') else input_ids}
 
         # Check vision cache if images present
-        vision_encoded = None
-        if image_sha:
+        if image_sha and "image_grid_thw" in inputs:
             vision_encoded = self.vision_cache.get_encoded_image(image_sha)
             if vision_encoded is None:
-                # Encode and cache vision
-                vision_encoded = f"encoded_{image_sha}"  # Placeholder
-                self.vision_cache.cache_encoded_image(image_sha, vision_encoded)
+                # Vision features are already processed by processor
+                self.vision_cache.cache_encoded_image(image_sha, inputs.get("image_grid_thw"))
                 logger.debug(f"Cached vision encoding: {image_sha}")
 
         # Check KV cache
         kv_cache_key = self.prompt_kv_cache._make_cache_key(model_name, prompt_sha, image_sha)
         cached_kv = self.prompt_kv_cache.get_kv_state(kv_cache_key)
 
-        if cached_kv:
+        if cached_kv and StaticCache and hasattr(cached_kv, 'past_key_values'):
             logger.debug(f"Using cached KV state for {kv_cache_key}")
-            # Try to use StaticCache if available
-            if StaticCache and hasattr(cached_kv, 'past_key_values'):
-                kv_cache = cached_kv
-            else:
-                kv_cache = None
+            inputs["past_key_values"] = cached_kv.past_key_values
+            kv_cache = cached_kv
         else:
             logger.debug(f"No cached KV state for {kv_cache_key}")
             kv_cache = None
 
-        # Simulate generation (replace with actual model call)
-        response = f"Generated response for: {prompt[:50]}..."
+        # Generate response
+        try:
+            if torch is None:
+                raise RuntimeError("PyTorch not available")
 
-        # Cache KV state if long prompt (simulate StaticCache creation)
-        if len(prompt) > 50 and StaticCache:
-            try:
-                # Create mock StaticCache - in real implementation, this would be the actual KV state
-                dummy_kv_state = {"prompt_sha": prompt_sha, "model": model_name}  # Mock KV state
-                self.prompt_kv_cache.cache_kv_state(kv_cache_key, dummy_kv_state)
-                logger.debug(f"Cached KV state: {kv_cache_key}")
-            except Exception as e:
-                logger.warning(f"Failed to cache KV state: {e}")
+            with torch.no_grad():
+                # Set model to eval mode
+                model.eval()
+
+                # Generate with proper parameters
+                generation_config = {
+                    "max_new_tokens": max_tokens,
+                    "temperature": temperature if temperature > 0 else None,
+                    "do_sample": temperature > 0,
+                    "pad_token_id": tokenizer.pad_token_id if tokenizer else None,
+                    "eos_token_id": tokenizer.eos_token_id if tokenizer else None,
+                }
+
+                # Remove None values
+                generation_config = {k: v for k, v in generation_config.items() if v is not None}
+
+                outputs = model.generate(**inputs, **generation_config)
+
+                # Decode response
+                if tokenizer:
+                    # Skip input tokens for generated text only
+                    generated_ids = outputs[0][len(inputs["input_ids"][0]):]
+                    response = tokenizer.decode(generated_ids, skip_special_tokens=True)
+                else:
+                    response = str(outputs)  # Fallback
+
+                # Cache KV state if long prompt
+                # TODO: Implement proper KV caching with StaticCache
+                pass
+
+        except Exception as e:
+            logger.error(f"Generation failed for {model_name}: {e}")
+            response = f"Generation failed: {str(e)[:50]}..."
 
         latency = time.time() - start_time
         logger.debug(f"Generation completed in {latency:.3f}s")
@@ -903,7 +1150,11 @@ class QwenController:
 
     def get_batch_stats(self) -> Dict[str, Any]:
         """Get batch processing statistics."""
-        return self.model_router.get_batch_stats()
+        # Use default stats if model_router doesn't have the method
+        try:
+            return self.model_router.get_batch_stats()
+        except AttributeError:
+            return {"note": "ModelRouter.get_batch_stats not available"}
 
     def preload_models(self, model_sizes: List[ModelSize]) -> None:
         """Preload models into memory."""

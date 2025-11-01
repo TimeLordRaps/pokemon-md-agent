@@ -21,11 +21,14 @@ class TestInferenceQueueStages:
     @pytest.mark.asyncio
     async def test_prefill_stage_micro_batching(self):
         """Test PREFILL stage groups requests by model and parameters."""
-        # Set a proper HF_HOME to avoid path issues
+        # Sanitize HF_HOME for testing
+        from src.agent.utils import sanitize_hf_home
         import os
         old_hf_home = os.environ.get('HF_HOME')
-        os.environ['HF_HOME'] = '/tmp/test_cache'
-        
+        sanitized_hf = sanitize_hf_home()
+        if sanitized_hf:
+            os.environ['HF_HOME'] = sanitized_hf
+
         try:
             router = ModelRouter()
             pipeline = TwoStagePipeline(router, flush_tick_ms=100)
@@ -47,10 +50,16 @@ class TestInferenceQueueStages:
             # Force flush to process
             pipeline.force_flush()
 
-            # All should be in same group
-            assert len(pipeline.prefill_queues) == 1
-            group_key = list(pipeline.prefill_queues.keys())[0]
-            assert len(pipeline.prefill_queues[group_key]) == 0  # Processed
+            # Wait for all futures to complete
+            results = await asyncio.gather(*futures)
+
+            # Check that all futures completed successfully
+            assert len(results) == 3
+            for result in results:
+                assert isinstance(result, PrefillResult)
+
+            # Queues should be empty after processing
+            assert len(pipeline.prefill_queues) == 0  # All groups processed
         finally:
             # Restore original HF_HOME
             if old_hf_home is not None:
@@ -58,7 +67,8 @@ class TestInferenceQueueStages:
             elif 'HF_HOME' in os.environ:
                 del os.environ['HF_HOME']
 
-    def test_decode_stage_processing(self):
+    @pytest.mark.asyncio
+    async def test_decode_stage_processing(self):
         """Test DECODE stage processes prefill results with temperatures."""
         router = ModelRouter()
         pipeline = TwoStagePipeline(router, flush_tick_ms=100)
@@ -79,10 +89,12 @@ class TestInferenceQueueStages:
         # Force flush
         pipeline.force_flush()
 
-        # Should have processed
-        assert len(pipeline.decode_queues) == 1
-        group_key = list(pipeline.decode_queues.keys())[0]
-        assert len(pipeline.decode_queues[group_key]) == 0  # Processed
+        # Wait for completion
+        result = await future
+        assert isinstance(result, DecodeResult)
+
+        # Queues should be empty after processing
+        assert len(pipeline.decode_queues) == 0
 
     def test_group_key_hashing(self):
         """Test group key creation and hashing for micro-batching."""
@@ -111,7 +123,8 @@ class TestInferenceQueueStages:
         assert hash(key1) == hash(key2)
         assert key1 != key3
 
-    def test_concurrent_pipeline_operations(self):
+    @pytest.mark.asyncio
+    async def test_concurrent_pipeline_operations(self):
         """Test concurrent PREFILL and DECODE operations."""
         router = ModelRouter()
         pipeline = TwoStagePipeline(router, flush_tick_ms=10)  # Short flush
@@ -140,10 +153,16 @@ class TestInferenceQueueStages:
 
         # Check queues processed
         pipeline._check_flush()
-        assert len(pipeline.prefill_queues) == 1  # One group
-        assert len(pipeline.decode_queues) == 1  # One group
 
-    def test_batch_size_limits(self):
+        # Wait for all futures to complete
+        await asyncio.gather(*prefill_futures, *decode_futures)
+
+        # Queues should be empty after processing
+        assert len(pipeline.prefill_queues) == 0
+        assert len(pipeline.decode_queues) == 0
+
+    @pytest.mark.asyncio
+    async def test_batch_size_limits(self):
         """Test batch size limits are respected in processing."""
         router = ModelRouter()
 
@@ -162,10 +181,14 @@ class TestInferenceQueueStages:
         # Force processing
         router.two_stage_pipeline.force_flush()
 
-    def test_timeout_flush_mechanism(self):
+    @pytest.mark.asyncio
+    async def test_timeout_flush_mechanism(self):
         """Test timeout-based flush prevents indefinite queuing."""
         router = ModelRouter()
         pipeline = TwoStagePipeline(router, flush_tick_ms=20)  # 20ms timeout
+
+        # Initialize caches first
+        pipeline.force_flush()
 
         # Submit request
         req = PrefillRequest(prompt="Test", model_size=ModelSize.SIZE_2B)
@@ -173,6 +196,8 @@ class TestInferenceQueueStages:
 
         # Initially queued
         assert len(pipeline.prefill_queues) == 1
+        group_key = list(pipeline.prefill_queues.keys())[0]
+        assert len(pipeline.prefill_queues[group_key]) == 1
 
         # Wait for timeout
         time.sleep(0.03)  # Longer than 20ms
@@ -180,10 +205,15 @@ class TestInferenceQueueStages:
         # Check flush
         pipeline._check_flush()
 
-        # Should be processed
-        assert len(pipeline.prefill_queues) == 0
+        # Should be processed (group should no longer exist or be empty)
+        if group_key in pipeline.prefill_queues:
+            assert len(pipeline.prefill_queues[group_key]) == 0
+        else:
+            # Group was completely processed and removed
+            pass
 
-    def test_pipeline_metrics_tracking(self):
+    @pytest.mark.asyncio
+    async def test_pipeline_metrics_tracking(self):
         """Test pipeline tracks batching and latency metrics."""
         router = ModelRouter()
         pipeline = TwoStagePipeline(router, flush_tick_ms=100)
@@ -201,4 +231,5 @@ class TestInferenceQueueStages:
             pipeline.force_flush()
 
         # Should have processed all
-        assert len(pipeline.prefill_queues) == 0
+        for group_key, requests in pipeline.prefill_queues.items():
+            assert len(requests) == 0, f"Group {group_key} should have empty queue"

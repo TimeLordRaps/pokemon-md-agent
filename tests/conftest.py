@@ -18,6 +18,7 @@ import os
 import socket
 import time
 import faulthandler
+from unittest.mock import Mock
 
 # Global variable to track session start time
 _session_start_time = None
@@ -215,17 +216,20 @@ def smoke_mgba_controller(address_config_path: str, temp_cache_dir: Path) -> Gen
 # Address Manager Fixtures
 # ============================================================================
 
-@pytest.fixture(scope="session")
-def address_manager(address_config_path: str) -> AddressManager:
-    """Create AddressManager instance.
+@pytest.fixture
+def mock_controller(address_manager: AddressManager) -> Mock:
+    """Create a mock MGBAController for unit testing.
 
-    This is a session-scoped fixture since AddressManager is read-only
-    and can be safely shared across tests.
+    This fixture provides a mock controller with the necessary attributes
+    for testing decoder functionality without requiring a live emulator.
 
     Returns:
-        AddressManager: Initialized address manager
+        Mock: Mocked MGBAController instance
     """
-    return AddressManager(address_config_path)
+    controller = Mock()
+    controller.address_manager = address_manager
+    controller.peek = Mock()
+    return controller
 
 
 # ============================================================================

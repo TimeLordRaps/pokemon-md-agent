@@ -93,4 +93,4 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 addopts = "-q -rfEsx --maxfail=1 --timeout=30 --timeout-method=thread -m 'not slow and not network and not bench and not longctx'"
 filterwarnings = ["ignore::DeprecationWarning"]
-markers = ["slow","network","bench","longctx"]
+markers = ["slow","network","bench","longctx","real_model"]

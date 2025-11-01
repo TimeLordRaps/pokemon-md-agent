@@ -31,7 +31,7 @@ async def main():
         agent = AgentCore(
             objective="Navigate to stairs and progress through dungeon",
             test_mode=False,  # Real mGBA connection
-            enable_retrieval=False  # Skip retrieval for demo
+            enable_retrieval=True  # Enable Qwen3-VL for actual decision making
         )
 
         print("Agent initialized successfully!")

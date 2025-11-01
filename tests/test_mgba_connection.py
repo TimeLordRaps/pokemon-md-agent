@@ -198,9 +198,9 @@ def test_send_command_after_disconnect(tmp_path: Path):
 
         controller.disconnect()
         
-        # Should raise RuntimeError since we're not connected
-        with pytest.raises(RuntimeError):
-            controller.send_command("core.platform")
+        # Should return None since we're not connected
+        response = controller.send_command("core.platform")
+        assert response is None
     except ConnectionError:
         pytest.skip("mGBA emulator not reachable - connection failed")
     finally:

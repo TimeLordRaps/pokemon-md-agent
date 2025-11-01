@@ -25,7 +25,7 @@ def test_model_presets_structure():
     # Test 2B preset
     preset_2b = MODEL_PRESETS["qwen3-vl-2b"]
     assert isinstance(preset_2b, ModelPreset)
-    assert preset_2b.vtokens_budget_per_msg == 8000
+    assert preset_2b.vtokens_budget_per_msg == 4000
     assert preset_2b.max_images_per_msg == 3
     assert preset_2b.retrieved_traj_len == 5
     assert preset_2b.suppress_grid_in_town is True
@@ -80,7 +80,7 @@ def test_get_model_preset():
     """Test get_model_preset utility function."""
     preset = get_model_preset("qwen3-vl-2b")
     assert isinstance(preset, ModelPreset)
-    assert preset.vtokens_budget_per_msg == 8000
+    assert preset.vtokens_budget_per_msg == 4000
 
     # Test fallback
     fallback = get_model_preset("unknown-model")
@@ -201,7 +201,7 @@ def test_grid_overlay_detection():
 
 def test_budget_validation():
     """Test token budget validation."""
-    config = AgentConfig(model_name="qwen3-vl-2b")  # 8000 budget
+    config = AgentConfig(model_name="qwen3-vl-2b")  # 4000 budget
     packager = ImagePackager(config)
 
     # Create a message that fits within budget

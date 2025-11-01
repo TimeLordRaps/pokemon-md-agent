@@ -9,6 +9,11 @@ import numpy as np
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoProcessor
 
+# Sanitize HF_HOME before any imports that might use it
+from ..agent.utils import get_hf_cache_dir
+
+hf_cache_dir = get_hf_cache_dir()
+
 logger = logging.getLogger(__name__)
 
 
@@ -71,12 +76,13 @@ class QwenEmbeddingExtractor:
                 model_path,
                 torch_dtype=torch.float16 if device == "cuda" else torch.float32,
                 device_map="auto" if device == "cuda" else None,
-                trust_remote_code=True
+                trust_remote_code=True,
+                cache_dir=hf_cache_dir
             )
 
             # Load tokenizer and processor
-            self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-            self.processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
+            self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, cache_dir=hf_cache_dir)
+            self.processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True, cache_dir=hf_cache_dir)
 
             # Move to device if not using device_map
             if device == "cpu" and self.model.device.type != "cpu":

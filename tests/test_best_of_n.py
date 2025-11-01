@@ -17,23 +17,29 @@ class TestBestOfN:
     def test_best_of_n_parameter_validation(self):
         """Test best_of_n parameter accepts valid values."""
         controller = QwenController()
+        
+        # Disable pipeline for this test to avoid initialization issues
+        controller.use_pipeline = False
+        
+        # Mock _single_generate to avoid loading real models
+        with patch.object(controller, '_single_generate', return_value="mock response"):
+            # Valid values
+            for valid_n in [1, 2, 4, 8]:
+                result = controller.generate("test", best_of_n=valid_n)
+                assert isinstance(result, str)
 
-        # Valid values
-        for valid_n in [1, 2, 4, 8]:
-            result = controller.generate("test", best_of_n=valid_n)
-            assert isinstance(result, str)
+            # Invalid values should raise
+            with pytest.raises(ValueError):
+                controller.generate("test", best_of_n=3)
 
-        # Invalid values should raise
-        with pytest.raises(ValueError):
-            controller.generate("test", best_of_n=3)
-
-        with pytest.raises(ValueError):
-            controller.generate("test", best_of_n=0)
+            with pytest.raises(ValueError):
+                controller.generate("test", best_of_n=0)
 
     @pytest.mark.asyncio
     async def test_best_of_n_single_candidate(self):
         """Test best_of_n=1 works like normal generation."""
         controller = QwenController()
+        controller.use_pipeline = False  # Disable pipeline for testing
 
         with patch.object(controller, '_single_generate', new_callable=AsyncMock) as mock_single:
             mock_single.return_value = "test output"
@@ -48,6 +54,7 @@ class TestBestOfN:
     async def test_best_of_n_parallel_generation(self):
         """Test best_of_n>1 generates multiple candidates in parallel."""
         controller = QwenController()
+        controller.use_pipeline = False  # Disable pipeline for testing
 
         # Mock single generation with different outputs
         outputs = ["output 1", "output 2", "output 3", "output 4"]
@@ -140,6 +147,7 @@ class TestBestOfN:
     async def test_best_of_n_score_improvement_over_n1(self):
         """Test that n>1 scores higher than n=1 baseline."""
         controller = QwenController()
+        controller.use_pipeline = False  # Disable pipeline for testing
 
         # Mock single generation with fixed outputs of different lengths
         # (longer outputs get higher scores in the mock implementation)
@@ -170,6 +178,7 @@ class TestBestOfN:
         import time
         import asyncio
         controller = QwenController()
+        controller.use_pipeline = False  # Disable pipeline for testing
 
         # Mock with timing
         async def timed_generate(*args, **kwargs):

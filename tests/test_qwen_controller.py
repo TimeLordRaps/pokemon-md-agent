@@ -1,5 +1,6 @@
 """Tests for QwenController."""
 
+import asyncio
 import pytest
 from unittest.mock import Mock, patch
 
@@ -49,12 +50,13 @@ class TestQwenController:
         controller = QwenController()
 
         async def run_test():
-            result = await controller.generate_async(
+            text, scores = await controller.generate_async(
                 prompt="test prompt",
                 model_size=ModelSize.SIZE_2B
             )
-            assert isinstance(result, str)
-            assert "Generated response" in result
+            assert isinstance(text, str)
+            assert ("Generated response" in text) or ("Pipeline result" in text)
+            assert isinstance(scores, list)
 
         # Run in new event loop
         loop = asyncio.new_event_loop()

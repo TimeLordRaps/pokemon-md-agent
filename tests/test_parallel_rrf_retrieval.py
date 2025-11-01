@@ -3,6 +3,7 @@
 import pytest
 import numpy as np
 import asyncio
+import time
 from unittest.mock import Mock, AsyncMock
 from src.retrieval.auto_retrieve import AutoRetriever, RetrievedTrajectory, RetrievalQuery
 from src.retrieval.cross_silo_search import CrossSiloRetriever, SearchConfig
@@ -46,11 +47,37 @@ class TestParallelRRFRetrieval:
         """RRF merge combines rankings from multiple sources with reciprocal ranks."""
         query = RetrievalQuery(current_embedding=np.random.rand(128))
 
-        # Mock parallel search results
-        mock_silo_manager.cross_silo_search.side_effect = [
-            {"global": [(Mock(trajectory_id="g1", embedding=np.random.rand(128), metadata={"episode": "ep1"}), 0.9)]},
-            {"model1": [(Mock(trajectory_id="m1", embedding=np.random.rand(128), metadata={"episode": "ep2"}), 0.8)]},
-        ]
+        # Mock parallel search results with proper attributes
+        mock1 = Mock(
+            trajectory_id="g1",
+            embedding=np.random.rand(128),
+            metadata={"episode": "ep1", "timestamp": 1000.0},
+            raw_similarity=0.9,
+            similarity_score=0.9,
+            timestamp=1000.0,
+            recency_weight=1.0
+        )
+        mock2 = Mock(
+            trajectory_id="m1",
+            embedding=np.random.rand(128),
+            metadata={"episode": "ep2", "timestamp": 2000.0},
+            raw_similarity=0.8,
+            similarity_score=0.8,
+            timestamp=2000.0,
+            recency_weight=1.0
+        )
+        
+        # Mock cross_silo_search to return consistent results for parallel calls
+        def mock_cross_silo_search(query_embedding, silo_filter=None, top_k=None):
+            if silo_filter and "global" in str(silo_filter):
+                return {"global": [(mock1, 0.9)]}
+            elif silo_filter and any("temporal" in s for s in silo_filter):
+                return {"model1": [(mock2, 0.8)]}
+            else:
+                # Default fallback for any other calls
+                return {"fallback": [(mock1, 0.9)]}
+        
+        mock_silo_manager.cross_silo_search.side_effect = mock_cross_silo_search
 
         results = asyncio.run(auto_retriever.retrieve_parallel_rrf(query))
 
@@ -68,19 +95,54 @@ class TestParallelRRFRetrieval:
 
     def test_rrf_fusion_weights_by_rank(self, auto_retriever):
         """RRF assigns higher scores to higher-ranked items across sources."""
-        # Setup mock with known rankings
-        query = RetrievalQuery(current_embedding=np.random.rand(128))
+        # Create actual RetrievedTrajectory instances for RRF testing
+        traj_a = RetrievedTrajectory(
+            trajectory_id="A",
+            similarity_score=0.9,
+            embedding=np.random.rand(128),
+            metadata={},
+            timestamp=time.time(),
+            silo_id="test",
+            action_sequence=[]
+        )
+        traj_b = RetrievedTrajectory(
+            trajectory_id="B",
+            similarity_score=0.8,
+            embedding=np.random.rand(128),
+            metadata={},
+            timestamp=time.time(),
+            silo_id="test",
+            action_sequence=[]
+        )
+        traj_c = RetrievedTrajectory(
+            trajectory_id="C",
+            similarity_score=0.7,
+            embedding=np.random.rand(128),
+            metadata={},
+            timestamp=time.time(),
+            silo_id="test",
+            action_sequence=[]
+        )
+        traj_d = RetrievedTrajectory(
+            trajectory_id="D",
+            similarity_score=0.5,
+            embedding=np.random.rand(128),
+            metadata={},
+            timestamp=time.time(),
+            silo_id="test",
+            action_sequence=[]
+        )
 
         # Simulate ranks: item A rank 1 in source1, rank 3 in source2
         # Item B rank 2 in source1, rank 1 in source2
         results = auto_retriever._rrf_merge([
-            [("A", 0.9), ("B", 0.8), ("C", 0.7)],
-            [("B", 0.95), ("A", 0.6), ("D", 0.5)]
+            [traj_a, traj_b, traj_c],  # Source 1: A(1), B(2), C(3)
+            [traj_b, traj_a, traj_d]   # Source 2: B(1), A(2), D(3)
         ], k=60)
 
         # A should have higher RRF score than C due to better average rank
-        a_score = next(r[1] for r in results if r[0] == "A")
-        c_score = next(r[1] for r in results if r[0] == "C")
+        a_score = next(r.similarity_score for r in results if r.trajectory_id == "A")
+        c_score = next(r.similarity_score for r in results if r.trajectory_id == "C")
         assert a_score > c_score
 
     def test_episode_deduplication(self, auto_retriever):
@@ -101,11 +163,27 @@ class TestParallelRRFRetrieval:
         """Apply recency bias with exponential decay."""
         now = 3000.0
         trajectories = [
-            Mock(similarity_score=0.8, metadata={"timestamp": 2500.0}),  # Recent
-            Mock(similarity_score=0.8, metadata={"timestamp": 1000.0}),  # Old
+            RetrievedTrajectory(
+                trajectory_id="recent",
+                similarity_score=0.8,
+                embedding=np.random.rand(128),
+                metadata={},
+                timestamp=2500.0,  # Recent
+                silo_id="test",
+                action_sequence=[]
+            ),
+            RetrievedTrajectory(
+                trajectory_id="old",
+                similarity_score=0.8,
+                embedding=np.random.rand(128),
+                metadata={},
+                timestamp=1000.0,  # Old
+                silo_id="test",
+                action_sequence=[]
+            ),
         ]
 
-        biased = auto_retriever._apply_recency_bias(trajectories, now=now, decay_rate=0.001)
+        biased = auto_retriever._apply_recency_bias(trajectories, now=now)
         # Recent should have higher score
         assert biased[0].similarity_score > biased[1].similarity_score
 

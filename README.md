@@ -33,19 +33,19 @@ Multi-model Qwen3-VL agent with hierarchical RAG system, dynamic temporal resolu
 ## ⚡ Quick Start (2 minutes)
 
 1. **Activate environment:**
-   ```bash
-   mamba activate agent-hackathon
-   ```
+    ```bash
+    mamba activate agent-hackathon
+    ```
 
 2. **Run demo (50 steps + 3-min video):**
-   ```bash
-   cd pokemon-md-agent
-   python scripts/final_demo_runner.py
-   ```
+    ```bash
+    cd pokemon-md-agent
+    python scripts/final_demo_runner.py
+    ```
 
 3. **View results:**
-   - Video: `docs/assets/agent_demo.mp4`
-   - Logs: `runs/demo_*/trajectory_*.jsonl`
+    - Video: `agent_demo.mp4`
+    - Logs: `runs/demo_*/trajectory_*.jsonl`
 
 ---
 
@@ -129,7 +129,19 @@ Multi-model Qwen3-VL agent with hierarchical RAG system, dynamic temporal resolu
 
 ## 📊 Dashboard & Monitoring
 
-The agent includes a comprehensive dashboard system for monitoring gameplay and retrieving external knowledge:
+The agent includes a comprehensive dashboard system for monitoring gameplay and retrieving external knowledge.
+
+### HF_HOME Path Sanitization
+
+**Critical Fix Applied**: All HF_HOME environment variable usages have been sanitized to handle quoted paths, normalize separators, and support user path expansion. This resolves model loading failures on Windows systems where HF_HOME may contain quotes or need path expansion.
+
+Applied sanitization template:
+- Strip surrounding quotes (`"`, `'`)
+- Expand user paths (`~` → actual home directory)
+- Normalize path separators for cross-platform compatibility
+- Added comprehensive test coverage in `test_path_sanitization.py`
+
+**Verification**: Model loading tested with real Qwen3-VL models from HuggingFace Hub, confirming proper cache directory resolution and tokenizer loading.
 
 ### Dashboard Features
 - **Live Updates**: Real-time trajectory logging and meta-view generation
@@ -138,6 +150,190 @@ The agent includes a comprehensive dashboard system for monitoring gameplay and 
 - **Build Budget**: Coalesces commits to ≤10/hour to avoid GitHub Actions limits
 - **LFS Avoidance**: Keeps artifacts under 8MB; no Git LFS unless required
 - **Resolution Modes**: 2× (480×320) default for dashboard, 1× (240×160) for Qwen-VL benchmarking
+
+---
+
+## 👁️ Vision Prompts & Game State Schema
+
+**Phase 1 Implementation** (Complete): Structured JSON schema for vision model outputs.
+
+### GameState Schema
+
+The agent uses a **Pydantic-validated GameState schema** for consistent vision model outputs:
+
+```python
+from src.models.game_state_schema import GameState, Entity, GameStateEnum
+
+# Models must return JSON matching this schema
+state = GameState(
+    player_pos=(12, 8),
+    player_hp=45,
+    floor=3,
+    state=GameStateEnum.EXPLORING,
+    enemies=[Entity(x=14, y=8, type="enemy", species="Geodude")],
+    items=[Entity(x=10, y=6, type="item", name="Apple")],
+    confidence=0.95,
+    threats=["Geodude approaching"],
+    opportunities=["Move up to dodge"]
+)
+```
+
+**Key Features:**
+- ✅ **51 unit tests** (1.28s runtime) covering validation, serialization, edge cases
+- ✅ **Type-safe coordinates** (0-indexed bounds checking, negative rejection)
+- ✅ **Confidence scoring** (0-1 range, quality metrics)
+- ✅ **JSON roundtrip** (validation + serialization)
+- ✅ **Few-shot examples** (3-5 predefined examples for in-context learning)
+
+### Quick Validation
+
+```bash
+# Activate environment
+mamba activate agent-hackathon
+
+# Run schema tests (51 tests)
+python -m pytest tests/test_game_state_schema.py tests/test_game_state_utils.py -v
+
+# Quick validation
+python scripts/test_vision_schema.py
+
+# (Windows) PowerShell validation script
+.\scripts\validate_vision_schema.ps1 -RunTests
+```
+
+### Phase 2: Vision System Prompts
+
+**Phase 2 Implementation** (Complete): Structured system prompts for Qwen3-VL vision models.
+
+#### Key Features
+- ✅ **58 unit + integration tests** (1.34s runtime) covering prompt variants and message integration
+- ✅ **Instruct variant** — Direct JSON output for 2B/4B models
+- ✅ **Thinking variant** — Chain-of-thought reasoning for reasoning-enabled models
+- ✅ **PromptBuilder class** — Type-safe prompt assembly with few-shot examples
+- ✅ **Message packager integration** — Seamless integration with three-message protocol
+- ✅ **Model-specific optimization** — 2B/4B use instruct, 8B uses thinking variant
+
+#### System Prompts
+
+Located in `src/models/vision_prompts.py`:
+
+```python
+from src.models.vision_prompts import (
+    VISION_SYSTEM_PROMPT_INSTRUCT,
+    VISION_SYSTEM_PROMPT_THINKING,
+    PromptBuilder,
+    format_vision_prompt_with_examples
+)
+
+# Build complete prompt with context and examples
+builder = PromptBuilder("instruct")
+builder.add_few_shot_examples(3)
+builder.add_context(policy_hint="explore", model_size="4B")
+
+prompt = builder.build_complete_prompt()
+# Returns: {"system": "...", "user": "..."}
+
+# Or use high-level function
+complete = format_vision_prompt_with_examples(
+    policy_hint="battle",
+    model_variant="thinking",
+    num_examples=3,
+    model_size="8B"
+)
+```
+
+#### Message Packager Integration
+
+Located in `src/orchestrator/message_packager.py`:
+
+```python
+from src.orchestrator.message_packager import pack_with_vision_prompts
+
+# Pack game state with vision prompts
+step_state = {...}  # From Copilot or agent state
+system_prompt, messages = pack_with_vision_prompts(
+    step_state,
+    policy_hint="explore",
+    model_size="4B",
+    num_examples=3
+)
+
+# Returns: (system_prompt_str, [msg1, msg2, msg3])
+# Ready to send to Qwen3-VL with three-message protocol
+```
+
+#### Quick Validation
+
+```bash
+# Activate environment
+mamba activate agent-hackathon
+
+# Run all vision tests (Phase 1 + Phase 2)
+python -m pytest tests/test_game_state_*.py tests/test_vision_prompts.py tests/test_message_packager_vision.py -v
+
+# Quick validation (Phase 2 only)
+python scripts/test_vision_prompts.py
+
+# (Windows) PowerShell validation script
+.\scripts\validate_vision_prompts.ps1 -RunTests
+```
+
+#### Prompt Characteristics
+
+**Instruct Variant (2B/4B models)**
+- ~2,234 characters
+- Direct JSON output format
+- Explicit requirements and rules
+- Optimized for smaller models with less reasoning capability
+- Focus on clear instructions and schema compliance
+
+**Thinking Variant (8B+ reasoning models)**
+- ~2,521 characters
+- 6-step chain-of-thought reasoning (OBSERVATION → CLASSIFICATION → STATE → THREATS → CONFIDENCE → JSON)
+- Encourages explicit reasoning about visual input
+- Better for models that benefit from intermediate reasoning steps
+- Chain of thought helps with complex multi-entity scenes
+
+### Utility Functions
+
+Located in `src/models/game_state_utils.py`:
+
+```python
+# Parse model output with validation
+state = parse_model_output(json_str, partial_ok=True, confidence_threshold=0.7)
+
+# Validate state quality
+report = validate_game_state(state)
+print(f"Quality: {report['quality_score']:.2f}")
+print(f"Warnings: {report['warnings']}")
+
+# Generate few-shot examples
+examples = generate_few_shot_examples(num_examples=3)
+
+# Format for agent decisions
+text = format_state_for_decision(state)
+```
+
+### Next Steps (Phases 3-5)
+
+Phases 1-2 complete. Remaining work:
+
+1. **Phase 3**: Few-shot in-context learning (5-10 curated examples)
+   - Cover diverse scenarios (exploring, combat, boss, shop, stairs)
+   - Entity positioning edge cases
+   - Confidence scoring patterns
+
+2. **Phase 4**: Model selection strategy (2B/4B/8B by task complexity)
+   - Auto-select based on game state
+   - Latency vs. quality tradeoffs
+   - Cost-aware routing
+
+3. **Phase 5**: A/B testing + prompt optimization
+   - Compare prompt variants systematically
+   - Track quality metrics vs. agent performance
+   - Optimize based on empirical results
+
+See [PROMPT_OPTIMIZATION_GUIDE.md](docs/PROMPT_OPTIMIZATION_GUIDE.md) for full 5-phase plan.
 
 ### Upload Modes
 1. **Git Push**: Direct push to `pages` branch (recommended for development)

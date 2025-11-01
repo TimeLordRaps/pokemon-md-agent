@@ -8,7 +8,7 @@ import os
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from agent.memory_manager import MemoryManager, ModelCache, ModelPair
+from src.agent.memory_manager import MemoryManager, ModelCache, ModelPair
 
 
 class TestModelCache:
@@ -17,10 +17,11 @@ class TestModelCache:
     def test_vram_probing(self):
         """Test VRAM usage probing."""
         # Mock torch.cuda.mem_get_info to return (free, total) in bytes
-        with patch('torch.cuda.mem_get_info', return_value=(4 * 1024**3, 8 * 1024**3)):  # 4GB free, 8GB total
-            cache = ModelCache()
-            free_gb = cache.probe_vram_free_gb()
-            assert free_gb == 4.0
+        with patch('torch.cuda.is_available', return_value=True):
+            with patch('torch.cuda.mem_get_info', return_value=(4 * 1024**3, 8 * 1024**3)):  # 4GB free, 8GB total
+                cache = ModelCache()
+                free_gb = cache.probe_vram_free_gb()
+                assert free_gb == 4.0
 
     def test_model_pair_creation(self):
         """Test ModelPair dataclass."""
@@ -92,7 +93,7 @@ class TestMemoryManagerIntegration:
                     "Qwen/Qwen3-VL-2B-Instruct",
                     trust_remote_code=True,
                     local_files_only=True,
-                    cache_dir='E:\\transformer_models'
+                    cache_dir='E:\\transformer_models\\hub'  # Updated to expect hub subdirectory
                 )
 
     def test_paired_loading_preference(self):

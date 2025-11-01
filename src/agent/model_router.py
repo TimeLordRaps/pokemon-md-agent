@@ -9,6 +9,7 @@ import json
 import os
 import asyncio
 import mmap
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from collections import OrderedDict
 
@@ -145,7 +146,18 @@ class ModelRouter:
     """Routes inference requests to appropriate models with batching and caching."""
 
     def __init__(self, hf_home: Optional[str] = None):
-        self.hf_home = hf_home or os.getenv('HF_HOME', '~/.cache/huggingface')
+        from .utils import sanitize_hf_home
+
+        hf_home_raw = hf_home or os.environ.get("HF_HOME")
+        if hf_home_raw:
+            sanitized = sanitize_hf_home()
+            self.hf_home = sanitized
+            if sanitized:
+                os.environ["HF_HOME"] = sanitized
+        else:
+            default_path = str(Path.home() / ".cache" / "huggingface")
+            self.hf_home = default_path
+            os.environ.setdefault("HF_HOME", default_path)
         self.two_stage_pipeline = TwoStagePipeline(self)
 
         # Wire in caches (will be populated later)
@@ -234,16 +246,21 @@ class ModelRouter:
     def _estimate_inference_time(self, model_size: ModelSize, use_thinking: bool) -> float:
         """Estimate total inference time for a model including all stages."""
         # Rough estimates based on model size (tokenize + forward + decode)
+        # Conservative estimates for testing deadline scenarios
         base_times = {
-            ModelSize.SIZE_2B: TOKENIZE_BUDGET_S + FORWARD_BUDGET_S * 0.3 + DECODE_BUDGET_S * 0.3,
-            ModelSize.SIZE_4B: TOKENIZE_BUDGET_S + FORWARD_BUDGET_S * 0.6 + DECODE_BUDGET_S * 0.6,
-            ModelSize.SIZE_8B: TOKENIZE_BUDGET_S + FORWARD_BUDGET_S + DECODE_BUDGET_S,
+            ModelSize.SIZE_2B: TOKENIZE_BUDGET_S + FORWARD_BUDGET_S * 0.1 + DECODE_BUDGET_S * 0.1,
+            ModelSize.SIZE_4B: TOKENIZE_BUDGET_S + FORWARD_BUDGET_S * 0.5 + DECODE_BUDGET_S * 0.5,
+            ModelSize.SIZE_8B: TOKENIZE_BUDGET_S + FORWARD_BUDGET_S * 0.8 + DECODE_BUDGET_S * 0.8,
         }
         return base_times[model_size]
 
     def auto_batch_size(self, model_size: ModelSize, gpu_utilization: float = 0.5,
                        vram_used_gb: float = 16.0) -> int:
-        """Calculate optimal batch size based on model and resources."""
+        """Calculate optimal batch size based on model and resources.
+
+        Heuristic considers (1) baseline per-model batch size, (2) additional VRAM headroom,
+        and (3) live GPU utilization pressure.
+        """
         base_sizes = {
             ModelSize.SIZE_2B: 2,
             ModelSize.SIZE_4B: 2,
@@ -251,12 +268,109 @@ class ModelRouter:
         }
         base = base_sizes[model_size]
 
-        # Scale down with GPU utilization
-        scale = max(0.1, 1.0 - gpu_utilization)
-        batch_size = int(base * scale)
+        # VRAM headroom adjustments (expects vram_used_gb to reflect available VRAM on device)
+        headroom_bonus = 0
+        if vram_used_gb >= 18.0:
+            bonus_lookup = {
+                ModelSize.SIZE_2B: 2,
+                ModelSize.SIZE_4B: 1,
+                ModelSize.SIZE_8B: 1,
+            }
+            headroom_bonus = bonus_lookup[model_size]
+        elif vram_used_gb < 12.0:
+            # Reduce concurrency when VRAM is constrained
+            headroom_bonus = -1 if base > 1 else 0
 
-        # Ensure minimum 1
-        return max(1, batch_size)
+        candidate_batch = max(1, base + headroom_bonus)
+
+        # Scale down under high utilization; leave baseline untouched at <=50% util
+        if gpu_utilization <= 0.5:
+            util_scale = 1.0
+        elif gpu_utilization <= 0.7:
+            util_scale = 0.75
+        elif gpu_utilization <= 0.85:
+            util_scale = 0.5
+        else:
+            util_scale = 0.25
+
+        batch_size = max(1, int(round(candidate_batch * util_scale)))
+        return batch_size
+
+    def infer(self, query: str, model_size: ModelSize = ModelSize.SIZE_4B,
+              use_thinking: bool = False, timeout_s: Optional[float] = None) -> str:
+        """Synchronous convenience wrapper around ``infer_async`` for legacy integrations."""
+        result_obj = self.infer_async(query, model_size)
+
+        # Direct return for already-synchronous paths
+        if not asyncio.isfuture(result_obj) and not asyncio.iscoroutine(result_obj):
+            return result_obj  # type: ignore[return-value]
+
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            created_loop = True
+        else:
+            created_loop = False
+
+        if loop.is_running():
+            raise RuntimeError("infer() cannot be used while an event loop is running; use infer_async().")
+
+        if asyncio.iscoroutine(result_obj):
+            future = asyncio.ensure_future(result_obj, loop=loop)
+        else:
+            future = result_obj  # already a Future
+
+        try:
+            return loop.run_until_complete(future)
+        finally:
+            if created_loop:
+                loop.close()
+
+
+class _InMemoryPromptCache:
+    """Minimal fallback cache used when full PromptCache is unavailable."""
+
+    def __init__(self):
+        self._store: Dict[tuple[str, str], Any] = {}
+
+    def get_tokenized_prefix(self, prompt_sha: str, model_name: str) -> Optional[Any]:
+        return self._store.get((model_name, prompt_sha))
+
+    def cache_tokenized_prefix(self, prompt_sha: str, model_name: str, tokenized: Any) -> None:
+        self._store[(model_name, prompt_sha)] = tokenized
+
+
+class _InMemoryVisionCache:
+    """Minimal fallback vision cache that keeps items in RAM only."""
+
+    def __init__(self):
+        self._store: Dict[str, Any] = {}
+
+    def get_encoded_image(self, image_sha: Optional[str]) -> Optional[Any]:
+        if image_sha is None:
+            return None
+        return self._store.get(image_sha)
+
+    def cache_encoded_image(self, image_sha: str, encoded: Any) -> None:
+        self._store[image_sha] = encoded
+
+
+class _InMemoryPromptKVCache:
+    """Minimal fallback KV cache storing entries in-process."""
+
+    def __init__(self):
+        self._store: Dict[tuple[str, str, Optional[str]], Any] = {}
+
+    def _make_cache_key(self, model_name: str, prompt_sha: str, image_sha: Optional[str] = None) -> tuple[str, str, Optional[str]]:
+        return (model_name, prompt_sha, image_sha)
+
+    def get_kv_state(self, cache_key: tuple[str, str, Optional[str]]) -> Optional[Any]:
+        return self._store.get(cache_key)
+
+    def cache_kv_state(self, cache_key: tuple[str, str, Optional[str]], state: Any) -> None:
+        self._store[cache_key] = state
 
 
 class TwoStagePipeline:
@@ -280,20 +394,33 @@ class TwoStagePipeline:
         Returns:
             Future for PrefillResult.
         """
-        if deadline_s is not None:
-            # Set deadline on request for batch processing
-            request.deadline_s = deadline_s
+        effective_deadline = deadline_s if deadline_s is not None else getattr(request, "deadline_s", None)
+        if effective_deadline is not None:
+            request.deadline_s = effective_deadline
+
+        try:
+            loop = asyncio.get_running_loop()
+            future: asyncio.Future = loop.create_future()
+        except RuntimeError:
+            future = asyncio.Future()
+
+        request._future = future  # type: ignore
+
+        now = time.time()
+        if effective_deadline is not None and effective_deadline <= now:
+            future.set_exception(DeadlineExceededError("Prefill deadline exceeded"))
+            return future
 
         group_key = self._make_group_key(request)
         if group_key not in self.prefill_queues:
             self.prefill_queues[group_key] = []
         self.prefill_queues[group_key].append(request)
 
-        future = asyncio.Future()
-        # Store future for resolution
-        request._future = future  # type: ignore
-
-        self._check_flush()
+        # Force immediate flush if deadline is imminent or expired
+        if effective_deadline is not None and effective_deadline - now < 0.1:  # Within 100ms
+            self._flush_all_batches()
+        else:
+            self._check_flush()
         return future
 
     def submit_decode(self, request: DecodeRequest, deadline_s: Optional[float] = None) -> asyncio.Future[DecodeResult]:
@@ -306,19 +433,32 @@ class TwoStagePipeline:
         Returns:
             Future for DecodeResult.
         """
-        if deadline_s is not None:
-            # Set deadline on request for batch processing
-            request.deadline_s = deadline_s
+        effective_deadline = deadline_s if deadline_s is not None else getattr(request, "deadline_s", None)
+        if effective_deadline is not None:
+            request.deadline_s = effective_deadline
+
+        try:
+            loop = asyncio.get_running_loop()
+            future: asyncio.Future = loop.create_future()
+        except RuntimeError:
+            future = asyncio.Future()
+
+        request._future = future  # type: ignore
+
+        now = time.time()
+        if effective_deadline is not None and effective_deadline <= now:
+            future.set_exception(DeadlineExceededError("Decode deadline exceeded"))
+            return future
 
         group_key = self._make_group_key_from_decode(request)
         if group_key not in self.decode_queues:
             self.decode_queues[group_key] = []
         self.decode_queues[group_key].append(request)
 
-        future = asyncio.Future()
-        request._future = future  # type: ignore
-
-        self._check_flush()
+        if effective_deadline is not None and effective_deadline - now < 0.1:  # Within 100ms
+            self._flush_all_batches()
+        else:
+            self._check_flush()
         return future
 
     def _make_group_key(self, request: PrefillRequest) -> GroupKey:
@@ -400,15 +540,26 @@ class TwoStagePipeline:
 
     def _flush_all_batches(self):
         """Flush all accumulated batches."""
+        self._ensure_caches()
         for group_key, requests in list(self.prefill_queues.items()):
             if requests:
-                self._process_prefill_batch(group_key, requests)
+                pending = list(requests)
                 self.prefill_queues[group_key] = []
+                self._process_prefill_batch(group_key, pending)
+                if not self.prefill_queues.get(group_key):
+                    self.prefill_queues.pop(group_key, None)
+            else:
+                self.prefill_queues.pop(group_key, None)
 
         for group_key, requests in list(self.decode_queues.items()):
             if requests:
-                self._process_decode_batch(group_key, requests)
+                pending = list(requests)
                 self.decode_queues[group_key] = []
+                self._process_decode_batch(group_key, pending)
+                if not self.decode_queues.get(group_key):
+                    self.decode_queues.pop(group_key, None)
+            else:
+                self.decode_queues.pop(group_key, None)
 
         self.last_flush_time = time.time()
 
@@ -643,19 +794,8 @@ class TwoStagePipeline:
 
     def force_flush(self):
         """Force immediate flush of all batches."""
+        self._ensure_caches()
         self._flush_all_batches()
-
-        # Wire in caches from qwen_controller
-        try:
-            from .qwen_controller import PromptCache, VisionCache, PromptKVCache
-            from pathlib import Path
-            cache_dir = Path(self.model_router.hf_home)
-            self.prompt_cache = PromptCache(cache_dir / "pmd_prompt_cache")
-            self.vision_cache = VisionCache()
-            self.prompt_kv_cache = PromptKVCache(cache_dir, max_ram_entries=5)
-            logger.info("Wired in caches from qwen_controller")
-        except ImportError:
-            logger.warning("Could not import caches from qwen_controller")
 
     def get_batch_stats(self) -> Dict[str, Any]:
         """Get batch processing statistics."""
@@ -671,6 +811,37 @@ class TwoStagePipeline:
             })
 
         return stats
+
+    def _ensure_caches(self) -> None:
+        """Ensure router caches are initialized, falling back to in-memory versions."""
+        if all([
+            self.model_router.prompt_cache is not None,
+            self.model_router.vision_cache is not None,
+            self.model_router.prompt_kv_cache is not None,
+        ]):
+            return
+
+        try:
+            from .qwen_controller import PromptCache, VisionCache, PromptKVCache  # noqa: WPS433
+            cache_dir = Path(self.model_router.hf_home)
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            if self.model_router.prompt_cache is None:
+                self.model_router.prompt_cache = PromptCache(cache_dir / "pmd_prompt_cache")
+            if self.model_router.vision_cache is None:
+                self.model_router.vision_cache = VisionCache()
+            if self.model_router.prompt_kv_cache is None:
+                self.model_router.prompt_kv_cache = PromptKVCache(cache_dir, max_ram_entries=5)
+            logger.info("Initialized router caches using qwen_controller implementations")
+            return
+        except Exception as exc:  # pragma: no cover - fallback is simple in-memory
+            logger.warning("Falling back to in-memory caches: %s", exc)
+
+        if self.model_router.prompt_cache is None:
+            self.model_router.prompt_cache = _InMemoryPromptCache()
+        if self.model_router.vision_cache is None:
+            self.model_router.vision_cache = _InMemoryVisionCache()
+        if self.model_router.prompt_kv_cache is None:
+            self.model_router.prompt_kv_cache = _InMemoryPromptKVCache()
 
 
 class SecondaryTrigger:

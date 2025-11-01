@@ -263,7 +263,7 @@ class ComprehensiveQwenVLBenchmark:
             self.controller = None
         else:
             try:
-                self.controller = QwenController()
+                self.controller = QwenController(use_pipeline=False)  # Disable pipeline for now
             except Exception as exc:  # pragma: no cover - defensive logging
                 logger.warning(
                     "Failed to initialize QwenController (%s). "
@@ -458,7 +458,7 @@ class ComprehensiveQwenVLBenchmark:
                 # Benchmark
                 start_time = time.time()
                 try:
-                    response = await self.controller.generate_async(
+                    response, scores = await self.controller.generate_async(
                         prompt,
                         images=images,
                         max_tokens=max_new_tokens,
@@ -1208,17 +1208,9 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--enable-caching",
+        "--create-plots",
         action="store_true",
-        default=True,
-        help="Enable KV caching (default: True)"
-    )
-
-    parser.add_argument(
-        "--enable-pipelining",
-        action="store_true",
-        default=True,
-        help="Enable request pipelining (default: True)"
+        help="Create visualization plots during benchmarking (slower)"
     )
 
     return parser.parse_args(argv)
@@ -1362,7 +1354,7 @@ def main():
 
     asyncio.run(benchmark.run_comprehensive_benchmarks(
         models, tasks, args.max_new_tokens, args.num_runs, args.dry_run,
-        max_ctx=max_ctx, time_budget_s=time_budget_s, create_plots=False
+        max_ctx=max_ctx, time_budget_s=time_budget_s, create_plots=args.create_plots
     ))
 
 

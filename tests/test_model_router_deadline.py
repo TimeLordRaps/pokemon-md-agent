@@ -4,6 +4,7 @@ Tests deadline budget checking, model selection fallbacks, and truncation behavi
 """
 
 import sys
+import asyncio
 from pathlib import Path
 import time
 from unittest.mock import Mock, patch
@@ -71,30 +72,36 @@ class TestModelRouterDeadline:
         assert all(t > 0 for t in [time_8b, time_4b, time_2b])
 
     @patch('src.agent.model_router.time.time')
-    def test_prefill_deadline_exceeded(self, mock_time):
+    @pytest.mark.asyncio
+    async def test_prefill_deadline_exceeded(self, mock_time):
         """Test prefill deadline exceeded handling."""
         mock_time.return_value = 100.0  # Fixed time
 
         router = ModelRouter()
         pipeline = router.two_stage_pipeline
 
+        # Initialize caches first
+        pipeline.force_flush()
+
         request = PrefillRequest(prompt="test", deadline_s=99.0)  # Already expired
 
         future = pipeline.submit_prefill(request)
 
         # Should raise DeadlineExceededError
-        with pytest.raises(Exception) as exc_info:
-            # Wait for the future to complete
-            future.result(timeout=1.0)
-        assert "DeadlineExceededError" in str(exc_info.value) or "deadline exceeded" in str(exc_info.value).lower()
+        with pytest.raises(DeadlineExceededError):
+            await future
 
     @patch('src.agent.model_router.time.time')
-    def test_decode_deadline_exceeded(self, mock_time):
+    @pytest.mark.asyncio
+    async def test_decode_deadline_exceeded(self, mock_time):
         """Test decode deadline exceeded handling."""
         mock_time.return_value = 100.0  # Fixed time
 
         router = ModelRouter()
         pipeline = router.two_stage_pipeline
+
+        # Initialize caches first
+        pipeline.force_flush()
 
         prefill_result = PrefillResult(tokenized_input="test")
         request = DecodeRequest(prefill_result=prefill_result, deadline_s=99.0)  # Already expired
@@ -102,11 +109,11 @@ class TestModelRouterDeadline:
         future = pipeline.submit_decode(request)
 
         # Should raise DeadlineExceededError
-        with pytest.raises(Exception) as exc_info:
-            future.result(timeout=1.0)
-        assert "DeadlineExceededError" in str(exc_info.value) or "deadline exceeded" in str(exc_info.value).lower()
+        with pytest.raises(DeadlineExceededError):
+            await future
 
-    def test_prefill_no_deadline(self):
+    @pytest.mark.asyncio
+    async def test_prefill_no_deadline(self):
         """Test prefill processing without deadline works normally."""
         router = ModelRouter()
         pipeline = router.two_stage_pipeline
@@ -119,7 +126,8 @@ class TestModelRouterDeadline:
         assert future is not None
         assert not future.done()
 
-    def test_decode_no_deadline(self):
+    @pytest.mark.asyncio
+    async def test_decode_no_deadline(self):
         """Test decode processing without deadline works normally."""
         router = ModelRouter()
         pipeline = router.two_stage_pipeline

@@ -100,7 +100,9 @@ class TestOnDeviceBuffer:
 
             # Should log delegation attempt but not make real calls
             mock_logger.debug.assert_called()
-            assert "cross-silo" in str(mock_logger.debug.call_args)
+            # Check that cross-silo delegation was logged
+            debug_calls = [str(call) for call in mock_logger.debug.call_args_list]
+            assert any("Cross-silo" in call for call in debug_calls)
 
     def test_prune_by_time(self):
         """Prune removes entries older than TTL."""
