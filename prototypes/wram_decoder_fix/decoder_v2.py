@@ -30,14 +30,14 @@ MONSTER_STRUCT_SIZE = 48
 MONSTER_FIELDS = {
     "species_id": {"offset": 0, "size": 2, "type": "uint16", "description": "Pokemon species ID"},
     "level": {"offset": 2, "size": 1, "type": "uint8", "description": "Pokemon level"},
-    "hp_current": {"offset": 4, "size": 2, "type": "uint16", "description": "Current HP"},
-    "hp_max": {"offset": 6, "size": 2, "type": "uint16", "description": "Maximum HP"},
-    "status": {"offset": 8, "size": 1, "type": "uint8", "description": "Status conditions"},
-    "affiliation": {"offset": 9, "size": 1, "type": "uint8", "description": "0=ally, 1=enemy, 2=neutral"},
-    "tile_x": {"offset": 16, "size": 1, "type": "uint8", "description": "X position"},
-    "tile_y": {"offset": 17, "size": 1, "type": "uint8", "description": "Y position"},
-    "direction": {"offset": 18, "size": 1, "type": "uint8", "description": "Facing direction"},
-    "visible": {"offset": 19, "size": 1, "type": "uint8", "description": "Is entity visible"},
+    "hp_current": {"offset": 3, "size": 2, "type": "uint16", "description": "Current HP"},
+    "hp_max": {"offset": 5, "size": 2, "type": "uint16", "description": "Maximum HP"},
+    "status": {"offset": 7, "size": 1, "type": "uint8", "description": "Status conditions"},
+    "affiliation": {"offset": 8, "size": 1, "type": "uint8", "description": "0=ally, 1=enemy, 2=neutral"},
+    "tile_x": {"offset": 15, "size": 1, "type": "uint8", "description": "X position"},
+    "tile_y": {"offset": 16, "size": 1, "type": "uint8", "description": "Y position"},
+    "direction": {"offset": 17, "size": 1, "type": "uint8", "description": "Facing direction"},
+    "visible": {"offset": 18, "size": 1, "type": "uint8", "description": "Is entity visible"},
 }
 
 

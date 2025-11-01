@@ -16,6 +16,17 @@ from pathlib import Path
 from typing import Dict, List, Optional
 import numpy as np
 from collections import Counter, defaultdict
+from dataclasses import dataclass
+
+
+@dataclass
+class Event:
+    """Represents a key event detected in the trajectory."""
+    timestamp: float
+    event_type: str
+    score: float
+    metadata: Dict[str, any]
+    frame_idx: int
 
 # Setup logging
 logging.basicConfig(
@@ -27,9 +38,14 @@ logger = logging.getLogger(__name__)
 
 def _sanitize_hf_environment() -> None:
     """Ensure Hugging Face cache paths are valid on Windows."""
-    hf_home = os.environ.get("HF_HOME")
-    if hf_home:
-        os.environ["HF_HOME"] = hf_home.strip('"')
+    from src.agent.utils import get_hf_cache_dir
+
+    # Set sanitized HF_HOME for consistent caching
+    cache_dir = get_hf_cache_dir()
+    if cache_dir:
+        # Set environment for transformers library
+        import os
+        os.environ["HF_HOME"] = str(Path(cache_dir).parent)
     else:
         os.environ.setdefault("HF_HOME", str(Path.home() / ".cache" / "huggingface"))
 
@@ -118,8 +134,90 @@ def detect_vision_events(trajectory: List[dict]) -> List[Event]:
     """Detect vision-based events using Qwen-VL analysis."""
     events = []
 
-    # Placeholder for Qwen-VL integration - would analyze screenshots
-    # For now, detect basic room type changes from RAM
+    # Check if real Qwen-VL models are enabled
+    model_backend = os.environ.get("MODEL_BACKEND", "mock")
+    use_real_models = model_backend == "hf" and os.environ.get("REAL_MODELS_DRYRUN", "1") == "0"
+
+    if use_real_models:
+        # Import and use real Qwen-VL for vision analysis
+        try:
+            from src.agent.qwen_controller import QwenController
+            controller = QwenController()
+            events.extend(_detect_vision_events_with_qwen_vl(trajectory, controller))
+            logger.info(f"Detected {len(events)} vision events using real Qwen-VL")
+        except ImportError as e:
+            logger.warning(f"Qwen-VL not available, falling back to RAM-based detection: {e}")
+            events.extend(_detect_vision_events_from_ram(trajectory))
+    else:
+        # Fallback to RAM-based detection
+        events.extend(_detect_vision_events_from_ram(trajectory))
+
+    return events
+
+
+def _detect_vision_events_with_qwen_vl(trajectory: List[dict], controller: 'QwenController') -> List[Event]:
+    """Use real Qwen-VL to analyze screenshots for vision events."""
+    events = []
+
+    for i, frame in enumerate(trajectory):
+        screenshot = frame.get("screenshot")
+        if not screenshot:
+            continue
+
+        timestamp = frame.get("timestamp", 0.0)
+
+        # Convert screenshot to PIL Image if needed
+        try:
+            if isinstance(screenshot, bytes):
+                from PIL import Image
+                import io
+                img = Image.open(io.BytesIO(screenshot))
+            elif isinstance(screenshot, np.ndarray):
+                from PIL import Image
+                img = Image.fromarray(screenshot)
+            else:
+                img = screenshot  # Assume already PIL Image
+
+            # Analyze screenshot with Qwen-VL
+            prompt = (
+                "Analyze this Pokemon Mystery Dungeon screenshot and identify key events. "
+                "Look for: room type changes, enemy encounters, item discoveries, "
+                "environmental hazards, or significant visual changes. "
+                "Respond with a JSON object containing 'event_type', 'confidence', and 'description'."
+            )
+
+            response = controller.generate(prompt, images=[img])
+            # Parse response and create events
+            # This is simplified - real implementation would parse structured response
+
+            # Placeholder logic - in practice, parse Qwen-VL's structured output
+            if "staircase" in response.lower():
+                events.append(Event(
+                    timestamp=timestamp,
+                    event_type="staircase_discovered",
+                    score=9.0,
+                    metadata={"description": "Staircase visible in vision analysis", "confidence": 0.95},
+                    frame_idx=i
+                ))
+            elif "enemy" in response.lower() or "monster" in response.lower():
+                events.append(Event(
+                    timestamp=timestamp,
+                    event_type="enemy_detected",
+                    score=7.0,
+                    metadata={"description": "Enemy presence detected in vision analysis", "confidence": 0.85},
+                    frame_idx=i
+                ))
+
+        except Exception as e:
+            logger.debug(f"Vision analysis failed for frame {i}: {e}")
+            continue
+
+    return events
+
+
+def _detect_vision_events_from_ram(trajectory: List[dict]) -> List[Event]:
+    """Fallback vision detection using RAM data when Qwen-VL unavailable."""
+    events = []
     prev_room_type = None
 
     for i, frame in enumerate(trajectory):
@@ -531,9 +629,12 @@ def merge_voiceover_with_video(video_path: Path, audio_path: Path, fps: float) -
 try:
     import cv2
     from PIL import Image
+    CV2_AVAILABLE = True
 except ImportError:
-    logger.error("Missing dependencies: install 'opencv-python' and 'pillow'")
-    sys.exit(1)
+    logger.warning("OpenCV/PIL not available - video generation functions will not work")
+    CV2_AVAILABLE = False
+    cv2 = None
+    Image = None
 
 
 def find_latest_run(runs_dir: Path = Path("runs")) -> Optional[Path]:

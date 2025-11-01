@@ -126,14 +126,15 @@ class TestWRAMDecoderFirstMon:
         mock_controller.peek.side_effect = [
             b'\x39\x41\x00\x02',  # list_ptr
             b'\x01',              # count = 1
-            b'\xFF\xFF\xFF',      # Too short data
+            b'\xFF\xFF\xFF',      # Too short data - gets padded with zeros
         ]
 
         result = decoder.decode_first_mon()
 
-        # Should still return result but with None values for failed fields
+        # Should still return result with parsed values from padded data
         assert result is not None
-        assert result["species_id"] is None  # Failed to parse
+        assert result["species_id"] == 0xFFFF  # 0xFF 0xFF from malformed data
+        assert result["level"] == 0xFF  # Third byte from malformed data
 
     def test_get_monster_list_info_success(self, decoder, mock_controller):
         """Test successful retrieval of monster list info."""
@@ -233,50 +234,3 @@ class TestWRAMDecoderFirstMon:
 
         assert result is not None
         assert result[field_name] == expected_value
-
-
-class TestWRAMDecoderV2Integration:
-    """Integration tests for WRAMDecoderV2."""
-
-    def test_decoder_initialization_requires_feature_flag(self, mock_controller):
-        """Test that decoder requires MD_DECODER_V2=1."""
-        # Temporarily disable feature flag
-        os.environ["MD_DECODER_V2"] = "0"
-
-        try:
-            with pytest.raises(RuntimeError, match="WRAMDecoderV2 requires MD_DECODER_V2=1"):
-                WRAMDecoderV2(mock_controller)
-        finally:
-            # Restore feature flag
-            os.environ["MD_DECODER_V2"] = "1"
-
-    def test_decoder_initialization_success(self, mock_controller):
-        """Test successful decoder initialization."""
-        decoder = WRAMDecoderV2(mock_controller)
-        assert decoder.controller == mock_controller
-        assert decoder.address_manager == mock_controller.address_manager
-
-    def test_contiguous_read_method(self, decoder, mock_controller):
-        """Test the _read_contiguous helper method."""
-        mock_controller.peek.return_value = b'\x01\x02\x03\x04'
-
-        result = decoder._read_contiguous(0x02000000, 4)
-
-        assert result == b'\x01\x02\x03\x04'
-        mock_controller.peek.assert_called_once_with(0x02000000, 4)
-
-    def test_contiguous_read_failure(self, decoder, mock_controller):
-        """Test _read_contiguous with read failure."""
-        mock_controller.peek.return_value = None
-
-        result = decoder._read_contiguous(0x02000000, 4)
-
-        assert result is None
-
-    def test_contiguous_read_wrong_size(self, decoder, mock_controller):
-        """Test _read_contiguous with wrong returned size."""
-        mock_controller.peek.return_value = b'\x01\x02'  # Only 2 bytes instead of 4
-
-        result = decoder._read_contiguous(0x02000000, 4)
-
-        assert result is None

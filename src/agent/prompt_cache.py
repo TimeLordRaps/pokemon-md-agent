@@ -13,6 +13,7 @@ from typing import Optional, Any, Dict
 from pathlib import Path
 from collections import OrderedDict
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,18 @@ class PromptCache:
 
         self.max_entries_per_model = max_entries_per_model
         self.enable_disk = enable_disk
-        self.cache_dir = cache_dir or Path.home() / ".cache" / "pmd_prompt_cache"
+
+        env_cache_dir = os.environ.get("PROMPT_CACHE_DIR")
+        resolved_cache_dir: Optional[Path]
+        if env_cache_dir:
+            sanitized = env_cache_dir.strip().strip('"').strip("'")
+            resolved_cache_dir = Path(sanitized).expanduser()
+        elif cache_dir is not None:
+            resolved_cache_dir = Path(cache_dir)
+        else:
+            resolved_cache_dir = None
+
+        self.cache_dir = resolved_cache_dir or Path.home() / ".cache" / "pmd_prompt_cache"
         self.model_caches: Dict[str, OrderedDict[str, PromptCacheEntry]] = {}
         self._lock = threading.RLock()  # Allow recursive locking for nested operations
 

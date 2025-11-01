@@ -418,28 +418,25 @@ class TestMessagePackager:
         result = package_triplet("line1\nline2", "plan", "act")
         assert result == {'system': 'line1\nline2', 'plan': 'plan', 'act': 'act'}
 
-    def test_unpack_triplet_roundtrip_property(self):
+    @pytest.mark.parametrize("system,plan,act", [
+        ("system prompt", "planning step", "action taken"),
+        ("", "", ""),
+        ("single", "word", "values"),
+        ("multi\nline\nsystem", "plan\nwith\nnewlines", "act\nwith\nlines"),
+        ("unicode: ñáéíóú", "plan: αβγδε", "act: 日本語"),
+    ])
+    def test_unpack_triplet_roundtrip_property(self, system, plan, act):
         """Roundtrip property test: package then unpack should yield identical results."""
-        test_cases = [
-            ("system prompt", "planning step", "action taken"),
-            ("", "", ""),
-            ("single", "word", "values"),
-            ("multi\nline\nsystem", "plan\nwith\nnewlines", "act\nwith\nlines"),
-            ("unicode: ñáéíóú", "plan: αβγδε", "act: 日本語"),
-        ]
+        # Package the triplet
+        packaged = package_triplet(system, plan, act)
 
-        for system, plan, act in test_cases:
-            with self.subTest(system=system, plan=plan, act=act):
-                # Package the triplet
-                packaged = package_triplet(system, plan, act)
+        # Unpack it back
+        unpacked_system, unpacked_plan, unpacked_act = unpack_triplet(packaged)
 
-                # Unpack it back
-                unpacked_system, unpacked_plan, unpacked_act = unpack_triplet(packaged)
-
-                # Verify identical results
-                assert unpacked_system == system
-                assert unpacked_plan == plan
-                assert unpacked_act == act
+        # Verify identical results
+        assert unpacked_system == system
+        assert unpacked_plan == plan
+        assert unpacked_act == act
 
     def test_unpack_triplet_valueerror_invalid_keys(self):
         """Test ValueError for invalid keys in unpack_triplet."""

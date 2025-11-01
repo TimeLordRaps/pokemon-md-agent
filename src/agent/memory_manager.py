@@ -240,10 +240,13 @@ class ModelCache:
             return None
 
         try:
+            from .utils import get_hf_cache_dir
+            cache_dir = get_hf_cache_dir()
             processor = AutoProcessor.from_pretrained(
                 model_name,
                 trust_remote_code=True,
-                local_files_only=True
+                local_files_only=True,
+                cache_dir=cache_dir
             )
             self._shared_processors[model_name] = processor
             logger.info(f"Cached shared processor for {model_name}")
@@ -289,11 +292,13 @@ class ModelCache:
                 logger.info(f"Evicted models to make room: {evicted_keys}")
 
             # Load model
+            from .utils import get_hf_cache_dir
+            cache_dir = get_hf_cache_dir()
             model = AutoModelForVision2Seq.from_pretrained(
                 model_name,
                 trust_remote_code=True,
                 local_files_only=local_files_only,
-                cache_dir=os.environ.get("HF_HOME")
+                cache_dir=cache_dir
             )
 
             # Cache the model

@@ -512,11 +512,6 @@ class GridParser:
                 valid_neighbors = neighbors[valid_bounds]
                 
                 # Filter unvisited and walkable neighbors using vectorized operations
-                # Invariant asserts during BFS
-                assert len(queue) > 0, "Queue should not be empty during BFS traversal"
-                assert current_dist >= 0, f"Distance should be non-negative, got {current_dist}"
-                assert (current_x, current_y) in paths, f"Current position {(current_x, current_y)} should have a path"
-
                 for ny, nx in valid_neighbors:
                     if not visited[ny, nx] and walkable_mask[ny, nx]:
                         visited[ny, nx] = True

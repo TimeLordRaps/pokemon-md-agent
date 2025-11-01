@@ -393,8 +393,17 @@ class KeyframePolicy:
 
     def get_policy_stats(self) -> Dict[str, Any]:
         """Get statistics about keyframe policy performance."""
+        base_stats = {
+            "temporal_window_seconds": self.temporal_window_seconds,
+            "ssim_threshold": self.ssim_threshold,
+            "base_sampling_rate": self.base_sampling_rate,
+            "adaptive_threshold": self.adaptive_threshold,
+            "min_keyframes": self.min_keyframes,
+            "max_keyframes": self.max_keyframes,
+        }
+
         if not self.strategy_history:
-            return {"status": "no_selections_yet"}
+            return {**base_stats, "status": "no_selections_yet"}
 
         strategy_counts = {}
         for strategy in self.strategy_history:
@@ -405,11 +414,11 @@ class KeyframePolicy:
         ]) if self.strategy_history else 0.0
 
         return {
+            **base_stats,
             "total_selections": len(self.strategy_history),
             "current_keyframes": len(self.selected_keyframes),
             "strategy_distribution": strategy_counts,
             "avg_sampling_rate": avg_sampling_rate,
-            "temporal_window_seconds": self.temporal_window_seconds,
         }
 
     def _calculate_ssim_scores(self, candidates: List[KeyframeCandidate]) -> List[KeyframeCandidate]:

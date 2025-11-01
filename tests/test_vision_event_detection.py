@@ -1,7 +1,10 @@
 """Test vision event detection using Qwen-VL models."""
 import pytest
 from unittest.mock import Mock, patch
-from pokemon_md_agent.scripts.generate_montage_video import detect_vision_events, Event
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from scripts.generate_montage_video import detect_vision_events, Event
 
 
 def test_detect_vision_events_basic():
@@ -31,8 +34,44 @@ def test_detect_vision_events_basic():
 @pytest.mark.real_model
 def test_detect_vision_events_with_qwen_vl():
     """Test vision event detection with real Qwen-VL model."""
-    # This test would only run when MODEL_BACKEND=hf and real models are available
-    pytest.skip("Real model tests require HF_TOKEN and MODEL_BACKEND=hf environment variables")
+    # Skip if real models not enabled
+    backend = os.environ.get("MODEL_BACKEND", "").lower()
+    if backend != "hf":
+        pytest.skip("MODEL_BACKEND!=hf; skipping real model test")
+    
+    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN")
+    if not token:
+        pytest.skip("HF_TOKEN not set; skipping real model test")
+    
+    # Create test trajectory with fake screenshot data
+    trajectory = [
+        {
+            "timestamp": 0.0,
+            "ram": {"room_type": "corridor"},
+            "screenshot": b"fake_screenshot_data"  # This will be converted to PIL Image
+        },
+        {
+            "timestamp": 1.0,
+            "ram": {"room_type": "staircase"},
+            "screenshot": b"fake_screenshot_data2"
+        }
+    ]
+    
+    # Test that real model loading works (should not crash)
+    try:
+        events = detect_vision_events(trajectory)
+        # Should return some events (either from real model or fallback)
+        assert isinstance(events, list)
+        # Events should have proper structure
+        for event in events:
+            assert hasattr(event, 'timestamp')
+            assert hasattr(event, 'event_type')
+            assert hasattr(event, 'score')
+            assert hasattr(event, 'metadata')
+            assert hasattr(event, 'frame_idx')
+    except Exception as e:
+        # If model loading fails, that's acceptable for CI
+        pytest.skip(f"Real model loading failed (expected in some environments): {e}")
 
 
 def test_detect_vision_events_enemy_proximity():

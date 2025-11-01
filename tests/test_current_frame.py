@@ -70,23 +70,26 @@ class TestCurrentFrame:
 
             mock_image = Mock()
             mock_image.size = (480, 320)
-            mock_open.return_value.__enter__.return_value = mock_image
+            mock_convert = Mock()
+            mock_convert.copy.return_value = mock_image
+            mock_open.return_value.__enter__.return_value.convert.return_value = mock_convert
             mock_array.return_value = Mock()  # Mock numpy array
 
-            # Mock the video config
-            controller.video_config.get_supported_sizes.return_value = [(480, 320)]
-            controller.video_config.infer_profile_from_size.return_value = None
+            # Mock the video config methods
+            with patch.object(controller.video_config, 'get_supported_sizes', return_value={(480, 320)}), \
+                 patch.object(controller.video_config, 'infer_profile_from_size', return_value=None):
 
-            # Mock Path and cache_dir
-            with patch('pathlib.Path') as mock_path_class:
-                mock_path_instance = Mock()
-                mock_path_instance.unlink = Mock()
-                mock_path_class.return_value = mock_path_instance
-                controller.cache_dir = mock_path_instance
+                # Mock Path and cache_dir
+                with patch('pathlib.Path') as mock_path_class:
+                    mock_path_instance = Mock()
+                    mock_path_instance.unlink = Mock()
+                    mock_path_instance.__truediv__ = Mock(return_value=Mock())  # Mock the / operator
+                    mock_path_class.return_value = mock_path_instance
+                    controller.cache_dir = mock_path_instance
 
-                result = controller.grab_frame()
+                    result = controller.grab_frame()
 
-                # Should have called current_frame to get the current frame number
-                assert controller._current_frame == 50
-                assert controller._frame_counter == 1
-                assert result is not None
+                    # Should have called current_frame to get the current frame number
+                    assert controller._current_frame == 50
+                    assert controller._frame_counter == 1
+                    assert result is not None

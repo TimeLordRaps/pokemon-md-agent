@@ -206,6 +206,10 @@ class PipelineEngine:
         else:
             batch_size = min(self.max_batch_size, len(queue))
 
+        # Only assemble batch if forced or queue is at capacity
+        if not force_flush and batch_size < self.max_batch_size:
+            return None
+
         if batch_size == 0:
             return None
 
